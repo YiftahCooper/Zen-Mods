@@ -1,0 +1,12 @@
+{
+  "id": "yiftahcooper-zen-mods-catalogue",
+  "name": "Zen Mods Catalogue — install an individual mod instead",
+  "description": "This is a catalogue, not a mod bundle. Open the repository README and install a mod using its folder URL.",
+  "homepage": "https://github.com/YiftahCooper/Zen-Mods",
+  "version": "1.0.0",
+  "createdAt": "2026-09-30",
+  "updatedAt": "2026-09-30T09:00:00Z",
+  "style": { "chrome": "catalogue.css" },
+  "preferences": "catalogue-preferences.json",
+  "fork": ["zen"]
+}

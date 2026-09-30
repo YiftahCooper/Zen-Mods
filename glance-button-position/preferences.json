@@ -1,0 +1,56 @@
+[
+  {
+    "type": "dropdown",
+    "property": "glance.position.side",
+    "label": "Button Side",
+    "defaultValue": "left",
+    "placeholder": false,
+    "options": [
+      { "label": "Left", "value": "left" },
+      { "label": "Right", "value": "right" }
+    ]
+  },
+  {
+    "type": "string",
+    "property": "glance.position.percent",
+    "label": "Vertical Position (%) — 0 Top, 50 Centre, 100 Bottom",
+    "placeholder": "Any number from 0 to 100, e.g. 37.5",
+    "defaultValue": "0"
+  },
+  {
+    "type": "string",
+    "property": "glance.position.scale",
+    "label": "Button Size Multiplier",
+    "placeholder": "1.0 normal, 0.7 smaller, 1.2 larger (0.25–3)",
+    "defaultValue": "1.0"
+  },
+  {
+    "type": "separator",
+    "id": "glance-button-controls",
+    "label": "Buttons (Top to Bottom)"
+  },
+  {
+    "type": "checkbox",
+    "property": "glance.position.show.close",
+    "label": "Close",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "glance.position.show.expand",
+    "label": "Expand",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "glance.position.show.split",
+    "label": "Split",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "glance.position.show.copy",
+    "label": "Copy URL",
+    "defaultValue": true
+  }
+]

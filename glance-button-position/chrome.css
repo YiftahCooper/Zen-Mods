@@ -1,0 +1,78 @@
+/* Invalid or empty input falls back to the top; decimals are supported. */
+@property --glance-position-percent {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --glance-position-scale {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@-moz-document url-prefix("chrome://browser/content/browser.xhtml") {
+  .zen-glance-sidebar-container {
+    --glance-position-fraction: calc(clamp(0, var(--glance-position-percent), 100) / 100);
+    --glance-button-scale: clamp(0.25, var(--glance-position-scale), 3);
+    left: auto !important;
+    right: 100% !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: calc(12px * var(--glance-button-scale)) !important;
+    gap: calc(12px * var(--glance-button-scale)) !important;
+    max-width: none !important;
+    /* CSS-only fallback when Sine's JavaScript support is switched off. */
+    top: calc(15px + (100% - 30px) * var(--glance-position-fraction)) !important;
+    translate: 0 calc(-100% * var(--glance-position-fraction)) !important;
+  }
+
+  .zen-glance-sidebar-container[glance-position-measured] {
+    /* Centre the measured visible stack at the requested panel percentage.
+       Keep a 15px edge margin; translate preserves Zen's transform animation. */
+    top: clamp(calc(15px + var(--glance-half-height)),
+      calc(100% * var(--glance-position-fraction)),
+      calc(100% - 15px - var(--glance-half-height))) !important;
+    translate: 0 -50% !important;
+  }
+
+  .zen-glance-sidebar-container > toolbarbutton {
+    width: calc(var(--size-item-large) * var(--glance-button-scale)) !important;
+    height: calc(var(--size-item-large) * var(--glance-button-scale)) !important;
+    padding: calc(8px * var(--glance-button-scale)) !important;
+    flex-shrink: 0 !important;
+  }
+
+  .zen-glance-sidebar-container > toolbarbutton > .toolbarbutton-icon {
+    width: calc(16px * var(--glance-button-scale)) !important;
+    height: calc(16px * var(--glance-button-scale)) !important;
+  }
+
+  /* Zen can expand this button to show its confirmation label. */
+  .zen-glance-sidebar-container > .zen-glance-sidebar-close[waitconfirmation] {
+    width: fit-content !important;
+  }
+
+  @media (-moz-pref("glance.position.show.close", false)) {
+    .zen-glance-sidebar-container > .zen-glance-sidebar-close { display: none !important; }
+  }
+  @media (-moz-pref("glance.position.show.expand", false)) {
+    .zen-glance-sidebar-container > .zen-glance-sidebar-open { display: none !important; }
+  }
+  @media (-moz-pref("glance.position.show.split", false)) {
+    .zen-glance-sidebar-container > .zen-glance-sidebar-split { display: none !important; }
+  }
+  @media (-moz-pref("glance.position.show.copy", false)) {
+    .zen-glance-sidebar-container > .glance-position-copy-url { display: none !important; }
+  }
+
+  :root:has(#theme-Glance-Button-Position[glance-position-side="right"])
+    .zen-glance-sidebar-container {
+    left: 100% !important;
+    right: auto !important;
+  }
+
+  .glance-position-copy-url {
+    list-style-image: url('chrome://browser/skin/zen-icons/link.svg');
+  }
+}
