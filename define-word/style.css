@@ -2,14 +2,23 @@
 #define-word-panel .dw-shell { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 480px; max-width: calc(100vw - 48px); max-height: calc(100vh - 32px); overflow: hidden; color: var(--arrowpanel-color,CanvasText); background: var(--arrowpanel-background,Canvas); color-scheme: inherit; }
 #define-word-panel .dw-card { box-sizing: border-box; font: menu; font-size: var(--dw-text-size,14px); color: inherit; background: inherit; color-scheme: inherit; width: 100%; min-height: 0; max-height: min(650px,80vh); overflow-y: auto; overflow-x: hidden; padding: 14px; }
 #define-word-panel .dw-shell[data-resized] .dw-card { flex: 1; max-height: none; }
-#define-word-panel .dw-resize-bar { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; }
-#define-word-panel .dw-resize-bar button { appearance: none; width: 16px; height: 16px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; cursor: nwse-resize; touch-action: none; user-select: none; }
-#define-word-panel .dw-resize-bar button:focus:not(:focus-visible) { outline: none; }
-#define-word-panel .dw-resize-bar button:focus-visible { outline-offset: -3px; }
-#define-word-panel .dw-resize-bar button[data-pointer-focus] { outline: none; }
+#define-word-panel .dw-resize-edge { appearance: none; position: absolute; z-index: 2; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; touch-action: none; user-select: none; }
+#define-word-panel [data-resize-edge="n"], #define-word-panel [data-resize-edge="s"] { left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
+#define-word-panel [data-resize-edge="n"] { top: 0; }
+#define-word-panel [data-resize-edge="s"] { bottom: 0; }
+#define-word-panel [data-resize-edge="w"], #define-word-panel [data-resize-edge="e"] { top: 12px; bottom: 12px; width: 6px; cursor: ew-resize; }
+#define-word-panel [data-resize-edge="w"] { left: 0; }
+#define-word-panel [data-resize-edge="e"] { right: 0; }
+#define-word-panel [data-resize-edge="nw"], #define-word-panel [data-resize-edge="ne"], #define-word-panel [data-resize-edge="sw"], #define-word-panel [data-resize-edge="se"] { width: 12px; height: 12px; }
+#define-word-panel [data-resize-edge="nw"] { left: 0; top: 0; cursor: nwse-resize; }
+#define-word-panel [data-resize-edge="ne"] { right: 0; top: 0; cursor: nesw-resize; }
+#define-word-panel [data-resize-edge="sw"] { left: 0; bottom: 0; cursor: nesw-resize; }
+#define-word-panel [data-resize-edge="se"] { right: 0; bottom: 0; cursor: nwse-resize; }
+#define-word-panel .dw-resize-edge:focus:not(:focus-visible), #define-word-panel .dw-resize-edge[data-pointer-focus] { outline: none; }
+#define-word-panel .dw-resize-edge:focus-visible { outline-offset: -3px; }
 #define-word-panel .dw-card * { box-sizing: border-box; min-width: 0; }
 #define-word-panel .dw-bar, #define-word-panel .dw-footer, #define-word-panel .dw-search { display: flex; gap: 8px; align-items: center; }
-#define-word-panel .dw-bar { display: grid; grid-template-columns: auto minmax(0,1fr) auto; margin-bottom: 12px; cursor: grab; touch-action: none; user-select: none; }
+#define-word-panel .dw-bar { display: grid; grid-template-columns: minmax(5em,1fr) minmax(0,2fr) auto; margin-bottom: 12px; padding-block: 4px; cursor: grab; touch-action: none; user-select: none; }
 #define-word-panel .dw-bar[data-dragging] { cursor: grabbing; }
 #define-word-panel .dw-bar strong { margin-inline-end: auto; }
 #define-word-panel .dw-bar select { width: 100%; max-width: 100%; cursor: default; }
@@ -24,6 +33,8 @@
 #define-word-panel li p { margin-block: 4px; line-height: 1.5; }
 #define-word-panel blockquote { margin: 6px 0; padding-inline-start: 10px; border-inline-start: 2px solid color-mix(in srgb,currentColor 40%,transparent); }
 #define-word-panel .dw-part { font-size: .9em; opacity: .8; }
+#define-word-panel :lang(he) { font-family: "Noto Sans Hebrew", "Arial", sans-serif; line-height: 1.65; }
+#define-word-panel input, #define-word-panel select { line-height: 1.6; }
 #define-word-panel .dw-matches { margin-top: 8px; font-size: .92em; }
 #define-word-panel .dw-matches p { margin: 4px 0; opacity: .8; }
 #define-word-panel .dw-matches ul { list-style: none; padding: 0; margin: 4px 0; display: flex; gap: 4px; flex-wrap: wrap; }
@@ -38,7 +49,7 @@
 #define-word-menu.menuitem-iconic { -moz-context-properties: fill, fill-opacity; fill: currentColor; }
 #define-word-menu.menuitem-iconic > .menu-iconic-left { display: flex !important; visibility: visible !important; }
 /* Sine owns the title divider. Keep these layout resets local to Define Word. */
-[mod-id="define-word"] dialog { width: min(760px,96vw) !important; min-width: 0 !important; padding: 16px !important; }
+[mod-id="define-word"] .sineItemPreferenceDialog { box-sizing: border-box !important; width: min(800px,calc(100vw - 32px)) !important; max-width: 800px !important; min-width: 0 !important; padding: 16px !important; }
 [mod-id="define-word"] .sineItemPreferenceDialogContent { display: flex !important; flex-direction: column; gap: 8px; width: 100% !important; min-width: 0 !important; }
 [mod-id="define-word"] .sineItemPreferenceDialogContent > * { box-sizing: border-box; margin-block: 0 !important; min-height: 0; padding-block: 0; }
 [mod-id="define-word"] .dw-settings { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 8px !important; width: 100%; min-width: 0; margin: 6px 0 0 !important; padding: 0 !important; border: 0 !important; font: menu; color: inherit; background: transparent; }
@@ -53,3 +64,7 @@
 [mod-id="define-word"] .dw-settings .dw-actions { display: flex !important; flex-wrap: wrap; gap: 6px !important; margin: 0 !important; }
 [mod-id="define-word"] .dw-settings button, [mod-id="define-word"] .dw-settings input { font: inherit; color: inherit; background: color-mix(in srgb,currentColor 7%,transparent); border: 1px solid color-mix(in srgb,currentColor 30%,transparent); border-radius: 5px; padding: 6px 8px; margin: 0; }
 [mod-id="define-word"] .dw-key-help { justify-self: start; }
+[mod-id="define-word"] .dw-key-field { position: relative; width: 100%; }
+[mod-id="define-word"] .dw-key-field input { padding-inline-end: 40px; }
+[mod-id="define-word"] .dw-settings .dw-key-reveal { position: absolute; inset-inline-end: 3px; top: 50%; transform: translateY(-50%); width: 30px; height: 28px; padding: 4px; border: 0; background: transparent; cursor: pointer; }
+[mod-id="define-word"] .dw-key-reveal svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; }

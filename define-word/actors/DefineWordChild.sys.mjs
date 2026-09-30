@@ -1,4 +1,4 @@
-import {sanitizeSelectionAnchor} from '../src/selection.sys.mjs';
+import {sanitizeSelectionAnchor} from '../src/selection.sys.mjs?v=0.3.0';
 
 export class DefineWordChild extends JSWindowActorChild {
   async receiveMessage(message) {
@@ -23,3 +23,4 @@ export class DefineWordChild extends JSWindowActorChild {
     return {rawText,contextId:this.browsingContext.id,innerWindowId:this.manager.innerWindowId,anchor};
   }
 }
+export {DefineWordChild as DefineWordV030Child};

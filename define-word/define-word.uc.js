@@ -1,22 +1,24 @@
-// Define Word 0.2.0 â€” generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.0 â€” generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
   function failure(code) {
     return Object.assign(new Error(code), { code });
   }
-  async function requestJson(url, { fetch, signal, lexicalaKey }) {
+  async function request(url, { fetch, signal, lexicalaKey }, format) {
     try {
       const target = new URL(url);
       const lexicala = target.hostname === "lexicala1.p.rapidapi.com";
-      const headers = { Accept: "application/json" };
+      const headers = { Accept: format === "json" ? "application/json" : "text/html" };
       if (lexicala || lexicalaKey !== void 0) {
         if (!safeUrl(url, ["lexicala1.p.rapidapi.com"]) || target.port || target.pathname !== "/search" || target.hash) throw failure("unavailable");
         if (typeof lexicalaKey !== "string" || !lexicalaKey.trim()) throw failure("missing-key");
         if (lexicalaKey.length > 4096 || /[\x00-\x20\x7f]/.test(lexicalaKey)) throw failure("unavailable");
         headers["X-RapidAPI-Key"] = lexicalaKey;
         headers["X-RapidAPI-Host"] = "lexicala1.p.rapidapi.com";
-      } else if (!safeUrl(url, ["api.dictionaryapi.dev", "en.wiktionary.org", "he.wiktionary.org", "www.dictionaryapi.com"]) || target.port) throw failure("unavailable");
+      } else if (!safeUrl(url, ["api.dictionaryapi.dev", "en.wiktionary.org", "he.wiktionary.org", "www.dictionaryapi.com", "kalanit.hebrew-academy.org.il", "milog.co.il"]) || target.port) throw failure("unavailable");
+      if (target.hostname === "kalanit.hebrew-academy.org.il" && (target.pathname !== "/api/Ac/" || format !== "json")) throw failure("unavailable");
+      if (format === "html" && target.hostname !== "milog.co.il") throw failure("unavailable");
       const response = await fetch(url, { signal, credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", headers });
       if (response.status === 404) return null;
       if (response.status === 401) throw failure("unauthorized");
@@ -44,12 +46,15 @@
         buffer.set(chunk, offset);
         offset += chunk.byteLength;
       }
-      return JSON.parse(new TextDecoder().decode(buffer));
+      const body = new TextDecoder().decode(buffer);
+      return format === "json" ? JSON.parse(body) : body;
     } catch (error) {
       if (signal?.aborted) throw failure("cancelled");
       throw failure(["rate-limit", "unauthorized", "access-denied", "missing-key"].includes(error?.code) ? error.code : "unavailable");
     }
   }
+  var requestJson = (url, options) => request(url, options, "json");
+  var requestHtml = (url, options) => request(url, options, "html");
   function safeUrl(value, hosts2) {
     try {
       const u = new URL(value);
@@ -216,8 +221,85 @@
     return data === null ? null : parseLexicalaHebrew(data, options.query);
   } };
 
+  // project:src/providers/academy.mjs
+  var unpointed2 = (value) => text(value).normalize("NFD").replace(/[\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/gu, "");
+  var displayWord = (value) => text(value).replace(/_פועל$/u, "");
+  function rows(data) {
+    if (!Array.isArray(data)) throw failure("unavailable");
+    return data.filter((row) => row && /[א-ת]/u.test(displayWord(row.keyword))).slice(0, 100).sort((a, b) => (Number.isFinite(b.score) ? b.score : 0) - (Number.isFinite(a.score) ? a.score : 0) || (Number.isFinite(a.order) ? a.order : 100) - (Number.isFinite(b.order) ? b.order : 100));
+  }
+  function candidates(entries, except = "") {
+    return [...new Set(entries.map((row) => displayWord(row.keyword)))].filter((word) => word && word !== except).slice(0, 8).map((word) => ({ word, language: "he" }));
+  }
+  function sourceMatches(row, query) {
+    const wanted = unpointed2(query);
+    if ([row.keyword, row.keywordWithoutNikud, row.ktiv_male, row.menukad].some((value) => unpointed2(displayWord(value)) === wanted)) return true;
+    const title = text(row.title), separator = title.indexOf(" > ");
+    if (separator < 0) return false;
+    const form = title.slice(0, separator);
+    return unpointed2(form.replace(/\s*\([^)]*\)\s*$/u, "")) === wanted || [...form.matchAll(/\(([^)]+)\)/gu)].some((match) => unpointed2(match[1]) === wanted);
+  }
+  function definitionText(html, parseDocument) {
+    const document2 = parseDocument(html);
+    document2.querySelectorAll("script,style,iframe,object,template").forEach((node) => node.remove());
+    return text(document2.body.textContent);
+  }
+  function parseAcademyHebrew(data, query, parseDocument) {
+    const entries = rows(data), defined = entries.map((row) => ({ row, senses: (Array.isArray(row.hagdarot) ? row.hagdarot : []).filter((value) => typeof value === "string").flatMap((value) => value.split("|")).map((value) => definitionText(value, parseDocument)).filter(Boolean).slice(0, 20).map((value) => ({ partOfSpeech: /Poal/u.test(row.ItemTypeName || "") ? "פועל" : "", text: value, examples: [] })) })).filter((entry) => entry.senses.length && sourceMatches(entry.row, query));
+    const selected = defined.find((entry) => displayWord(entry.row.keyword).normalize("NFC") === text(query).normalize("NFC")) || defined[0];
+    if (!selected) return null;
+    const headword = displayWord(selected.row.keyword), sourceUrl = `https://hebrew-academy.org.il/דף-מילה/${encodeURIComponent(selected.row.keyword)}/`;
+    return { headword, language: "he", senses: selected.senses, matches: candidates(entries, headword), sourceUrl, attribution: { label: "האקדמיה ללשון העברית · מילון ההווה", url: sourceUrl } };
+  }
+  async function search(options) {
+    return requestJson(`https://kalanit.hebrew-academy.org.il/api/Ac/?${new URLSearchParams({ SearchString: options.query })}`, options);
+  }
+  var academyHebrew = { id: "academy-he", label: "האקדמיה ללשון העברית", language: "he", keyRequired: false, supportsFallback: false, suggestionsLabel: "Dictionary entries", async suggest(options) {
+    const data = await search(options);
+    return data === null ? [] : candidates(rows(data));
+  }, async lookup(options) {
+    const data = await search(options);
+    return data === null ? null : parseAcademyHebrew(data, options.query, options.parseDocument);
+  } };
+
+  // project:src/providers/milog.mjs
+  var unpointed3 = (value) => text(value).normalize("NFD").replace(/[\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/gu, "");
+  var lookupUrl = (query) => `https://milog.co.il/${encodeURIComponent(query.replace(/\s+/gu, "_").replace(/\//gu, "_slash_"))}`;
+  function plain2(node, remove = "script,style,iframe,object,template") {
+    const copy = node.cloneNode(true);
+    copy.querySelectorAll(remove).forEach((child) => child.remove());
+    return text(copy.textContent);
+  }
+  function parseMilogHebrew(document2, query) {
+    const entries = [];
+    for (const element of [...document2.querySelectorAll(".sr_e")].slice(0, 100)) {
+      const title = element.querySelector(".sr_e_t");
+      if (!title) continue;
+      const headword = plain2(title, "span:not(.sr_e_prefix_txt),script,style,iframe,object,template").replace(/\s+-\s*$/u, "").trim();
+      if (!/[א-ת]/u.test(headword)) continue;
+      const grammar = title.querySelector("span:not(.sr_e_prefix_txt)");
+      const partOfSpeech = grammar ? plain2(grammar) : "";
+      const senses = [];
+      for (const sense of [...element.querySelectorAll(".sr_e_para .sr_e_txt")].slice(0, 20)) {
+        const definition = plain2(sense, "script,style,iframe,object,template,.sr_example");
+        if (!definition) continue;
+        const examples = [...sense.querySelectorAll(".sr_example")].slice(0, 3).map((node) => plain2(node)).filter(Boolean);
+        senses.push({ partOfSpeech, text: definition, examples });
+      }
+      if (senses.length) entries.push({ headword, senses, sourceUrl: safeUrl(title.getAttribute("href"), ["milog.co.il"]) || lookupUrl(query) });
+    }
+    const selected = entries.find((entry) => entry.headword.normalize("NFC") === text(query).normalize("NFC")) || entries.find((entry) => unpointed3(entry.headword) === unpointed3(query));
+    if (!selected) return null;
+    const matches = [...new Set(entries.map((entry) => entry.headword))].filter((word) => word !== selected.headword).slice(0, 8).map((word) => ({ word, language: "he" }));
+    return { ...selected, language: "he", matches, attribution: { label: "מילוג", url: selected.sourceUrl } };
+  }
+  var milogHebrew = { id: "milog-he", label: "מילוג", language: "he", keyRequired: false, supportsFallback: false, suggestionsLabel: null, async lookup(options) {
+    const html = await requestHtml(lookupUrl(options.query), options);
+    return html === null ? null : parseMilogHebrew(options.parseDocument(html), options.query);
+  } };
+
   // project:src/providers/registry.mjs
-  var providers = new Map([freeDictionary, wiktionary("en"), wiktionary("he"), merriamWebster("collegiate"), merriamWebster("learners"), lexicalaHebrew].map((p) => [p.id, p]));
+  var providers = new Map([freeDictionary, wiktionary("en"), wiktionary("he"), merriamWebster("collegiate"), merriamWebster("learners"), lexicalaHebrew, academyHebrew, milogHebrew].map((p) => [p.id, p]));
 
   // project:src/normalize.mjs
   function normalizeTerm(rawText) {
@@ -252,7 +334,7 @@
         timedOut = true;
         stop();
       }, 1e4);
-      async function request() {
+      async function request2() {
         let key;
         if (provider.keyRequired) {
           try {
@@ -265,12 +347,13 @@
         if (abort.signal.aborted) return { status: "cancelled" };
         const options = { query: term.query, signal: abort.signal, key, fetch, parseDocument };
         if (operation === "suggest") {
-          const candidates = await provider.suggest(options), suggestions = [], seen = /* @__PURE__ */ new Set();
-          if (!Array.isArray(candidates)) return { status: "unavailable" };
-          for (const candidate of candidates) {
+          const candidates2 = await provider.suggest(options), suggestions = [], seen = /* @__PURE__ */ new Set();
+          if (!Array.isArray(candidates2)) return { status: "unavailable" };
+          for (const candidate of candidates2) {
             const word = normalizeTerm(candidate?.word);
-            if (word.status || word.language !== term.language || candidate.language !== term.language || seen.has(word.query)) continue;
-            seen.add(word.query);
+            const identity = word.query?.toLocaleLowerCase("en");
+            if (word.status || word.language !== term.language || candidate.language !== term.language || seen.has(identity)) continue;
+            seen.add(identity);
             suggestions.push({ word: word.query, language: term.language });
             if (suggestions.length === 8) break;
           }
@@ -285,7 +368,7 @@
         return definition ? { status: "ok", definition, normalizedRetry } : { status: "no-result" };
       }
       try {
-        return await Promise.race([request().catch((error) => ({ status: ["rate-limit", "cancelled", "unauthorized", "access-denied"].includes(error?.code) ? error.code : "unavailable" })), stopped]);
+        return await Promise.race([request2().catch((error) => ({ status: ["rate-limit", "cancelled", "unauthorized", "access-denied"].includes(error?.code) ? error.code : "unavailable" })), stopped]);
       } finally {
         timers.clearTimeout(timer);
         signal?.removeEventListener("abort", stop);
@@ -295,17 +378,18 @@
   }
 
   // project:src/resize.mjs
-  function createPopupResizer(window2, { panel, shell, handle, isOpen, readSize, onSizeChange }) {
+  function createPopupResizer(window2, { panel, shell, handle, handles = [handle], isOpen, readSize, onSizeChange, onPositionChange }) {
     let drag = null, manual = null, disposed2 = false;
     function geometry() {
       const content = shell.getBoundingClientRect(), outer = panel.getBoundingClientRect();
       return { content, frameWidth: Math.max(0, outer.width - content.width), frameHeight: Math.max(0, outer.height - content.height) };
     }
-    function apply(width, height, preparing = false) {
+    function apply(width, height, preparing = false, at = null) {
       if (disposed2) return;
       const { content, frameWidth, frameHeight } = geometry();
-      const maxWidth = Math.max(1, Math.min(window2.innerWidth - 48, preparing ? Infinity : window2.innerWidth - Math.max(0, content.left) - frameWidth - 12));
-      const maxHeight = Math.max(1, Math.min(window2.innerHeight - 32, preparing ? Infinity : window2.innerHeight - Math.max(0, content.top) - frameHeight - 12));
+      const left = at?.left ?? content.left, top = at?.top ?? content.top;
+      const maxWidth = Math.max(1, Math.min(window2.innerWidth - 48, preparing ? Infinity : window2.innerWidth - Math.max(0, left) - frameWidth - 12));
+      const maxHeight = Math.max(1, Math.min(window2.innerHeight - 32, preparing ? Infinity : window2.innerHeight - Math.max(0, top) - frameHeight - 12));
       manual = { width: Math.round(Math.min(maxWidth, Math.max(320, width))), height: Math.round(Math.min(maxHeight, Math.max(200, height))) };
       shell.dataset.resized = "";
       shell.style.width = `${manual.width}px`;
@@ -315,39 +399,57 @@
     function stop() {
       const previous = drag;
       drag = null;
-      window2.removeEventListener("pointermove", move);
-      window2.removeEventListener("pointerup", stop);
-      window2.removeEventListener("pointercancel", stop);
-      window2.removeEventListener("blur", stop);
+      for (const type of ["pointermove", "mousemove"]) window2.removeEventListener(type, move);
+      for (const type of ["pointerup", "mouseup", "pointercancel", "blur"]) window2.removeEventListener(type, stop);
       if (previous?.pointerId !== void 0) {
         try {
-          handle.releasePointerCapture?.(previous.pointerId);
+          previous.handle.releasePointerCapture?.(previous.pointerId);
         } catch {
         }
       }
       if (previous?.changed && manual) onSizeChange?.({ ...manual });
     }
     function move(event) {
-      if (!drag || disposed2) return;
-      if (drag.pointerId !== void 0 && event.pointerId !== drag.pointerId) return;
+      if (!drag || disposed2 || drag.pointerId !== void 0 && event.pointerId !== drag.pointerId) return;
       event.preventDefault();
       drag.changed = true;
-      apply(drag.width + event.clientX - drag.x, drag.height + event.clientY - drag.y);
+      const dx = (drag.screen ? event.screenX : event.clientX) - drag.x, dy = (drag.screen ? event.screenY : event.clientY) - drag.y;
+      const west = drag.edge.includes("w"), north = drag.edge.includes("n");
+      let width = drag.width + (west ? -dx : drag.edge.includes("e") ? dx : 0), height = drag.height + (north ? -dy : drag.edge.includes("s") ? dy : 0);
+      if (west) width = Math.max(320, Math.min(width, drag.width + drag.left - 12));
+      if (north) height = Math.max(200, Math.min(height, drag.height + drag.top - 12));
+      const left = west ? drag.left + drag.width - width : drag.left, top = north ? drag.top + drag.height - height : drag.top;
+      apply(width, height, false, { left, top });
+      onPositionChange?.(drag.screenLeft + (west ? drag.width - manual.width : 0), drag.screenTop + (north ? drag.height - manual.height : 0));
     }
     function start2(event) {
-      if (disposed2 || !isOpen() || event.button !== 0 || event.isPrimary === false) return;
+      if (disposed2 || drag || !isOpen() || event.button !== 0 || event.isPrimary === false) return;
       event.preventDefault();
-      stop();
-      const { content } = geometry();
-      drag = { x: event.clientX, y: event.clientY, width: content.width, height: content.height, pointerId: event.pointerId };
-      handle.setAttribute("data-pointer-focus", "");
-      handle.focus();
+      const { content } = geometry(), outer = panel.getOuterScreenRect?.();
+      const screen = !!outer, target = event.currentTarget;
+      drag = {
+        x: screen ? event.screenX : event.clientX,
+        y: screen ? event.screenY : event.clientY,
+        screen,
+        width: content.width,
+        height: content.height,
+        left: content.left,
+        top: content.top,
+        screenLeft: outer?.x ?? (window2.mozInnerScreenX || 0) + content.left,
+        screenTop: outer?.y ?? (window2.mozInnerScreenY || 0) + content.top,
+        edge: target.dataset.resizeEdge || "se",
+        handle: target,
+        pointerId: event.pointerId
+      };
+      target.setAttribute("data-pointer-focus", "");
+      target.focus();
       try {
-        handle.setPointerCapture?.(event.pointerId);
+        target.setPointerCapture?.(event.pointerId);
       } catch {
       }
-      window2.addEventListener("pointermove", move, { passive: false });
-      window2.addEventListener("pointerup", stop);
+      const mouse = event.type === "mousedown";
+      window2.addEventListener(mouse ? "mousemove" : "pointermove", move, { passive: false });
+      window2.addEventListener(mouse ? "mouseup" : "pointerup", stop);
       window2.addEventListener("pointercancel", stop);
       window2.addEventListener("blur", stop);
     }
@@ -372,7 +474,7 @@
       else clear();
     }
     function keyboard(event) {
-      keyboardFocus();
+      event.currentTarget.removeAttribute("data-pointer-focus");
       if (disposed2 || !isOpen()) return;
       if (event.key === "Home") {
         event.preventDefault();
@@ -393,30 +495,36 @@
       onSizeChange?.({ ...manual });
     }
     function fit() {
-      if (manual && isOpen()) apply(manual.width, manual.height);
+      if (manual && isOpen() && !drag) apply(manual.width, manual.height);
     }
     const windowResized = (event) => {
       if (event.target === window2) fit();
     };
-    function keyboardFocus() {
-      handle.removeAttribute("data-pointer-focus");
+    function keyboardFocus(event) {
+      event.currentTarget.removeAttribute("data-pointer-focus");
     }
-    handle.addEventListener("blur", keyboardFocus);
-    handle.addEventListener("pointerdown", start2);
-    handle.addEventListener("lostpointercapture", stop);
-    handle.addEventListener("keydown", keyboard);
-    handle.addEventListener("dblclick", reset);
+    for (const item of handles) {
+      item.addEventListener("blur", keyboardFocus);
+      item.addEventListener("pointerdown", start2);
+      item.addEventListener("mousedown", start2);
+      item.addEventListener("lostpointercapture", stop);
+      item.addEventListener("keydown", keyboard);
+      item.addEventListener("dblclick", reset);
+    }
     panel.addEventListener("popupshown", fit);
     window2.addEventListener("resize", windowResized);
     return { prepare, stop, destroy() {
       if (disposed2) return;
       stop();
       disposed2 = true;
-      handle.removeEventListener("blur", keyboardFocus);
-      handle.removeEventListener("pointerdown", start2);
-      handle.removeEventListener("lostpointercapture", stop);
-      handle.removeEventListener("keydown", keyboard);
-      handle.removeEventListener("dblclick", reset);
+      for (const item of handles) {
+        item.removeEventListener("blur", keyboardFocus);
+        item.removeEventListener("pointerdown", start2);
+        item.removeEventListener("mousedown", start2);
+        item.removeEventListener("lostpointercapture", stop);
+        item.removeEventListener("keydown", keyboard);
+        item.removeEventListener("dblclick", reset);
+      }
       panel.removeEventListener("popupshown", fit);
       window2.removeEventListener("resize", windowResized);
     } };
@@ -449,7 +557,7 @@
       return clamp(b.x + (browser?.left || 0) + 4, b.y + (browser?.top || 0) + 4);
     }
     function fit() {
-      if (disposed2 || !isOpen()) return;
+      if (disposed2 || !isOpen() || drag) return;
       const next = target();
       if (!lastPosition || next.x !== lastPosition.x || next.y !== lastPosition.y) {
         lastPosition = next;
@@ -462,6 +570,8 @@
       header.removeAttribute("data-dragging");
       window2.removeEventListener("pointermove", move);
       window2.removeEventListener("pointerup", stop);
+      window2.removeEventListener("mousemove", move);
+      window2.removeEventListener("mouseup", stop);
       window2.removeEventListener("pointercancel", stop);
       window2.removeEventListener("blur", stop);
       if (old?.id !== void 0) {
@@ -479,7 +589,7 @@
       panel.moveTo?.(lastPosition.x, lastPosition.y);
     }
     function start2(event) {
-      if (disposed2 || !isOpen() || event.button !== 0 || event.isPrimary === false || event.target.closest("button,select,input,a")) return;
+      if (disposed2 || drag || !isOpen() || event.button !== 0 || event.isPrimary === false || event.target.closest("button,select,input,a")) return;
       event.preventDefault();
       stop();
       const rect = panel.getOuterScreenRect?.(), point = rect ? { x: rect.x, y: rect.y } : lastPosition || target();
@@ -489,8 +599,9 @@
         header.setPointerCapture?.(event.pointerId);
       } catch {
       }
-      window2.addEventListener("pointermove", move, { passive: false });
-      window2.addEventListener("pointerup", stop);
+      const mouse = event.type === "mousedown";
+      window2.addEventListener(mouse ? "mousemove" : "pointermove", move, { passive: false });
+      window2.addEventListener(mouse ? "mouseup" : "pointerup", stop);
       window2.addEventListener("pointercancel", stop);
       window2.addEventListener("blur", stop);
     }
@@ -509,6 +620,7 @@
       panel.moveTo?.(lastPosition.x, lastPosition.y);
     }
     header.addEventListener("pointerdown", start2);
+    header.addEventListener("mousedown", start2);
     header.addEventListener("lostpointercapture", stop);
     header.addEventListener("keydown", keyboard);
     panel.addEventListener("popupshown", fit);
@@ -526,6 +638,11 @@
         else panel.openPopup(window2.gBrowser.selectedBrowser, "overlap", 16, 16, false, false);
         fit();
       },
+      setPosition(x, y) {
+        manual = true;
+        lastPosition = clamp(x, y);
+        panel.moveTo?.(lastPosition.x, lastPosition.y);
+      },
       fit,
       stop,
       destroy() {
@@ -534,6 +651,7 @@
         disposed2 = true;
         observer2?.disconnect();
         header.removeEventListener("pointerdown", start2);
+        header.removeEventListener("mousedown", start2);
         header.removeEventListener("lostpointercapture", stop);
         header.removeEventListener("keydown", keyboard);
         panel.removeEventListener("popupshown", fit);
@@ -543,7 +661,9 @@
   }
 
   // project:src/popup.mjs
-  var hosts = ["en.wiktionary.org", "he.wiktionary.org", "dictionaryapi.dev", "www.merriam-webster.com", "creativecommons.org", "lexicala.com"];
+  var hosts = ["en.wiktionary.org", "he.wiktionary.org", "dictionaryapi.dev", "www.merriam-webster.com", "creativecommons.org", "lexicala.com", "hebrew-academy.org.il", "milog.co.il", "www.milog.co.il"];
+  var wordKey = (value) => String(value || "").normalize("NFC").trim().toLocaleLowerCase("en");
+  var displayWord2 = (value, language) => language === "en" ? String(value || "").toLocaleLowerCase("en").replace(new RegExp("(^|[\\s-])(\\p{L})", "gu"), (_m, space, letter) => space + letter.toLocaleUpperCase("en")) : String(value || "");
   var messages = { empty: "Enter an English or Hebrew word.", unsupported: "Enter an English or Hebrew word.", "too-long": "Enter a word or short phrase (up to 100 characters).", loading: "Looking up…", "no-result": "No definition found. Try a matching word below the search field.", "missing-key": "Add your dictionary API key in the mod’s Configure settings.", "credential-unavailable": "Credential storage is unavailable or locked. Unlock it and try again.", "unauthorized": "The dictionary rejected the API key. Check or replace it in Configure.", "access-denied": "Access was denied. Check that your key has an active subscription to this dictionary.", "rate-limit": "This dictionary’s request limit has been reached.", timeout: "The dictionary took too long to respond. Press Enter to retry, or choose another dictionary.", unavailable: "The dictionary is currently unavailable. Press Enter to retry, or choose another." };
   function createPopup(window2, callbacks) {
     const { document: document2 } = window2;
@@ -572,8 +692,8 @@
     provider.setAttribute("aria-label", "Dictionary");
     provider.title = "Dictionary for the language you type";
     bar.append(title, provider, closeButton);
-    const search = el("form");
-    search.className = "dw-search";
+    const search2 = el("form");
+    search2.className = "dw-search";
     const query = el("input");
     query.type = "text";
     query.maxLength = 100;
@@ -588,7 +708,7 @@
     query.setAttribute("aria-expanded", "false");
     const submit = el("button", "Search");
     submit.type = "submit";
-    search.append(query, submit);
+    search2.append(query, submit);
     const matches = el("div");
     matches.className = "dw-matches";
     matches.hidden = true;
@@ -605,38 +725,42 @@
     result.append(word, headword, status, senses);
     const footer = el("div");
     footer.className = "dw-footer";
-    const attribution = el("div"), source = el("button", "View dictionary entry"), settings = el("button", "Define Word settings");
-    source.type = settings.type = "button";
+    const attribution = el("div"), source = el("button", "View dictionary entry");
+    source.type = "button";
     source.dataset.source = "";
     source.hidden = true;
-    footer.append(attribution, source, settings);
+    footer.append(attribution, source);
     const shell = el("div");
     shell.className = "dw-shell";
-    const resizeBar = el("div");
-    resizeBar.className = "dw-resize-bar";
-    const resizeHandle = el("button");
-    resizeHandle.type = "button";
+    const handles = ["se", "s", "e", "n", "w", "nw", "ne", "sw"].map((edge) => {
+      const n = el("button");
+      n.type = "button";
+      n.dataset.resizeEdge = edge;
+      n.className = "dw-resize-edge";
+      n.tabIndex = edge === "se" ? 0 : -1;
+      n.setAttribute("aria-label", "Resize definition popup");
+      n.title = "Drag any edge or corner to resize. Arrow keys resize; Shift makes larger steps. Home or double-click resets.";
+      return n;
+    });
+    const resizeHandle = handles[0];
     resizeHandle.dataset.resize = "";
-    resizeHandle.setAttribute("aria-label", "Resize definition popup");
-    resizeHandle.title = "Drag to resize. Arrow keys resize; Shift makes larger steps. Home or double-click resets.";
-    resizeBar.append(resizeHandle);
-    box.append(bar, search, matches, result, footer);
-    shell.append(box, resizeBar);
+    box.append(bar, search2, matches, result, footer);
+    shell.append(box, ...handles);
     panel.append(shell);
     (document2.getElementById("mainPopupSet") || document2.documentElement).append(panel);
-    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates = [];
-    const resizer = createPopupResizer(window2, { panel, shell, handle: resizeHandle, isOpen: () => active, readSize: callbacks.readSize, onSizeChange: callbacks.onSizeChange });
+    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates2 = [];
     const positioner = createPopupPositioner(window2, { panel, shell, header: bar, isOpen: () => active });
+    const resizer = createPopupResizer(window2, { panel, shell, handle: resizeHandle, handles, isOpen: () => active, readSize: callbacks.readSize, onSizeChange: callbacks.onSizeChange, onPositionChange: positioner.setPosition });
     function clearMatches() {
       matches.hidden = true;
       list.replaceChildren();
-      candidates = [];
+      candidates2 = [];
       selected = -1;
       query.setAttribute("aria-expanded", "false");
       query.removeAttribute("aria-activedescendant");
     }
     function choose(word2) {
-      query.value = word2;
+      query.value = displayWord2(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
       clearMatches();
       callbacks.onSearch?.(word2);
       query.focus();
@@ -680,7 +804,6 @@
       return a;
     }
     closeButton.addEventListener("click", () => callbacks.onClose({ restoreFocus: true }));
-    settings.addEventListener("click", callbacks.onSettings);
     source.addEventListener("click", () => {
       if (sourceUrl) window2.openTrustedLinkIn(sourceUrl, "tab");
     });
@@ -689,21 +812,21 @@
       clearMatches();
       callbacks.onQueryInput?.(query.value);
     });
-    search.addEventListener("submit", (event) => {
+    search2.addEventListener("submit", (event) => {
       event.preventDefault();
       clearMatches();
       callbacks.onSearch?.(query.value);
     });
     query.addEventListener("keydown", (event) => {
-      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && candidates.length) {
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && candidates2.length) {
         event.preventDefault();
-        selected = selected < 0 ? event.key === "ArrowDown" ? 0 : candidates.length - 1 : (selected + (event.key === "ArrowDown" ? 1 : -1) + candidates.length) % candidates.length;
+        selected = selected < 0 ? event.key === "ArrowDown" ? 0 : candidates2.length - 1 : (selected + (event.key === "ArrowDown" ? 1 : -1) + candidates2.length) % candidates2.length;
         for (const [index, node] of [...list.children].entries()) node.setAttribute("aria-selected", String(index === selected));
         query.setAttribute("aria-activedescendant", list.children[selected].id);
         list.children[selected].scrollIntoView?.({ block: "nearest" });
       } else if (event.key === "Enter" && selected >= 0) {
         event.preventDefault();
-        choose(candidates[selected].word);
+        choose(candidates2[selected].word);
       } else if (event.key === "Escape" && !matches.hidden) {
         event.preventDefault();
         event.stopPropagation();
@@ -750,33 +873,40 @@
         matches.hidden = false;
         matchLabel.textContent = outcome.status === "ok" ? label : outcome.status === "timeout" ? "Suggestions timed out. Press Enter to retry." : outcome.status === "missing-key" ? "Add an API key in Configure to use this dictionary." : "Suggestions unavailable. You can still press Enter to look up a word.";
         if (outcome.status !== "ok") return;
-        candidates = (outcome.suggestions || []).slice(0, 8);
-        if (!candidates.length) {
+        const seen = /* @__PURE__ */ new Set();
+        candidates2 = (outcome.suggestions || []).filter((item) => {
+          const key = wordKey(item.word);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).slice(0, 8);
+        if (!candidates2.length) {
           matchLabel.textContent = "No matching words found.";
           return;
         }
         query.setAttribute("aria-expanded", "true");
-        for (const [index, item] of candidates.entries()) {
-          const li = el("li", item.word);
+        for (const [index, item] of candidates2.entries()) {
+          const li = el("li", displayWord2(item.word, item.language));
           li.id = `dw-match-${index}`;
           li.setAttribute("role", "option");
           li.setAttribute("aria-selected", "false");
           li.dir = item.language === "he" ? "rtl" : "ltr";
+          li.lang = item.language || "en";
           li.addEventListener("mousedown", (event) => event.preventDefault());
           li.addEventListener("click", () => choose(item.word));
           list.append(li);
         }
       },
       render({ term, providerId, providers: providers2, outcome, textSize }) {
-        if (outcome.status === "loading" || query.value !== term.original) {
-          query.value = term.original || "";
+        if (outcome.status === "loading" || wordKey(query.value) !== wordKey(term.original)) {
+          query.value = displayWord2(term.original, term.language);
           clearMatches();
         }
         setTextSize(textSize);
         chooseProviders(term, providerId, providers2);
         result.dir = term.language === "he" ? "rtl" : "ltr";
         result.lang = term.language || "en";
-        word.textContent = term.original || "Define";
+        word.textContent = displayWord2(term.original, term.language) || "Define";
         clearResult();
         status.textContent = messages[outcome.status] || "";
         status.dir = "ltr";
@@ -792,11 +922,11 @@
           const d = outcome.definition;
           result.dir = d.language === "he" ? "rtl" : "ltr";
           result.lang = d.language;
-          if (d.headword && d.headword !== term.original) {
+          if (d.headword && wordKey(d.headword) !== wordKey(term.original)) {
             headword.hidden = false;
-            headword.textContent = (d.language === "he" ? "ערך במילון: " : "Dictionary entry: ") + d.headword;
+            headword.textContent = (d.language === "he" ? "ערך במילון: " : "Dictionary entry: ") + displayWord2(d.headword, d.language);
           }
-          status.textContent = outcome.normalizedRetry ? term.language === "he" ? "נמצא ערך ללא ניקוד." : "Found the lowercase dictionary entry." : "";
+          status.textContent = outcome.normalizedRetry && term.language === "he" ? "נמצא ערך ללא ניקוד." : "";
           for (const sense of d.senses) {
             const li = el("li");
             if (sense.partOfSpeech) {
@@ -896,10 +1026,6 @@
         debounce = window2.setTimeout(() => {
           void suggest(term, providerId, token);
         }, 350);
-      },
-      onSettings() {
-        close();
-        deps.openSettings?.();
       }
     });
     updateAppearance();
@@ -984,7 +1110,10 @@
     }
     const command = () => {
       const context = window2.gContextMenu;
-      if (context && !context.onPassword) void define({ frameBrowsingContext: context.frameBrowsingContext, selectionInfo: { text: context.selectionInfo?.text || "" }, onPassword: context.onPassword });
+      if (!context || context.onPassword) return;
+      const point = context.contentData?.context, scale = window2.devicePixelRatio || 1;
+      const anchor = Number.isFinite(point?.screenXDevPx) && Number.isFinite(point?.screenYDevPx) ? { x: point.screenXDevPx / scale, y: point.screenYDevPx / scale, width: 1, height: 1 } : null;
+      void define({ frameBrowsingContext: context.frameBrowsingContext, selectionInfo: { text: context.selectionInfo?.text || "" }, onPassword: context.onPassword, anchor });
     };
     item.addEventListener("command", command);
     menu?.addEventListener("popupshowing", showing);
@@ -1078,7 +1207,7 @@
   // project:src/settings.mjs
   var PREF = "extension.define-word.";
   function readSettings(prefs) {
-    const english = prefs.getStringPref(`${PREF}english`, "wiktionary-en"), hebrew = prefs.getStringPref(`${PREF}hebrew`, "wiktionary-he");
+    const english = prefs.getStringPref(`${PREF}english`, "wiktionary-en"), hebrew = prefs.getStringPref(`${PREF}hebrew`, "academy-he");
     let shortcut2;
     try {
       const raw = prefs.getStringPref(`${PREF}shortcut`, JSON.stringify(DEFAULT_BINDING));
@@ -1087,7 +1216,7 @@
       shortcut2 = null;
     }
     const requestedSize = Number(prefs.getStringPref(`${PREF}text-size`, "14"));
-    return { englishProvider: providers.get(english)?.language === "en" ? english : "wiktionary-en", hebrewProvider: providers.get(hebrew)?.language === "he" ? hebrew : "wiktionary-he", shortcut: shortcut2, showIcon: prefs.getBoolPref?.(`${PREF}show-icon`, true) ?? true, textSize: [12, 14, 16, 18, 20, 24].includes(requestedSize) ? requestedSize : 14 };
+    return { englishProvider: providers.get(english)?.language === "en" ? english : "wiktionary-en", hebrewProvider: providers.get(hebrew)?.language === "he" ? hebrew : "academy-he", shortcut: shortcut2, showIcon: prefs.getBoolPref?.(`${PREF}show-icon`, true) ?? true, textSize: [12, 14, 16, 18, 20, 24].includes(requestedSize) ? requestedSize : 14 };
   }
   function createSettingsControls(window2, { prefs, credentials, onCredentialsChanged, browserWindow = () => window2 }) {
     const { document: document2 } = window2;
@@ -1162,44 +1291,115 @@
       }
     });
     root.append(el("h3", "Dictionary API keys"), el("p", "Wiktionary and Free Dictionary API need no key. For Merriam-Webster, register below, request Collegiate and Learner’s Dictionary keys, and verify your email. Each dictionary needs its own key. Keys are saved in Firefox credential storage."));
-    const inputs = [];
+    const keyControls = [];
     for (const id of ["mw-collegiate", "mw-learners", "lexicala-he"]) {
+      let conceal = function() {
+        input.type = "password";
+        reveal.setAttribute("aria-label", `Show ${providerLabel} API key`);
+        reveal.setAttribute("aria-pressed", "false");
+      }, commit = function() {
+        if (disposed2 || input.disabled || !loaded && !edited) return;
+        const key = input.value.trim();
+        if (key === pending || pending === void 0 && loaded && key === saved) return;
+        version++;
+        const request2 = ++requests;
+        pending = key;
+        status.textContent = "Saving…";
+        const stillCurrent = () => !disposed2 && !input.disabled && request2 === requests && input.value.trim() === key;
+        queue = queue.then(async () => {
+          try {
+            if (key) await credentials.set(id, key);
+            else await credentials.remove(id);
+            saved = key;
+            loaded = true;
+            onCredentialsChanged?.(id);
+            if (stillCurrent()) {
+              input.value = key;
+              edited = false;
+              status.textContent = key ? "Key saved." : "Key removed.";
+            }
+          } catch {
+            if (stillCurrent()) status.textContent = "Could not save the key. Check its value and unlock Firefox credential storage, then leave the field to retry.";
+          } finally {
+            if (request2 === requests) pending = void 0;
+          }
+        });
+      };
       const group = el("div");
       group.className = "dw-setting-row";
       root.append(group);
-      const row = el("label", providers.get(id).label + " API key"), input = el("input");
+      const providerLabel = providers.get(id).label, row = el("label", providerLabel + " API key"), input = el("input");
+      input.id = `dw-key-${id}`;
+      row.htmlFor = input.id;
       input.type = "password";
       input.autocomplete = "off";
       input.maxLength = 512;
-      input.placeholder = "Paste key to save or replace";
-      row.append(input);
+      input.placeholder = "Paste a key; clear to remove";
+      const keyField = el("div");
+      keyField.className = "dw-key-field";
+      row.append(keyField);
+      keyField.append(input);
       group.append(row);
-      inputs.push(input);
-      const buttons = el("div");
-      buttons.className = "dw-actions";
-      const set = el("button", "Save key"), remove = el("button", "Remove key");
-      set.type = remove.type = "button";
-      buttons.append(set, remove);
-      group.append(buttons);
-      async function change(action) {
-        set.disabled = remove.disabled = true;
+      const reveal = el("button");
+      reveal.type = "button";
+      reveal.className = "dw-key-reveal";
+      const eye = document2.createElementNS("http://www.w3.org/2000/svg", "svg");
+      eye.setAttribute("viewBox", "0 0 24 24");
+      eye.setAttribute("aria-hidden", "true");
+      for (const data of ["M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z", "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"]) {
+        const path = document2.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", data);
+        eye.append(path);
+      }
+      reveal.append(eye);
+      keyField.append(reveal);
+      const status = el("p");
+      status.dataset.keyStatus = id;
+      status.id = `dw-key-status-${id}`;
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      input.setAttribute("aria-describedby", status.id);
+      row.append(status);
+      conceal();
+      reveal.addEventListener("click", () => {
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        reveal.setAttribute("aria-label", `${show ? "Hide" : "Show"} ${providerLabel} API key`);
+        reveal.setAttribute("aria-pressed", String(show));
+      });
+      let queue = Promise.resolve(), saved = "", pending, version = 0, requests = 0, loaded = false, edited = false;
+      input.addEventListener("input", () => {
+        version++;
+        edited = true;
+        status.textContent = "Changes save when you leave this field.";
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+      async function refresh() {
+        conceal();
+        const current = ++version;
+        input.disabled = true;
+        status.textContent = "Loading saved key…";
         try {
-          await action();
-          input.value = "";
-          onCredentialsChanged?.(id);
-          if (!disposed2) error.textContent = "Dictionary key updated.";
+          await queue;
+          const key = await credentials.get(id);
+          if (disposed2 || current !== version) return;
+          saved = key || "";
+          input.value = saved;
+          loaded = true;
+          edited = false;
+          pending = void 0;
+          status.textContent = "";
         } catch {
-          if (!disposed2) error.textContent = "Could not update the key. Check the value and unlock Firefox credential storage, then try again.";
+          if (!disposed2 && current === version) {
+            loaded = false;
+            status.textContent = "Could not load the saved key. Unlock Firefox credential storage and reopen Configure, or enter a replacement key.";
+          }
         } finally {
-          set.disabled = remove.disabled = false;
+          if (!disposed2 && current === version) input.disabled = false;
         }
       }
-      set.addEventListener("click", () => {
-        const key = input.value;
-        input.value = "";
-        void change(() => credentials.set(id, key));
-      });
-      remove.addEventListener("click", () => change(() => credentials.remove(id)));
+      keyControls.push({ input, refresh, conceal });
     }
     const info = el("button", "Get a Merriam-Webster API key");
     info.type = "button";
@@ -1213,7 +1413,7 @@
     root.insertBefore(lexicalaInfo, error);
     root.insertBefore(el("p", "Lexicala Hebrew is a test integration. Subscribe to Lexicala on RapidAPI, save its X-RapidAPI-Key above, then select it as your Hebrew dictionary. It searches only when you submit a word; typing uses no quota. Check the provider’s current plan limits and display terms."), error);
     function reset() {
-      for (const input of inputs) input.value = "";
+      for (const control of keyControls) void control.refresh();
       recording = false;
       binding = readSettings(prefs).shortcut;
       field.value = bindingLabel(binding);
@@ -1223,7 +1423,10 @@
     reset();
     return { element: root, reset, destroy() {
       disposed2 = true;
-      for (const input of inputs) input.value = "";
+      for (const control of keyControls) {
+        control.conceal();
+        control.input.value = "";
+      }
       recording = false;
       root.remove();
     } };
@@ -1235,7 +1438,7 @@
     let controls, container, dialog, disposed2 = false;
     const style = document2.createElementNS("http://www.w3.org/1999/xhtml", "link");
     style.rel = "stylesheet";
-    style.href = "chrome://sine/content/define-word/style.css";
+    style.href = "chrome://sine/content/define-word/style.css?v=0.3.0";
     document2.documentElement.append(style);
     const reset = () => controls?.reset();
     function openRequestedDialog() {
@@ -1267,8 +1470,11 @@
       dialog?.addEventListener("close", reset);
       openRequestedDialog();
     }
-    const observer2 = new window2.MutationObserver(mount);
-    observer2.observe(document2.documentElement, { childList: true, subtree: true });
+    const observer2 = new window2.MutationObserver((records) => {
+      mount();
+      if (records.some((record) => record.type === "attributes" && record.target === dialog) && dialog?.open) controls?.reset();
+    });
+    observer2.observe(document2.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["open"] });
     mount();
     return { destroy() {
       if (disposed2) return;
@@ -1283,29 +1489,29 @@
   var ORIGIN = "https://define-word.invalid";
   var allowed = /* @__PURE__ */ new Set(["mw-collegiate", "mw-learners", "lexicala-he"]);
   function createCredentials(manager, createLogin) {
-    function check(provider) {
+    async function check(provider) {
       if (!allowed.has(provider)) throw new Error("Unsupported credential provider");
+      await manager.initializationPromise;
       if (!manager.isLoggedIn) throw new Error("credential-unavailable");
     }
-    function find(provider) {
-      check(provider);
-      return manager.findLogins(ORIGIN, null, `define-word:${provider}`);
+    async function find(provider) {
+      await check(provider);
+      return typeof manager.searchLoginsAsync === "function" ? manager.searchLoginsAsync({ origin: ORIGIN, httpRealm: `define-word:${provider}` }) : manager.findLogins(ORIGIN, null, `define-word:${provider}`);
     }
     return {
       async get(provider) {
         try {
-          return find(provider)[0]?.password || null;
+          return (await find(provider))[0]?.password || null;
         } catch {
           throw new Error("credential-unavailable");
         }
       },
       async set(provider, key) {
-        check(provider);
         if (typeof key !== "string" || !key.trim() || key.length > 512) throw new Error("Enter a valid API key.");
         try {
-          const existing = find(provider);
+          const existing = await find(provider);
           const login = createLogin({ origin: ORIGIN, formActionOrigin: null, httpRealm: `define-word:${provider}`, username: "api-key", password: key.trim(), usernameField: "", passwordField: "" });
-          if (existing.length) manager.modifyLogin(existing[0], login);
+          if (existing.length) await (manager.modifyLoginAsync ?? manager.modifyLogin).call(manager, existing[0], login);
           else await manager.addLoginAsync(login);
         } catch {
           throw new Error("credential-unavailable");
@@ -1313,7 +1519,7 @@
       },
       async remove(provider) {
         try {
-          for (const login of find(provider)) manager.removeLogin(login);
+          for (const login of await find(provider)) await (manager.removeLoginAsync ?? manager.removeLogin).call(manager, login);
         } catch {
           throw new Error("credential-unavailable");
         }
@@ -1363,7 +1569,7 @@
         });
         return;
       }
-      const { acquireSelectionService } = ChromeUtils.importESModule("chrome://sine/content/define-word/src/selection.sys.mjs");
+      const { acquireSelectionService } = ChromeUtils.importESModule("chrome://sine/content/define-word/src/selection.sys.mjs?v=0.3.0");
       selection = acquireSelectionService();
       const lookup = createLookupService({
         providers,
@@ -1389,9 +1595,6 @@
         },
         savePopupSize(size) {
           Services.prefs.setStringPref(`${PREF}popup-size`, size ? JSON.stringify(size) : "");
-        },
-        openSettings() {
-          window.openTrustedLinkIn("about:preferences?defineWordSettings=1#sineMods", "tab");
         }
       });
       shortcut = createShortcut(window, { binding: readSettings(Services.prefs).shortcut, onInvoke: () => {
