@@ -2,6 +2,18 @@
 
 Put Zen's Glance buttons where you want them. Choose their side, height, size and order, hide buttons you don't use, and copy the open Glance page's URL with the chain-link button.
 
+## In use
+
+All four buttons on the left, centred at 50%, at their normal size:
+
+![Glance Controls on the left with all four buttons centred vertically](screenshots/left-centred.png)
+
+On the right at 70%, with size set to 0.8, Copy URL moved to the top and Split hidden:
+
+![Glance Controls lower on the right, with smaller buttons and Copy URL first](screenshots/right-compact.png)
+
+Captured in Zen's Glance panel with an example page.
+
 ## Install
 
 With [Sine](https://github.com/CosmoCreeper/Sine) installed, paste this URL into **Settings → Sine Mods → Install from GitHub**:
@@ -15,13 +27,6 @@ Allow JavaScript mods in Sine and restart Zen once after installation. Disable o
 If you're updating from the old **Glance Button Position** repository or folder, switch to the URL above. Your saved settings use the same identifiers and carry over.
 
 ## Settings
-
-<details>
-<summary>Screenshot: settings in Sine</summary>
-
-![Settings in Sine](screenshots/settings.png)
-
-</details>
 
 Open **Glance Controls → Configure** in Sine. Changes apply immediately after the first restart.
 
