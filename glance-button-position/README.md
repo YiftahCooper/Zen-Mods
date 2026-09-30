@@ -1,4 +1,6 @@
-# Glance Button Position
+# Glance Controls
+
+Previously named **Glance Button Position**.
 
 A [Sine](https://github.com/CosmoCreeper/Sine) mod for Zen Browser. Choose the side, vertical position, size, order, and visibility of Glance's buttons, with an added button to copy the Glance page's URL.
 
@@ -20,9 +22,11 @@ Enable Sine's option to allow JavaScript mods for the copy button, ordering cont
 
 **Updating an existing installation:** use the mod's update button in Sine. If the new controls do not appear, restart Zen once and reopen the mod's configuration. Existing side, height, size, and visibility settings are preserved.
 
-## Moving from the standalone repository
+## Name and repository changes
 
-Version 0.4.1 moves this mod into the Zen Mods collection. Use the update button on your existing Glance Button Position entry in Sine, then restart Zen once. The transition update changes the update source to the folder above while keeping the same mod ID and preference names. Your side, height, size, order, and visibility settings are preserved.
+Version 0.4.2 renames the mod to **Glance Controls**. The internal ID, installation URL, and preference names remain unchanged. Existing settings carry over.
+
+Version 0.4.1 moved this mod into the Zen Mods collection. Use the update button on your existing Glance Button Position or Glance Controls entry in Sine, then restart Zen once. The transition update changes the update source to the folder above while keeping the same mod ID and preference names. Your side, height, size, order, and visibility settings are preserved.
 
 Future updates are published here. The old repository is retained only as a transition route. If it is unavailable, use the new folder URL when installing through Sine.
 

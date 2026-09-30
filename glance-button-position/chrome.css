@@ -66,7 +66,7 @@
     .zen-glance-sidebar-container > .glance-position-copy-url { display: none !important; }
   }
 
-  :root:has(#theme-Glance-Button-Position[glance-position-side="right"])
+  :root:has(.sine-theme-strings[glance-position-side="right"])
     .zen-glance-sidebar-container {
     left: 100% !important;
     right: auto !important;

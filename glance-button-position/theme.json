@@ -1,11 +1,11 @@
 {
   "id": "glance-button-position",
-  "name": "Glance Button Position",
-  "description": "Position, resize, reorder, and show or hide Zen's Glance buttons, with a Copy URL button.",
+  "name": "Glance Controls",
+  "description": "Customise Glance’s buttons: position, size, order, and visibility, plus a Copy URL button.",
   "homepage": "https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-button-position",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "createdAt": "2026-09-21",
-  "updatedAt": "2026-09-30T09:00:29Z",
+  "updatedAt": "2026-09-30T09:16:22Z",
   "style": {
     "chrome": "chrome.css"
   },

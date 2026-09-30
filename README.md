@@ -8,7 +8,7 @@ Each mod has its own settings, version, README, and license. Install only the mo
 
 | Mod | What it does | Install source |
 | --- | --- | --- |
-| [Glance Button Position](glance-button-position/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Button Position folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-button-position) |
+| [Glance Controls](glance-button-position/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-button-position) |
 
 ## Other mods
 
