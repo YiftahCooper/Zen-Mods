@@ -1,5 +1,6 @@
 [
   {"property":"extension.define-word.english","label":"English dictionary","type":"dropdown","defaultValue":"wiktionary-en","options":[{"label":"Wiktionary","value":"wiktionary-en"},{"label":"Free Dictionary API","value":"free-en"},{"label":"Merriam-Webster Collegiate (API key)","value":"mw-collegiate"},{"label":"Merriam-Webster Learner's (API key)","value":"mw-learners"}]},
-  {"property":"extension.define-word.hebrew","label":"Hebrew dictionary","type":"dropdown","defaultValue":"wiktionary-he","options":[{"label":"ויקימילון","value":"wiktionary-he"}]},
-  {"property":"extension.define-word.show-icon","label":"Show a dictionary icon next to Define in the right-click menu","type":"checkbox","defaultValue":true}
+  {"property":"extension.define-word.hebrew","label":"Hebrew dictionary","type":"dropdown","defaultValue":"wiktionary-he","options":[{"label":"ויקימילון","value":"wiktionary-he"},{"label":"Lexicala Hebrew (test · API key)","value":"lexicala-he"}]},
+  {"property":"extension.define-word.text-size","label":"Popup text size","type":"dropdown","defaultValue":"14","options":[{"label":"12 px","value":"12"},{"label":"14 px","value":"14"},{"label":"16 px","value":"16"},{"label":"18 px","value":"18"},{"label":"20 px","value":"20"},{"label":"24 px","value":"24"}]},
+  {"property":"extension.define-word.show-icon","label":"Show an icon next to Define in the right-click menu","type":"checkbox","defaultValue":true}
 ]

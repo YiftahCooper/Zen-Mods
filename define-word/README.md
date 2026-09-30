@@ -1,49 +1,53 @@
 # Define Word
 
-Look up selected English and Hebrew words without leaving the page. Select a word, then right-click **Define** or press **Ctrl+Alt+D**. The popup shows definitions, examples when available, and a link to the dictionary entry. Hebrew results use right-to-left text.
+Look up selected English and Hebrew words in a compact popup. Select a word, right-click **Define**, or press **Ctrl+Alt+D**. Edit the search field and press Enter to look up another word; the language is detected automatically. Change dictionaries with the top-right selector. Hebrew definitions use right-to-left text.
 
-## Install
+## Install or update
 
-With [Sine](https://github.com/CosmoCreeper/Sine) installed, paste this URL into its GitHub installation field:
+With [Sine](https://github.com/CosmoCreeper/Sine) installed, paste this folder URL into its GitHub installation field:
 
 ```text
 https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word
 ```
 
-Allow JavaScript mods in Sine. To update an installation from the old standalone repository, use Sine's update check or switch its source to this folder. Existing settings and saved dictionary keys are preserved.
+Allow JavaScript mods in Sine. Update an existing installation with Sine's update check. For the old standalone repository, update or switch its source to this folder. **Saved settings and dictionary keys survive mod updates.** Keys are stored in Firefox's credential manager, outside the mod files. The blank password fields are for saving or replacing keys; they do not reveal a saved key.
 
 ## Dictionaries
 
-| Language | Dictionary | API key |
+| Language | Dictionary | Setup |
 | --- | --- | --- |
-| English | Wiktionary — default | Not needed |
-| English | Free Dictionary API | Not needed |
-| English | Merriam-Webster Collegiate | Required |
-| English | Merriam-Webster Learner's | Required |
-| Hebrew | ויקימילון | Not needed |
+| English | Wiktionary (default) | No key |
+| English | Free Dictionary API | No key |
+| English | Merriam-Webster Collegiate | Personal API key |
+| English | Merriam-Webster Learner's | Separate personal API key |
+| Hebrew | ויקימילון (default) | No key |
+| Hebrew | Lexicala Hebrew (test) | Approved API access and RapidAPI key |
 
-Choose a dictionary in the popup or set your defaults in **Sine → Define Word → Configure**. The mod uses your selected dictionary; it doesn't switch providers when a lookup fails.
+Set defaults in **Sine → Define Word → Configure**. A failed lookup does not switch providers. Dictionary coverage varies, especially for Hebrew inflections. Wiktionary can retry without niqqud; English searches can retry lowercase. The popup labels a different dictionary headword. Requests time out after ten seconds and show an error instead of loading indefinitely.
 
-Merriam-Webster's two dictionaries need separate keys from [dictionaryapi.com](https://dictionaryapi.com/). Enter them in the matching fields under **Configure → Dictionary API keys**, then select **Save key**. Keys are stored in Firefox's credential manager.
+**Merriam-Webster:** [register for API keys](https://dictionaryapi.com/register/index), request Collegiate Dictionary and Learner’s Dictionary, and complete the required verification. Save each key in its matching masked field under **Configure → Dictionary API keys**. Then select that dictionary. The two products use separate keys.
 
-## Settings and use
+**Lexicala test:** obtain access through [Lexicala on RapidAPI](https://rapidapi.com/kdictionaries/api/lexicala1); provider approval may be required. Save its **X-RapidAPI-Key** in the Lexicala field, then select **Lexicala Hebrew (test)**. Try familiar words such as `מדריך`, `הבית`, `מחשב` and `טלפון` and check the displayed headword and meaning. These examples are test inputs, not verified coverage claims.
 
-<details>
-<summary>Screenshot: settings in Sine</summary>
+Lexicala uses its Global Hebrew monolingual resource. Each explicit lookup makes one request; typing makes none. Matching words come from that response, and selecting one costs another request. The candidate examines the first ten returned entries and shows up to eight alternatives. Broad morphology/stem matching may return related words or phrases; the displayed headword identifies the result. Definitions are not cached. [The advertised free plan](https://api.lexicala.com/plans/) allows 200 requests/month; confirm current limits and terms before subscribing. Published terms require prior consent for dictionary-product use or entry display. A free subscription alone does not establish that permission.
 
-![Settings in Sine](screenshots/settings.png)
+## Settings and popup
 
-</details>
+- **Search:** edit the prefilled word and press Enter or Search. Wiktionary offers autocomplete; Merriam-Webster offers spelling suggestions. Free Dictionary API and this Lexicala test do not request suggestions while typing. Use arrow keys and Enter to select a match.
+- **Text size:** choose 12–24 px in Configure. Headings, definitions and controls scale proportionally.
+- **Resize:** drag the bottom-right corner. There is no triangle icon; the resize cursor appears on hover. Width and height are remembered across sessions. With the corner focused, arrow keys resize, Shift makes larger steps, and Home or double-click resets.
+- **Position:** opens near the selected word, below or above it as space allows. Drag the header to move it, or focus the header and use arrow keys. Each new selection gets a fresh position. If selection geometry is unavailable, it opens beside the content area.
+- **Shortcut:** Record shortcut, press your combination, then Save shortcut. Disable shortcut followed by Save disables it. Some browser or OS shortcuts may conflict.
+- **Menu icon:** toggle the outlined open-book icon in Configure.
+- **Settings:** Define Word settings opens this mod's actual Sine Configure dialog.
+- **Close:** Escape, Close, changing tabs or navigating cancels pending lookups. Colors follow the browser theme.
 
-- **Shortcut:** choose **Record shortcut**, press your preferred combination, then **Save shortcut**. You can also disable it. Some browser or operating-system shortcuts may conflict.
-- **Menu icon:** show or hide the icon beside **Define**.
-- **Close:** press Escape or close the popup. Changing tabs or navigating also closes it.
-- **Settings:** the popup's Settings button opens the same Sine configuration page.
-
-Dictionary coverage varies, especially for Hebrew inflections. A missing entry is shown as such. If a pointed Hebrew word isn't found, the mod can retry without niqqud and label that result. Free Dictionary API may be unavailable; select another dictionary if it fails. Authenticated Merriam-Webster lookups have not yet been verified with a real key.
+Version **0.2.0** has automated provider, credential and simulated UI tests. Native Zen behavior and authenticated dictionary responses still need testing; Lexicala uses documentation-based synthetic response fixtures.
 
 ## Privacy
 
-A Define action sends the selected word to the dictionary you chose. Requests omit cookies and the page URL. The mod adds no persistent lookup history or telemetry, and it excludes selections from password fields. Optional API keys are sent only to the relevant Merriam-Webster API. Opening the source link visits the dictionary's website normally.
+Define and explicit searches send the word to the selected dictionary. Providers with autocomplete also receive edited queries after a short pause. Requests omit cookies and page URL/context, reject redirects, and time out. Password selections are excluded. No persistent lookup history or telemetry is added.
 
-Dictionary content and trademarks belong to their respective owners. [Merriam-Webster logo attribution](assets/README.md). [All mods](../README.md).
+Keys remain in Firefox credential storage. Merriam-Webster keys go only to its API; the Lexicala key goes in a header only to its RapidAPI search endpoint. Removing a key in Configure deletes that dictionary's saved credential. Uninstalling the mod does not automatically erase keys.
+
+Definitions render as text. **View dictionary entry** opens the original page when a safe entry URL is available; Lexicala currently provides an attribution link only. Dictionary content and trademarks retain their owners' rights. [Merriam-Webster attribution](assets/README.md). [All mods](../README.md).
