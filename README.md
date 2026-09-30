@@ -8,7 +8,7 @@ Each mod has its own settings, version, README, and license. Install only the mo
 
 | Mod | What it does | Install source |
 | --- | --- | --- |
-| [Glance Controls](glance-button-position/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-button-position) |
+| [Glance Controls](glance-controls/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-controls) |
 
 ## Other mods
 
@@ -34,7 +34,7 @@ These stay in their existing fork repositories so upstream history and contribut
 2. Open the mod's README and copy its **folder URL** into Sine's GitHub installation field. For example:
 
    ```text
-   https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-button-position
+   https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-controls
    ```
 
 3. Follow that mod's instructions, including any JavaScript permission or restart requirement.
