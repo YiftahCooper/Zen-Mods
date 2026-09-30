@@ -1,80 +1,49 @@
 # Define Word
 
-A Sine mod for Zen Browser that shows compact definitions for selected English and Hebrew words.
+Look up selected English and Hebrew words without leaving the page. Select a word, then right-click **Define** or press **Ctrl+Alt+D**. The popup shows definitions, examples when available, and a link to the dictionary entry. Hebrew results use right-to-left text.
 
-Select a word, right-click **Define**, or press **Ctrl+Alt+D**. The card includes definitions, examples when supplied, a dictionary selector and source attribution. Hebrew definitions use right-to-left layout. Configure the shortcut, optional API keys and menu icon in **Sine → Define Word → Configure**. The card's Settings button opens that same page.
+## Install
 
-**Version 0.1.2 moves the mod into the Zen Mods collection.** The settings and definition behavior are unchanged from 0.1.1. It passes 47 automated source/DOM/package tests, including migration and resource-path checks. Independent source review found no Critical or Important defect; its minor shortcut-status finding received a regression-tested fix. Native Zen/Sine behavior still needs user testing; publication is not a claim of native acceptance. See [verification](VERIFICATION.md).
-
-## Install with Sine
-
-In Sine's GitHub installation field, enter:
+With [Sine](https://github.com/CosmoCreeper/Sine) installed, paste this URL into its GitHub installation field:
 
 ```text
 https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word
 ```
 
-Install the mod and test it by selecting `computer` or `שלום` on a webpage. Sine has a live mod-loading path; this mod registers an unload handler so Sine can disable or reload it. A mandatory browser restart is not part of the installation instructions. If Define does not appear, report the Zen/Sine versions and the observed behavior rather than assuming installation succeeded.
-
-This is a custom JavaScript mod. It uses Sine's existing permission for JavaScript from outside its marketplace. If your Sine configuration blocks such scripts, the UI must permit them before this mod can load.
-
-To remove the mod, use Sine's normal disable/remove controls. Optional dictionary keys and mod preferences are not erased automatically.
-
-## Moving from the standalone repository
-
-Use the update check on your existing Define Word entry in Sine. The transition manifest changes the source to this folder while keeping the `define-word` mod ID, `extension.define-word.*` preferences and existing credential-storage identifiers. Future updates are published here.
-
-If the old source is unavailable, paste the folder URL above into Sine's GitHub installation field. Install this individual folder, not the Zen-Mods repository root. The migration does not require deleting your existing settings or dictionary keys. Actual installation and activation still need checking in Zen.
-
-[Browse all mods and linked forks](../README.md).
+Allow JavaScript mods in Sine. To update an installation from the old standalone repository, use Sine's update check or switch its source to this folder. Existing settings and saved dictionary keys are preserved.
 
 ## Dictionaries
 
-| Language | Dictionary | Setup |
-|---|---|---|
-| English | Wiktionary (default) | No key |
-| English | Free Dictionary API | No key |
-| English | Merriam-Webster's Collegiate® Dictionary | Personal API key |
-| English | Merriam-Webster's Learner's Dictionary | Separate personal API key |
-| Hebrew | ויקימילון | No key |
+| Language | Dictionary | API key |
+| --- | --- | --- |
+| English | Wiktionary — default | Not needed |
+| English | Free Dictionary API | Not needed |
+| English | Merriam-Webster Collegiate | Required |
+| English | Merriam-Webster Learner's | Required |
+| Hebrew | ויקימילון | Not needed |
 
-Wiktionary's English and Hebrew endpoints returned usable responses during development. Free Dictionary API returned HTTP 522 during that check, so it remains selectable but is not the initial default. There is no automatic switch to a different dictionary when a lookup fails.
+Choose a dictionary in the popup or set your defaults in **Sine → Define Word → Configure**. The mod uses your selected dictionary; it doesn't switch providers when a lookup fails.
 
-Obtain optional Merriam-Webster keys from [the official developer site](https://dictionaryapi.com/) and enter them in **Sine → Define Word → Configure → Dictionary API keys**. Each dictionary has a masked field and Save key / Remove key buttons. Its API terms and quotas apply. Authenticated Merriam-Webster requests have not yet been verified with a user key.
+Merriam-Webster's two dictionaries need separate keys from [dictionaryapi.com](https://dictionaryapi.com/). Enter them in the matching fields under **Configure → Dictionary API keys**, then select **Save key**. Keys are stored in Firefox's credential manager.
 
-Hebrew coverage is currently limited to ויקימילון. Even common words and inflected forms may have no entry. On 2026-09-29, the provider returned no entry for `מדריך`, while `מחשב` and `שלום` returned definitions. The mod does not invent a definition or substitute a different word. A failed pointed-Hebrew lookup can retry once without niqqud; the card labels that result and keeps the originally selected spelling. Milog, Rav-Milim, Cambridge and Oxford are not listed as supported because a suitable compact-card integration has not been established.
+## Settings and use
 
-## Settings and behavior
+<details>
+<summary>Screenshot: settings in Sine</summary>
 
-- Choose a preferred dictionary per language in Sine's mod settings or in the card.
-- In **Sine → Define Word → Configure**, choose **Record shortcut**, press the desired key combination, then choose **Save shortcut**. To disable it, choose **Disable shortcut**, then **Save shortcut**.
-- Optional API keys are entered in that same Configure dialog. Keys use Firefox's credential storage, not ordinary mod preferences.
-- **Show a dictionary icon next to Define** toggles the right-click menu icon.
-- The popup inherits browser popup colors and color scheme; Configure controls inherit the preferences-page theme.
-- Shortcut matching uses the physical key so it can work across English/Hebrew layouts. Known native browser-key conflicts leave the shortcut inactive. OS shortcuts and dynamically registered extension shortcuts cannot all be detected.
-- The card opens at a fixed inset beside the content area, approximately 440 CSS pixels wide. Positioning beside the selected word is not implemented yet.
-- Closing the card, changing tabs, navigating, starting another lookup or unloading cancels outstanding work and rejects stale results. Changing a key in the mod's Settings also cancels that dictionary's work in other active windows.
-- Translation and embedded dictionary websites are outside this mod's scope.
+![Settings in Sine](screenshots/settings.png)
+
+</details>
+
+- **Shortcut:** choose **Record shortcut**, press your preferred combination, then **Save shortcut**. You can also disable it. Some browser or operating-system shortcuts may conflict.
+- **Menu icon:** show or hide the icon beside **Define**.
+- **Close:** press Escape or close the popup. Changing tabs or navigating also closes it.
+- **Settings:** the popup's Settings button opens the same Sine configuration page.
+
+Dictionary coverage varies, especially for Hebrew inflections. A missing entry is shown as such. If a pointed Hebrew word isn't found, the mod can retry without niqqud and label that result. Free Dictionary API may be unavailable; select another dictionary if it fails. Authenticated Merriam-Webster lookups have not yet been verified with a real key.
 
 ## Privacy
 
-Only an explicit Define action sends the selected text to the chosen dictionary. Requests omit cookies and page URL/context, reject redirects and time out after ten seconds. No persistent lookup history, telemetry or background lookups are added. Password selections are excluded.
+A Define action sends the selected word to the dictionary you chose. Requests omit cookies and the page URL. The mod adds no persistent lookup history or telemetry, and it excludes selections from password fields. Optional API keys are sent only to the relevant Merriam-Webster API. Opening the source link visits the dictionary's website normally.
 
-Definitions render as text. Wikimedia HTML is parsed separately and never inserted into browser chrome. **Open source** opens a normal HTTPS tab; that website then operates as an ordinary website. API keys, when needed, are sent to the relevant Merriam-Webster API.
-
-## Development
-
-```sh
-npm ci --ignore-scripts
-npm run build
-npm test
-npm run check
-```
-
-The window entry is bundled with esbuild. Edit `src/`, then regenerate `define-word.uc.js`. Selection-service and actor modules stay external because Firefox loads them as system modules. The mod registers only the generated window entry; tests and development files are not executable mod entries.
-
-The Merriam-Webster logo is an unmodified official attribution asset; see [its provenance](assets/README.md). Dictionary content and trademarks retain their respective owners' rights.
-
-## Initial native test
-
-Use an ordinary webpage or [the included test page](tests/native/words.html). Check one menu entry, English and Hebrew results, the shortcut in both keyboard layouts, Close/Escape, and disabling/re-enabling through Sine. More detailed unchecked cases are in [VERIFICATION.md](VERIFICATION.md).
+Dictionary content and trademarks belong to their respective owners. [Merriam-Webster logo attribution](assets/README.md). [All mods](../README.md).

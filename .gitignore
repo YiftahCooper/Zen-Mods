@@ -1,7 +1,5 @@
 artifacts/
 tests/
+node_modules/
 __pycache__/
 *.zip
-
-!define-word/tests/
-!define-word/tests/**

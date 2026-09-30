@@ -1,5 +1,3 @@
-// Define Word 0.1.2 â€” generated from src/entry.js; run node build.mjs.
-// Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
   function failure(code) {
