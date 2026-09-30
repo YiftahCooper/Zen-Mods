@@ -2,3 +2,6 @@ artifacts/
 tests/
 __pycache__/
 *.zip
+
+!define-word/tests/
+!define-word/tests/**

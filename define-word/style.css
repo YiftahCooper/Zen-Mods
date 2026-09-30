@@ -1,0 +1,27 @@
+#define-word-panel { --panel-padding: 0; max-width: calc(100vw - 32px); }
+#define-word-panel .dw-card, .dw-settings { box-sizing: border-box; font: menu; color: var(--arrowpanel-color, CanvasText); background: var(--arrowpanel-background, Canvas); color-scheme: inherit; }
+#define-word-panel .dw-card { width: 440px; max-width: calc(100vw - 48px); max-height: min(620px,75vh); overflow: auto; padding: 16px; }
+#define-word-panel .dw-bar, #define-word-panel .dw-footer { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+#define-word-panel .dw-bar { justify-content: space-between; }
+#define-word-panel .dw-choices { display: flex; gap: 12px; margin-block: 16px; flex-wrap: wrap; }
+#define-word-panel label { display: grid; gap: 5px; min-width: 0; flex: 1; }
+#define-word-panel select { max-width: 100%; min-width: 0; }
+#define-word-panel button, #define-word-panel select, .dw-settings button, .dw-settings input, .dw-settings select { font: inherit; padding: 7px 10px; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 7px; background: color-mix(in srgb, currentColor 8%, transparent); color: inherit; }
+#define-word-panel h2 { font-size: 26px; margin-block: 12px; overflow-wrap: anywhere; }
+#define-word-panel li { margin-block: 14px; overflow-wrap: anywhere; }
+#define-word-panel li p { margin-block: 4px; line-height: 1.5; }
+#define-word-panel blockquote { margin: 8px 0; padding-inline-start: 12px; border-inline-start: 3px solid color-mix(in srgb, currentColor 45%, transparent); }
+#define-word-panel .dw-part { font-size: .9em; opacity: .8; }
+#define-word-panel .dw-footer { border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); padding-top: 12px; }
+#define-word-panel .dw-footer > div { width: 100%; }
+#define-word-panel .dw-source-link { border: 0; padding: 3px; background: transparent; text-decoration: underline; }
+#define-word-panel [hidden], .dw-settings [hidden] { display: none !important; }
+.dw-settings { color: inherit; background: transparent; width: 100%; margin-block-start: 16px; padding-block-start: 8px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.dw-settings label { display: grid; gap: 5px; margin-block: 14px; }
+.dw-settings input { min-width: 0; width: 100%; box-sizing: border-box; }
+.dw-settings .dw-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 10px; }
+
+#define-word-menu.menuitem-iconic { -moz-context-properties: fill, fill-opacity; fill: currentColor; }
+#define-word-menu.menuitem-iconic > .menu-iconic-left { display: flex !important; visibility: visible !important; }
+.dw-settings h3 { margin-block: 18px 8px; }
+.dw-settings p { line-height: 1.5; }

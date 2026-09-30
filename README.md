@@ -9,14 +9,7 @@ Each mod has its own settings, version, README, and license. Install only the mo
 | Mod | What it does | Install source |
 | --- | --- | --- |
 | [Glance Controls](glance-controls/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-controls) |
-
-## Other mods
-
-These currently live in separate repositories. Follow each repository's installation instructions.
-
-| Mod | Repository |
-| --- | --- |
-| Define Word | [YiftahCooper/zen-Define-Word](https://github.com/YiftahCooper/zen-Define-Word) |
+| [Define Word](define-word/) | Compact English and Hebrew definitions, configurable dictionaries and a keyboard shortcut. | [Define Word folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word) |
 
 ## Forks
 
