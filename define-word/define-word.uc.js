@@ -1,4 +1,4 @@
-// Define Word 0.3.0 â€” generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.1 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
@@ -83,6 +83,19 @@
     return parseFreeDictionary(await requestJson(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(options.query)}`, options), options.query);
   } };
 
+  // project:src/normalize.mjs
+  function normalizeTerm(rawText) {
+    const original = typeof rawText === "string" ? rawText.trim() : "";
+    if (!original) return { status: "empty" };
+    if ([...original].length > 100) return { status: "too-long" };
+    const query = original.normalize("NFC").replace(/^[\p{P}\p{Z}\s]+|[\p{P}\p{Z}\s]+$/gu, "");
+    if (!query) return { status: "empty" };
+    const letters = [...query].filter((c) => new RegExp("\\p{L}", "u").test(c));
+    const language = letters.length && letters.every((c) => new RegExp("\\p{Script=Hebrew}", "u").test(c)) ? "he" : letters.length && letters.every((c) => new RegExp("\\p{Script=Latin}", "u").test(c)) ? "en" : null;
+    const without = query.replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/g, "");
+    return { original, query, language, withoutNiqqud: language === "he" && without !== query ? without : null };
+  }
+
   // project:src/providers/wiktionary.mjs
   var parts = /^(noun|verb|adjective|adverb|pronoun|preposition|conjunction|interjection|determiner|article|numeral|proper noun|participle|phrase|proverb|contraction|prefix|suffix|symbol|letter)(?:\s+\d+)?$/i;
   function plain(node) {
@@ -121,8 +134,32 @@
     const sourceUrl = `https://${language}.wiktionary.org/wiki/${encodeURIComponent(query)}`;
     return { headword: query, language, senses: senses.slice(0, 20), sourceUrl, attribution: { label: language === "he" ? "ויקימילון" : "Wiktionary", url: sourceUrl, licenseLabel: "CC BY-SA 4.0 · adapted excerpt", licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/" } };
   }
+  async function englishSuggestions(options) {
+    const query = options.query;
+    const filter = " incategory:English_lemmas";
+    const params = new URLSearchParams({ action: "query", list: "prefixsearch|search", pssearch: query, psnamespace: "0", pslimit: "16", srsearch: `intitle:${query}${filter}`, srnamespace: "0", srlimit: "8", srprop: "", srinfo: "suggestion", format: "json", formatversion: "2" });
+    const data = await requestJson(`https://en.wiktionary.org/w/api.php?${params}`, options);
+    if (data?.error?.code === "ratelimited") throw failure("rate-limit");
+    if (!data?.query || data.error) throw failure("unavailable");
+    const suggestion = text(data.query.searchinfo?.suggestion);
+    const correction = suggestion.startsWith("intitle:") && suggestion.endsWith(filter) ? suggestion.slice(8, -filter.length) : "";
+    const matches = [...data.query.prefixsearch || [], ...data.query.search || []].filter((p) => p.ns === 0).map((p) => text(p.title));
+    const words = [.../* @__PURE__ */ new Set([correction, query, ...matches])].filter((word) => {
+      const normalized = normalizeTerm(word);
+      return word && !normalized.status && normalized.language === "en" && !/[|:#<>]/.test(word);
+    }).slice(0, 26);
+    if (!words.length) return [];
+    const categories = ["Category:English lemmas", "Category:English non-lemma forms"];
+    const verification = new URLSearchParams({ action: "query", prop: "categories", titles: words.join("|"), clcategories: categories.join("|"), cllimit: "max", format: "json", formatversion: "2" });
+    const checked = await requestJson(`https://en.wiktionary.org/w/api.php?${verification}`, options);
+    if (checked?.error?.code === "ratelimited") throw failure("rate-limit");
+    if (!Array.isArray(checked?.query?.pages) || checked.error) throw failure("unavailable");
+    const english = new Set(checked.query.pages.filter((p) => p.ns === 0 && !p.missing && !p.invalid && p.categories?.some((c) => categories.includes(c.title))).map((p) => p.title));
+    return words.filter((word) => english.has(word)).slice(0, 8).map((word) => ({ word, language: "en" }));
+  }
   function wiktionary(language) {
-    return { id: `wiktionary-${language}`, label: language === "he" ? "ויקימילון" : "Wiktionary", language, keyRequired: false, suggestionsLabel: "Search suggestions", async suggest(options) {
+    return { id: `wiktionary-${language}`, label: language === "he" ? "ויקימילון" : "Wiktionary", language, keyRequired: false, suggestionsLabel: language === "en" ? "English headword suggestions" : "Search suggestions", async suggest(options) {
+      if (language === "en") return englishSuggestions(options);
       const query = options.query.replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/g, "");
       const params = new URLSearchParams({ action: "query", list: "prefixsearch|search", pssearch: query, psnamespace: "0", pslimit: "8", srsearch: query, srnamespace: "0", srlimit: "8", srprop: "", format: "json", formatversion: "2" });
       if (language === "he" && /^ה[\p{Script=Hebrew}]{2,}$/u.test(query)) params.set("titles", query.slice(1));
@@ -169,10 +206,11 @@
   }
   function merriamWebster(kind) {
     const id = `mw-${kind}`;
-    return { id, label: kind === "learners" ? "Merriam-Webster Learner's" : "Merriam-Webster Collegiate", language: "en", keyRequired: true, suggestionsLabel: "Spelling suggestions", async suggest(options) {
+    return { id, label: kind === "learners" ? "Merriam-Webster Learner's" : "Merriam-Webster Collegiate", language: "en", keyRequired: true, suggestionsLabel: "Matching words", async suggest(options) {
       const data = await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options);
       if (!Array.isArray(data)) return [];
-      return [...new Set(data.filter((item) => typeof item === "string").map(text).filter(Boolean))].slice(0, 8).map((word) => ({ word, language: "en" }));
+      const words = data.map((item) => typeof item === "string" ? text(item) : text(item?.hwi?.hw).replace(/\*/g, "") || text(item?.meta?.id).replace(/:\d+$/, ""));
+      return [...new Set(words.filter(Boolean))].slice(0, 8).map((word) => ({ word, language: "en" }));
     }, async lookup(options) {
       return parseMerriamWebster(await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options), options.query, id);
     } };
@@ -301,19 +339,6 @@
   // project:src/providers/registry.mjs
   var providers = new Map([freeDictionary, wiktionary("en"), wiktionary("he"), merriamWebster("collegiate"), merriamWebster("learners"), lexicalaHebrew, academyHebrew, milogHebrew].map((p) => [p.id, p]));
 
-  // project:src/normalize.mjs
-  function normalizeTerm(rawText) {
-    const original = typeof rawText === "string" ? rawText.trim() : "";
-    if (!original) return { status: "empty" };
-    if ([...original].length > 100) return { status: "too-long" };
-    const query = original.normalize("NFC").replace(/^[\p{P}\p{Z}\s]+|[\p{P}\p{Z}\s]+$/gu, "");
-    if (!query) return { status: "empty" };
-    const letters = [...query].filter((c) => new RegExp("\\p{L}", "u").test(c));
-    const language = letters.length && letters.every((c) => new RegExp("\\p{Script=Hebrew}", "u").test(c)) ? "he" : letters.length && letters.every((c) => new RegExp("\\p{Script=Latin}", "u").test(c)) ? "en" : null;
-    const without = query.replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/g, "");
-    return { original, query, language, withoutNiqqud: language === "he" && without !== query ? without : null };
-  }
-
   // project:src/lookup.mjs
   function createLookupService({ providers: providers2, credentials, fetch = globalThis.fetch, parseDocument, timers = globalThis }) {
     async function run({ term, providerId, signal }, operation) {
@@ -381,20 +406,25 @@
   function createPopupResizer(window2, { panel, shell, handle, handles = [handle], isOpen, readSize, onSizeChange, onPositionChange }) {
     let drag = null, manual = null, disposed2 = false;
     function geometry() {
-      const content = shell.getBoundingClientRect(), outer = panel.getBoundingClientRect();
-      return { content, frameWidth: Math.max(0, outer.width - content.width), frameHeight: Math.max(0, outer.height - content.height) };
+      const content = shell.getBoundingClientRect();
+      let frameWidth = 0, frameHeight = 0;
+      for (const node of [panel, panel.panelContent].filter(Boolean)) {
+        const css = window2.getComputedStyle(node), px = (name) => parseFloat(css[name]) || 0;
+        frameWidth += px("paddingLeft") + px("paddingRight") + px("borderLeftWidth") + px("borderRightWidth");
+        frameHeight += px("paddingTop") + px("paddingBottom") + px("borderTopWidth") + px("borderBottomWidth");
+      }
+      return { content, frameWidth, frameHeight };
     }
     function apply(width, height, preparing = false, at = null) {
       if (disposed2) return;
       const { content, frameWidth, frameHeight } = geometry();
       const left = at?.left ?? content.left, top = at?.top ?? content.top;
       const maxWidth = Math.max(1, Math.min(window2.innerWidth - 48, preparing ? Infinity : window2.innerWidth - Math.max(0, left) - frameWidth - 12));
-      const maxHeight = Math.max(1, Math.min(window2.innerHeight - 32, preparing ? Infinity : window2.innerHeight - Math.max(0, top) - frameHeight - 12));
+      const maxHeight = Math.max(1, Math.min(window2.innerHeight - 32, parseFloat(shell.style.maxHeight) || Infinity, preparing ? Infinity : window2.innerHeight - Math.max(0, top) - frameHeight - 12));
       manual = { width: Math.round(Math.min(maxWidth, Math.max(320, width))), height: Math.round(Math.min(maxHeight, Math.max(200, height))) };
       shell.dataset.resized = "";
       shell.style.width = `${manual.width}px`;
       shell.style.height = `${manual.height}px`;
-      panel.sizeTo?.(Math.round(manual.width + frameWidth), Math.round(manual.height + frameHeight));
     }
     function stop() {
       const previous = drag;
@@ -426,6 +456,10 @@
       if (disposed2 || drag || !isOpen() || event.button !== 0 || event.isPrimary === false) return;
       event.preventDefault();
       const { content } = geometry(), outer = panel.getOuterScreenRect?.();
+      shell.style.width = `${content.width}px`;
+      shell.style.height = `${content.height}px`;
+      shell.dataset.resized = "";
+      shell.style.maxHeight = `${Math.max(1, window2.innerHeight - 32)}px`;
       const screen = !!outer, target = event.currentTarget;
       drag = {
         x: screen ? event.screenX : event.clientX,
@@ -468,9 +502,17 @@
       clear();
       onSizeChange?.(null);
     }
-    function prepare() {
+    function prepare(anchor) {
+      panel.removeAttribute("width");
+      panel.removeAttribute("height");
+      panel.style.removeProperty("width");
+      panel.style.removeProperty("height");
+      const origin = window2.mozInnerScreenY || 0;
+      const valid = anchor && Number.isFinite(anchor.y) && Number.isFinite(anchor.height) && anchor.height > 0;
+      const available = valid ? Math.max(anchor.y - origin - 20, origin + window2.innerHeight - anchor.y - anchor.height - 20) : window2.innerHeight - 32;
+      shell.style.maxHeight = `${Math.max(1, Math.min(window2.innerHeight - 32, available - geometry().frameHeight))}px`;
       const saved = readSize ? readSize() : manual;
-      if (saved && Number.isFinite(saved.width) && Number.isFinite(saved.height) && saved.width >= 200 && saved.height >= 120 && saved.width <= 1e4 && saved.height <= 1e4) apply(saved.width, saved.height, true);
+      if (saved && Number.isFinite(saved.width) && Number.isFinite(saved.height) && saved.width >= 200 && saved.height >= 120 && saved.width <= 1e4 && saved.height <= 1e4) apply(saved.width, Math.min(saved.height, parseFloat(shell.style.maxHeight)), true);
       else clear();
     }
     function keyboard(event) {
@@ -491,6 +533,7 @@
       if (!delta) return;
       event.preventDefault();
       const { content } = geometry();
+      shell.style.maxHeight = `${Math.max(1, window2.innerHeight - 32)}px`;
       apply(content.width + delta[0], content.height + delta[1]);
       onSizeChange?.({ ...manual });
     }
@@ -498,7 +541,10 @@
       if (manual && isOpen() && !drag) apply(manual.width, manual.height);
     }
     const windowResized = (event) => {
-      if (event.target === window2) fit();
+      if (event.target === window2) {
+        shell.style.maxHeight = `${Math.max(1, Math.min(parseFloat(shell.style.maxHeight) || Infinity, window2.innerHeight - 32))}px`;
+        fit();
+      }
     };
     function keyboardFocus(event) {
       event.currentTarget.removeAttribute("data-pointer-focus");
@@ -660,490 +706,6 @@
     };
   }
 
-  // project:src/popup.mjs
-  var hosts = ["en.wiktionary.org", "he.wiktionary.org", "dictionaryapi.dev", "www.merriam-webster.com", "creativecommons.org", "lexicala.com", "hebrew-academy.org.il", "milog.co.il", "www.milog.co.il"];
-  var wordKey = (value) => String(value || "").normalize("NFC").trim().toLocaleLowerCase("en");
-  var displayWord2 = (value, language) => language === "en" ? String(value || "").toLocaleLowerCase("en").replace(new RegExp("(^|[\\s-])(\\p{L})", "gu"), (_m, space, letter) => space + letter.toLocaleUpperCase("en")) : String(value || "");
-  var messages = { empty: "Enter an English or Hebrew word.", unsupported: "Enter an English or Hebrew word.", "too-long": "Enter a word or short phrase (up to 100 characters).", loading: "Looking up…", "no-result": "No definition found. Try a matching word below the search field.", "missing-key": "Add your dictionary API key in the mod’s Configure settings.", "credential-unavailable": "Credential storage is unavailable or locked. Unlock it and try again.", "unauthorized": "The dictionary rejected the API key. Check or replace it in Configure.", "access-denied": "Access was denied. Check that your key has an active subscription to this dictionary.", "rate-limit": "This dictionary’s request limit has been reached.", timeout: "The dictionary took too long to respond. Press Enter to retry, or choose another dictionary.", unavailable: "The dictionary is currently unavailable. Press Enter to retry, or choose another." };
-  function createPopup(window2, callbacks) {
-    const { document: document2 } = window2;
-    const el = (tag, value) => {
-      const n = document2.createElementNS("http://www.w3.org/1999/xhtml", tag);
-      if (value !== void 0) n.textContent = value;
-      return n;
-    };
-    const panel = document2.createXULElement("panel");
-    panel.id = "define-word-panel";
-    panel.setAttribute("type", "arrow");
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "Word definition");
-    panel.setAttribute("orient", "vertical");
-    const box = el("div");
-    box.className = "dw-card";
-    const bar = el("div");
-    bar.className = "dw-bar";
-    bar.tabIndex = 0;
-    bar.setAttribute("aria-label", "Move definition popup");
-    bar.title = "Drag to move. When the header is focused, arrow keys move the popup.";
-    const title = el("strong", "Define"), closeButton = el("button", "×");
-    closeButton.type = "button";
-    closeButton.setAttribute("aria-label", "Close definition");
-    const provider = el("select");
-    provider.setAttribute("aria-label", "Dictionary");
-    provider.title = "Dictionary for the language you type";
-    bar.append(title, provider, closeButton);
-    const search2 = el("form");
-    search2.className = "dw-search";
-    const query = el("input");
-    query.type = "text";
-    query.maxLength = 100;
-    query.dir = "auto";
-    query.autocomplete = "off";
-    query.spellcheck = false;
-    query.placeholder = "Search English or Hebrew";
-    query.setAttribute("aria-label", "Word to define in English or Hebrew");
-    query.setAttribute("role", "combobox");
-    query.setAttribute("aria-autocomplete", "list");
-    query.setAttribute("aria-controls", "dw-matches");
-    query.setAttribute("aria-expanded", "false");
-    const submit = el("button", "Search");
-    submit.type = "submit";
-    search2.append(query, submit);
-    const matches = el("div");
-    matches.className = "dw-matches";
-    matches.hidden = true;
-    const matchLabel = el("p"), list = el("ul");
-    list.id = "dw-matches";
-    list.setAttribute("role", "listbox");
-    list.setAttribute("aria-label", "Matching dictionary words");
-    matches.append(matchLabel, list);
-    const result = el("div");
-    result.dataset.result = "";
-    result.setAttribute("aria-live", "polite");
-    const word = el("h2"), headword = el("p"), status = el("p"), senses = el("ol");
-    headword.dataset.headword = "";
-    result.append(word, headword, status, senses);
-    const footer = el("div");
-    footer.className = "dw-footer";
-    const attribution = el("div"), source = el("button", "View dictionary entry");
-    source.type = "button";
-    source.dataset.source = "";
-    source.hidden = true;
-    footer.append(attribution, source);
-    const shell = el("div");
-    shell.className = "dw-shell";
-    const handles = ["se", "s", "e", "n", "w", "nw", "ne", "sw"].map((edge) => {
-      const n = el("button");
-      n.type = "button";
-      n.dataset.resizeEdge = edge;
-      n.className = "dw-resize-edge";
-      n.tabIndex = edge === "se" ? 0 : -1;
-      n.setAttribute("aria-label", "Resize definition popup");
-      n.title = "Drag any edge or corner to resize. Arrow keys resize; Shift makes larger steps. Home or double-click resets.";
-      return n;
-    });
-    const resizeHandle = handles[0];
-    resizeHandle.dataset.resize = "";
-    box.append(bar, search2, matches, result, footer);
-    shell.append(box, ...handles);
-    panel.append(shell);
-    (document2.getElementById("mainPopupSet") || document2.documentElement).append(panel);
-    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates2 = [];
-    const positioner = createPopupPositioner(window2, { panel, shell, header: bar, isOpen: () => active });
-    const resizer = createPopupResizer(window2, { panel, shell, handle: resizeHandle, handles, isOpen: () => active, readSize: callbacks.readSize, onSizeChange: callbacks.onSizeChange, onPositionChange: positioner.setPosition });
-    function clearMatches() {
-      matches.hidden = true;
-      list.replaceChildren();
-      candidates2 = [];
-      selected = -1;
-      query.setAttribute("aria-expanded", "false");
-      query.removeAttribute("aria-activedescendant");
-    }
-    function choose(word2) {
-      query.value = displayWord2(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
-      clearMatches();
-      callbacks.onSearch?.(word2);
-      query.focus();
-    }
-    function setTextSize(size = 14) {
-      box.style.setProperty("--dw-text-size", `${[12, 14, 16, 18, 20, 24].includes(Number(size)) ? Number(size) : 14}px`);
-    }
-    function chooseProviders(term, providerId, providers2) {
-      provider.replaceChildren();
-      for (const p of providers2) {
-        const option = el("option", p.label + (p.keyRequired ? " · API key" : ""));
-        option.value = p.id;
-        provider.append(option);
-      }
-      provider.value = providerId;
-      provider.disabled = !providers2.length;
-    }
-    function clearResult() {
-      headword.textContent = "";
-      headword.hidden = true;
-      senses.replaceChildren();
-      attribution.replaceChildren();
-      sourceUrl = null;
-      source.hidden = true;
-    }
-    function close({ restoreFocus = false } = {}) {
-      resizer.stop();
-      positioner.stop();
-      if (!active) return;
-      active = false;
-      panel.hidePopup();
-      if (restoreFocus && originBrowser === window2.gBrowser.selectedBrowser && origin?.isConnected) origin.focus();
-    }
-    function link(value, label) {
-      const url = safeUrl(value, hosts);
-      const a = el("button", label);
-      a.type = "button";
-      a.className = "dw-source-link";
-      a.disabled = !url;
-      if (url) a.addEventListener("click", () => window2.openTrustedLinkIn(url, "tab"));
-      return a;
-    }
-    closeButton.addEventListener("click", () => callbacks.onClose({ restoreFocus: true }));
-    source.addEventListener("click", () => {
-      if (sourceUrl) window2.openTrustedLinkIn(sourceUrl, "tab");
-    });
-    provider.addEventListener("change", () => callbacks.onProviderChange?.(provider.value, query.value));
-    query.addEventListener("input", () => {
-      clearMatches();
-      callbacks.onQueryInput?.(query.value);
-    });
-    search2.addEventListener("submit", (event) => {
-      event.preventDefault();
-      clearMatches();
-      callbacks.onSearch?.(query.value);
-    });
-    query.addEventListener("keydown", (event) => {
-      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && candidates2.length) {
-        event.preventDefault();
-        selected = selected < 0 ? event.key === "ArrowDown" ? 0 : candidates2.length - 1 : (selected + (event.key === "ArrowDown" ? 1 : -1) + candidates2.length) % candidates2.length;
-        for (const [index, node] of [...list.children].entries()) node.setAttribute("aria-selected", String(index === selected));
-        query.setAttribute("aria-activedescendant", list.children[selected].id);
-        list.children[selected].scrollIntoView?.({ block: "nearest" });
-      } else if (event.key === "Enter" && selected >= 0) {
-        event.preventDefault();
-        choose(candidates2[selected].word);
-      } else if (event.key === "Escape" && !matches.hidden) {
-        event.preventDefault();
-        event.stopPropagation();
-        clearMatches();
-      }
-    });
-    panel.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        callbacks.onClose({ restoreFocus: true });
-      }
-    });
-    panel.addEventListener("popuphidden", (event) => {
-      if (event.target === panel && active) {
-        resizer.stop();
-        positioner.stop();
-        active = false;
-        callbacks.onClose({ restoreFocus: false });
-      }
-    });
-    return {
-      show(anchor) {
-        if (active) return;
-        origin = document2.activeElement;
-        originBrowser = window2.gBrowser.selectedBrowser;
-        resizer.prepare();
-        active = true;
-        positioner.open(anchor);
-        query.focus();
-        query.select();
-      },
-      setTextSize,
-      editing({ term, providerId, providers: providers2 }) {
-        clearResult();
-        word.textContent = "";
-        status.textContent = term.status ? messages[term.status] : "Press Enter to look up this word, or choose a suggestion.";
-        status.dir = "ltr";
-        chooseProviders(term, providerId, providers2);
-      },
-      renderSuggestions({ outcome, label }) {
-        clearMatches();
-        if (outcome.status === "unsupported-suggestions") return;
-        matches.hidden = false;
-        matchLabel.textContent = outcome.status === "ok" ? label : outcome.status === "timeout" ? "Suggestions timed out. Press Enter to retry." : outcome.status === "missing-key" ? "Add an API key in Configure to use this dictionary." : "Suggestions unavailable. You can still press Enter to look up a word.";
-        if (outcome.status !== "ok") return;
-        const seen = /* @__PURE__ */ new Set();
-        candidates2 = (outcome.suggestions || []).filter((item) => {
-          const key = wordKey(item.word);
-          if (!key || seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).slice(0, 8);
-        if (!candidates2.length) {
-          matchLabel.textContent = "No matching words found.";
-          return;
-        }
-        query.setAttribute("aria-expanded", "true");
-        for (const [index, item] of candidates2.entries()) {
-          const li = el("li", displayWord2(item.word, item.language));
-          li.id = `dw-match-${index}`;
-          li.setAttribute("role", "option");
-          li.setAttribute("aria-selected", "false");
-          li.dir = item.language === "he" ? "rtl" : "ltr";
-          li.lang = item.language || "en";
-          li.addEventListener("mousedown", (event) => event.preventDefault());
-          li.addEventListener("click", () => choose(item.word));
-          list.append(li);
-        }
-      },
-      render({ term, providerId, providers: providers2, outcome, textSize }) {
-        if (outcome.status === "loading" || wordKey(query.value) !== wordKey(term.original)) {
-          query.value = displayWord2(term.original, term.language);
-          clearMatches();
-        }
-        setTextSize(textSize);
-        chooseProviders(term, providerId, providers2);
-        result.dir = term.language === "he" ? "rtl" : "ltr";
-        result.lang = term.language || "en";
-        word.textContent = displayWord2(term.original, term.language) || "Define";
-        clearResult();
-        status.textContent = messages[outcome.status] || "";
-        status.dir = "ltr";
-        status.lang = "en";
-        if (outcome.status === "no-result") {
-          const label = providers2.find((p) => p.id === providerId)?.label || "This dictionary";
-          status.textContent = term.language === "he" ? `לא נמצא ערך עבור ״${term.original}״ ב${label}. נסו מילה מההצעות או חפשו את צורת הבסיס.` : `No entry for “${term.original}” in ${label}. Try a matching word or edit your search.`;
-          if (providers2.length > 1) status.textContent += term.language === "he" ? " אפשר לבחור מילון אחר." : " Choose another dictionary above.";
-          status.dir = term.language === "he" ? "rtl" : "ltr";
-          status.lang = term.language || "en";
-        }
-        if (outcome.status === "ok") {
-          const d = outcome.definition;
-          result.dir = d.language === "he" ? "rtl" : "ltr";
-          result.lang = d.language;
-          if (d.headword && wordKey(d.headword) !== wordKey(term.original)) {
-            headword.hidden = false;
-            headword.textContent = (d.language === "he" ? "ערך במילון: " : "Dictionary entry: ") + displayWord2(d.headword, d.language);
-          }
-          status.textContent = outcome.normalizedRetry && term.language === "he" ? "נמצא ערך ללא ניקוד." : "";
-          for (const sense of d.senses) {
-            const li = el("li");
-            if (sense.partOfSpeech) {
-              const part = el("span", sense.partOfSpeech);
-              part.className = "dw-part";
-              li.append(part);
-            }
-            li.append(el("p", sense.text));
-            for (const example of sense.examples || []) {
-              const quote = el("blockquote", example);
-              li.append(quote);
-            }
-            senses.append(li);
-          }
-          if (d.attribution.brand === "merriam-webster") {
-            const logo = el("img");
-            logo.src = "chrome://sine/content/define-word/assets/merriam-webster.png";
-            logo.alt = "Merriam-Webster";
-            logo.width = logo.height = 50;
-            attribution.append(logo);
-          }
-          attribution.append(link(d.attribution.url, d.attribution.label));
-          if (d.attribution.licenseLabel) attribution.append(link(d.attribution.licenseUrl, d.attribution.licenseLabel));
-          sourceUrl = safeUrl(d.sourceUrl, hosts);
-          source.hidden = !sourceUrl;
-        }
-      },
-      close,
-      destroy() {
-        close();
-        positioner.destroy();
-        resizer.destroy();
-        panel.remove();
-      }
-    };
-  }
-
-  // project:src/controller.mjs
-  function createController(window2, deps) {
-    const { document: document2 } = window2, menu = document2.getElementById("contentAreaContextMenu");
-    const item = document2.createXULElement("menuitem");
-    item.id = "define-word-menu";
-    item.hidden = true;
-    item.setAttribute("label", "Define");
-    menu?.append(item);
-    function updateAppearance(settings = deps.settings()) {
-      const visible = settings.showIcon !== false;
-      item.classList.toggle("menuitem-iconic", visible);
-      if (visible) item.setAttribute("image", "chrome://sine/content/define-word/assets/define-word.svg");
-      else item.removeAttribute("image");
-      popup?.setTextSize?.(settings.textSize);
-    }
-    let generation = 0, pending, suggestionsPending, debounce, disposed2 = false, lastTerm, lastProvider, lastSelection, originBrowser;
-    const available = (language) => [...deps.providers.values()].filter((p) => p.language === language);
-    const current = () => originBrowser === window2.gBrowser.selectedBrowser && (!lastSelection || deps.selection.isCurrent(window2, lastSelection));
-    function cancel() {
-      generation++;
-      pending?.abort();
-      suggestionsPending?.abort();
-      pending = suggestionsPending = null;
-      window2.clearTimeout(debounce);
-    }
-    function close({ restoreFocus = false } = {}) {
-      cancel();
-      popup.close({ restoreFocus: restoreFocus && current() });
-    }
-    const popup = (deps.createPopup || createPopup)(window2, {
-      onClose: close,
-      readSize: deps.loadPopupSize,
-      onSizeChange: deps.savePopupSize,
-      onProviderChange(id, query = lastTerm?.original) {
-        if (!lastTerm || !current()) {
-          close();
-          return;
-        }
-        const term = normalizeTerm(query || "");
-        if (deps.providers.get(id)?.language !== term.language) return;
-        deps.saveProvider?.(term.language, id);
-        void run(term, id);
-      },
-      onSearch(query) {
-        if (!current()) {
-          close();
-          return;
-        }
-        const term = normalizeTerm(query);
-        void run(term, chooseProvider(term.language));
-      },
-      onQueryInput(query) {
-        if (!current()) {
-          close();
-          return;
-        }
-        cancel();
-        const token = generation, term = normalizeTerm(query), providerId = chooseProvider(term.language);
-        popup.editing?.({ term, providerId, providers: available(term.language) });
-        debounce = window2.setTimeout(() => {
-          void suggest(term, providerId, token);
-        }, 350);
-      }
-    });
-    updateAppearance();
-    const defaultProvider = (language) => language === "he" ? deps.settings().hebrewProvider : deps.settings().englishProvider;
-    const chooseProvider = (language) => deps.providers.get(lastProvider)?.language === language ? lastProvider : defaultProvider(language);
-    async function suggest(term, providerId, token) {
-      if (term.status || !term.language || !deps.lookup.suggest) return;
-      suggestionsPending?.abort();
-      const operation = new AbortController();
-      suggestionsPending = operation;
-      let outcome;
-      try {
-        outcome = await deps.lookup.suggest({ term, providerId, signal: operation.signal });
-      } catch {
-        outcome = { status: "unavailable" };
-      }
-      if (disposed2 || token !== generation || operation.signal.aborted || outcome?.status === "cancelled") return;
-      if (!current()) {
-        close();
-        return;
-      }
-      popup.renderSuggestions?.({ outcome: outcome || { status: "unavailable" }, label: deps.providers.get(providerId)?.suggestionsLabel || "Matching words" });
-    }
-    async function run(term, providerId, token) {
-      if (disposed2 || !current()) {
-        close();
-        return;
-      }
-      if (token === void 0) {
-        cancel();
-        token = generation;
-      } else {
-        pending?.abort();
-        suggestionsPending?.abort();
-        window2.clearTimeout(debounce);
-      }
-      pending = new AbortController();
-      lastTerm = term;
-      lastProvider = providerId;
-      const state = { term, providerId, providers: available(term.language), textSize: deps.settings().textSize };
-      popup.render({ ...state, outcome: { status: term.status || (!term.language ? "unsupported" : "loading") } });
-      popup.show(lastSelection?.anchor);
-      if (term.status || !term.language) return;
-      void suggest(term, providerId, token);
-      let outcome;
-      try {
-        outcome = await deps.lookup.lookup({ term, providerId, signal: pending.signal });
-      } catch {
-        outcome = { status: "unavailable" };
-      }
-      outcome ||= { status: "unavailable" };
-      if (disposed2 || token !== generation || outcome.status === "cancelled") return;
-      if (!current()) {
-        close();
-        return;
-      }
-      popup.render({ ...state, outcome, textSize: deps.settings().textSize });
-      if (outcome.status === "ok" && outcome.definition?.matches?.length) popup.renderSuggestions?.({ outcome: { status: "ok", suggestions: outcome.definition.matches }, label: "Matching dictionary entries" });
-    }
-    async function define(contextMenu) {
-      if (disposed2) return;
-      close();
-      const token = generation;
-      originBrowser = window2.gBrowser.selectedBrowser;
-      let selection;
-      try {
-        selection = await deps.selection.capture(window2, contextMenu);
-      } catch {
-        if (token === generation) close();
-        return;
-      }
-      if (disposed2 || token !== generation) return;
-      lastSelection = selection;
-      const term = normalizeTerm(selection?.rawText || "");
-      await run(term, defaultProvider(term.language), token);
-    }
-    function showing() {
-      const context = window2.gContextMenu;
-      const value = context?.selectionInfo?.text || "";
-      item.hidden = !value.trim() || !!context?.onPassword;
-      item.setAttribute("label", `Define “${value.slice(0, 36)}${value.length > 36 ? "…" : ""}”`);
-    }
-    const command = () => {
-      const context = window2.gContextMenu;
-      if (!context || context.onPassword) return;
-      const point = context.contentData?.context, scale = window2.devicePixelRatio || 1;
-      const anchor = Number.isFinite(point?.screenXDevPx) && Number.isFinite(point?.screenYDevPx) ? { x: point.screenXDevPx / scale, y: point.screenYDevPx / scale, width: 1, height: 1 } : null;
-      void define({ frameBrowsingContext: context.frameBrowsingContext, selectionInfo: { text: context.selectionInfo?.text || "" }, onPassword: context.onPassword, anchor });
-    };
-    item.addEventListener("command", command);
-    menu?.addEventListener("popupshowing", showing);
-    const dismiss = () => close();
-    const progress = { onLocationChange(browser) {
-      if (browser === originBrowser) close();
-    } };
-    const tabClosed = (event) => {
-      if (event.target.linkedBrowser === originBrowser) close();
-    };
-    window2.gBrowser.tabContainer.addEventListener("TabSelect", dismiss);
-    window2.gBrowser.tabContainer.addEventListener("TabClose", tabClosed);
-    window2.gBrowser.addTabsProgressListener(progress);
-    return { define, close, updateAppearance, credentialsChanged(id) {
-      if (id === lastProvider) close();
-    }, destroy() {
-      if (disposed2) return;
-      disposed2 = true;
-      close();
-      item.removeEventListener("command", command);
-      item.remove();
-      menu?.removeEventListener("popupshowing", showing);
-      window2.gBrowser.tabContainer.removeEventListener("TabSelect", dismiss);
-      window2.gBrowser.tabContainer.removeEventListener("TabClose", tabClosed);
-      window2.gBrowser.removeTabsProgressListener(progress);
-      popup.destroy();
-      deps.selection.release();
-    } };
-  }
-
   // project:src/shortcut.mjs
   var DEFAULT_BINDING = { code: "KeyD", ctrl: true, alt: true, shift: false, meta: false };
   function validateBinding(value) {
@@ -1206,6 +768,13 @@
 
   // project:src/settings.mjs
   var PREF = "extension.define-word.";
+  function validTextSize(value) {
+    const size = Number(value);
+    return Number.isFinite(size) && size >= 10 && size <= 32;
+  }
+  function normalizeTextSize(value) {
+    return validTextSize(value) ? Number(value) : 14;
+  }
   function readSettings(prefs) {
     const english = prefs.getStringPref(`${PREF}english`, "wiktionary-en"), hebrew = prefs.getStringPref(`${PREF}hebrew`, "academy-he");
     let shortcut2;
@@ -1215,8 +784,8 @@
     } catch {
       shortcut2 = null;
     }
-    const requestedSize = Number(prefs.getStringPref(`${PREF}text-size`, "14"));
-    return { englishProvider: providers.get(english)?.language === "en" ? english : "wiktionary-en", hebrewProvider: providers.get(hebrew)?.language === "he" ? hebrew : "academy-he", shortcut: shortcut2, showIcon: prefs.getBoolPref?.(`${PREF}show-icon`, true) ?? true, textSize: [12, 14, 16, 18, 20, 24].includes(requestedSize) ? requestedSize : 14 };
+    const textSize = normalizeTextSize(prefs.getStringPref(`${PREF}text-size`, "14"));
+    return { englishProvider: providers.get(english)?.language === "en" ? english : "wiktionary-en", hebrewProvider: providers.get(hebrew)?.language === "he" ? hebrew : "academy-he", shortcut: shortcut2, showIcon: prefs.getBoolPref?.(`${PREF}show-icon`, true) ?? true, textSize };
   }
   function createSettingsControls(window2, { prefs, credentials, onCredentialsChanged, browserWindow = () => window2 }) {
     const { document: document2 } = window2;
@@ -1229,6 +798,45 @@
     root.dataset.defineWordSettings = "";
     root.className = "dw-settings";
     let binding = readSettings(prefs).shortcut, recording = false, disposed2 = false;
+    const sizeRow = el("div");
+    sizeRow.className = "dw-setting-row";
+    const sizeLabel = el("label", "Popup base text size (px)"), sizeInput = el("input");
+    sizeInput.id = "dw-text-size";
+    sizeLabel.htmlFor = sizeInput.id;
+    sizeInput.type = "number";
+    sizeInput.min = "10";
+    sizeInput.max = "32";
+    sizeInput.step = "any";
+    sizeInput.required = true;
+    const sizeHelp = el("p", "Enter 10–32 px. Headings, definitions, controls, and footer text scale together. Changes save when you leave the field.");
+    sizeHelp.id = "dw-text-size-help";
+    const sizeStatus = el("p");
+    sizeStatus.id = "dw-text-size-status";
+    sizeStatus.dataset.textSizeStatus = "";
+    sizeStatus.setAttribute("role", "status");
+    sizeStatus.setAttribute("aria-live", "polite");
+    sizeInput.setAttribute("aria-describedby", `${sizeHelp.id} ${sizeStatus.id}`);
+    sizeLabel.append(sizeInput);
+    sizeRow.append(sizeLabel);
+    root.append(sizeRow, sizeHelp, sizeStatus);
+    function commitTextSize() {
+      if (disposed2) return;
+      if (!validTextSize(sizeInput.value)) {
+        sizeInput.setAttribute("aria-invalid", "true");
+        sizeStatus.textContent = "Enter a number from 10 to 32 px. The saved text size has not changed.";
+        return;
+      }
+      try {
+        prefs.setStringPref(`${PREF}text-size`, String(Number(sizeInput.value)));
+        sizeInput.setAttribute("aria-invalid", "false");
+        sizeStatus.textContent = "Text size saved.";
+      } catch {
+        sizeInput.setAttribute("aria-invalid", "true");
+        sizeStatus.textContent = "Could not save the text size. Leave the field to retry.";
+      }
+    }
+    sizeInput.addEventListener("change", commitTextSize);
+    sizeInput.addEventListener("blur", commitTextSize);
     const error = el("p");
     error.setAttribute("role", "status");
     error.setAttribute("aria-live", "polite");
@@ -1415,7 +1023,11 @@
     function reset() {
       for (const control of keyControls) void control.refresh();
       recording = false;
-      binding = readSettings(prefs).shortcut;
+      const settings = readSettings(prefs);
+      binding = settings.shortcut;
+      sizeInput.value = String(settings.textSize);
+      sizeInput.setAttribute("aria-invalid", "false");
+      sizeStatus.textContent = "";
       field.value = bindingLabel(binding);
       const conflict = findConflict(browserWindow(), binding);
       error.textContent = conflict ? `Shortcut inactive. ${conflict}` : "";
@@ -1432,13 +1044,505 @@
     } };
   }
 
+  // project:src/popup.mjs
+  var hosts = ["en.wiktionary.org", "he.wiktionary.org", "dictionaryapi.dev", "www.merriam-webster.com", "creativecommons.org", "lexicala.com", "hebrew-academy.org.il", "milog.co.il", "www.milog.co.il"];
+  var wordKey = (value) => String(value || "").normalize("NFC").trim().toLocaleLowerCase("en");
+  var displayWord2 = (value, language) => language === "en" ? String(value || "").toLocaleLowerCase("en").replace(new RegExp("(^|[\\s-])(\\p{L})", "gu"), (_m, space, letter) => space + letter.toLocaleUpperCase("en")) : String(value || "");
+  var messages = { empty: "Enter an English or Hebrew word.", unsupported: "Enter an English or Hebrew word.", "too-long": "Enter a word or short phrase (up to 100 characters).", loading: "Looking up…", "no-result": "No definition found. Try a matching word below the search field.", "missing-key": "Add your dictionary API key in the mod’s Configure settings.", "credential-unavailable": "Credential storage is unavailable or locked. Unlock it and try again.", "unauthorized": "The dictionary rejected the API key. Check or replace it in Configure.", "access-denied": "Access was denied. Check that your key has an active subscription to this dictionary.", "rate-limit": "This dictionary’s request limit has been reached.", timeout: "The dictionary took too long to respond. Press Enter to retry, or choose another dictionary.", unavailable: "The dictionary is currently unavailable. Press Enter to retry, or choose another." };
+  function createPopup(window2, callbacks) {
+    const { document: document2 } = window2;
+    const el = (tag, value) => {
+      const n = document2.createElementNS("http://www.w3.org/1999/xhtml", tag);
+      if (value !== void 0) n.textContent = value;
+      return n;
+    };
+    const panel = document2.createXULElement("panel");
+    panel.id = "define-word-panel";
+    panel.setAttribute("type", "arrow");
+    panel.setAttribute("animate", "false");
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "Word definition");
+    panel.setAttribute("orient", "vertical");
+    panel.setAttribute("norestorefocus", "true");
+    const box = el("div");
+    box.className = "dw-card";
+    const bar = el("div");
+    bar.className = "dw-bar";
+    bar.tabIndex = 0;
+    bar.setAttribute("aria-label", "Move definition popup");
+    bar.title = "Drag to move. When the header is focused, arrow keys move the popup.";
+    const title = el("strong", "Define"), closeButton = el("button", "×");
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close definition");
+    const provider = el("select");
+    provider.setAttribute("aria-label", "Dictionary");
+    provider.title = "Dictionary for the language you type";
+    bar.append(title, provider, closeButton);
+    const search2 = el("form");
+    search2.className = "dw-search";
+    const query = el("input");
+    query.type = "text";
+    query.maxLength = 100;
+    query.dir = "auto";
+    query.autocomplete = "off";
+    query.spellcheck = false;
+    query.placeholder = "Search English or Hebrew";
+    query.setAttribute("aria-label", "Word to define in English or Hebrew");
+    query.setAttribute("role", "combobox");
+    query.setAttribute("aria-autocomplete", "list");
+    query.setAttribute("aria-controls", "dw-matches");
+    query.setAttribute("aria-expanded", "false");
+    const submit = el("button", "Search");
+    submit.type = "submit";
+    search2.append(query, submit);
+    const matches = el("div");
+    matches.className = "dw-matches";
+    matches.hidden = true;
+    const matchLabel = el("p"), list = el("ul");
+    list.id = "dw-matches";
+    list.setAttribute("role", "listbox");
+    list.setAttribute("aria-label", "Matching dictionary words");
+    matches.append(matchLabel, list);
+    const result = el("div");
+    result.dataset.result = "";
+    result.setAttribute("aria-live", "polite");
+    const word = el("h2"), headword = el("p"), status = el("p"), senses = el("ol");
+    headword.dataset.headword = "";
+    result.append(word, headword, status, senses);
+    const footer = el("div");
+    footer.className = "dw-footer";
+    const attribution = el("div"), source = el("button", "View dictionary entry");
+    source.type = "button";
+    source.dataset.source = "";
+    source.hidden = true;
+    footer.append(attribution, source);
+    const shell = el("div");
+    shell.className = "dw-shell";
+    const handles = ["se", "s", "e", "n", "w", "nw", "ne", "sw"].map((edge) => {
+      const n = el("button");
+      n.type = "button";
+      n.dataset.resizeEdge = edge;
+      n.className = "dw-resize-edge";
+      n.tabIndex = edge === "se" ? 0 : -1;
+      n.setAttribute("aria-label", "Resize definition popup");
+      n.title = "Drag any edge or corner to resize. Arrow keys resize; Shift makes larger steps. Home or double-click resets.";
+      return n;
+    });
+    const resizeHandle = handles[0];
+    resizeHandle.dataset.resize = "";
+    box.append(search2, matches, result, footer);
+    shell.append(bar, box, ...handles);
+    panel.append(shell);
+    (document2.getElementById("mainPopupSet") || document2.documentElement).append(panel);
+    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates2 = [];
+    const positioner = createPopupPositioner(window2, { panel, shell, header: bar, isOpen: () => active });
+    const resizer = createPopupResizer(window2, { panel, shell, handle: resizeHandle, handles, isOpen: () => active, readSize: callbacks.readSize, onSizeChange: callbacks.onSizeChange, onPositionChange: positioner.setPosition });
+    function clearMatches() {
+      matches.hidden = true;
+      list.replaceChildren();
+      candidates2 = [];
+      selected = -1;
+      query.setAttribute("aria-expanded", "false");
+      query.removeAttribute("aria-activedescendant");
+    }
+    function choose(word2) {
+      query.value = displayWord2(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
+      clearMatches();
+      callbacks.onSearch?.(word2);
+      query.focus();
+    }
+    function setTextSize(size = 14) {
+      shell.style.setProperty("--dw-text-size", `${normalizeTextSize(size)}px`);
+    }
+    function chooseProviders(term, providerId, providers2) {
+      provider.replaceChildren();
+      for (const p of providers2) {
+        const option = el("option", p.label + (p.keyRequired ? " · API key" : ""));
+        option.value = p.id;
+        provider.append(option);
+      }
+      provider.value = providerId;
+      provider.disabled = !providers2.length;
+    }
+    function clearResult() {
+      headword.textContent = "";
+      headword.hidden = true;
+      senses.replaceChildren();
+      attribution.replaceChildren();
+      sourceUrl = null;
+      source.hidden = true;
+    }
+    function close({ restoreFocus = false } = {}) {
+      resizer.stop();
+      positioner.stop();
+      if (!active) return;
+      active = false;
+      panel.hidePopup();
+      if (restoreFocus && originBrowser === window2.gBrowser.selectedBrowser && origin?.isConnected) origin.focus();
+    }
+    function link(value, label) {
+      const url = safeUrl(value, hosts);
+      const a = el("button", label);
+      a.type = "button";
+      a.className = "dw-source-link";
+      a.disabled = !url;
+      if (url) a.addEventListener("click", () => window2.openTrustedLinkIn(url, "tab"));
+      return a;
+    }
+    closeButton.addEventListener("click", () => callbacks.onClose({ restoreFocus: true }));
+    source.addEventListener("click", () => {
+      if (sourceUrl) window2.openTrustedLinkIn(sourceUrl, "tab");
+    });
+    provider.addEventListener("change", () => callbacks.onProviderChange?.(provider.value, query.value));
+    query.addEventListener("input", () => {
+      clearMatches();
+      callbacks.onQueryInput?.(query.value);
+    });
+    search2.addEventListener("submit", (event) => {
+      event.preventDefault();
+      clearMatches();
+      callbacks.onSearch?.(query.value);
+    });
+    query.addEventListener("keydown", (event) => {
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && candidates2.length) {
+        event.preventDefault();
+        selected = selected < 0 ? event.key === "ArrowDown" ? 0 : candidates2.length - 1 : (selected + (event.key === "ArrowDown" ? 1 : -1) + candidates2.length) % candidates2.length;
+        for (const [index, node] of [...list.children].entries()) node.setAttribute("aria-selected", String(index === selected));
+        query.setAttribute("aria-activedescendant", list.children[selected].id);
+        list.children[selected].scrollIntoView?.({ block: "nearest" });
+      } else if (event.key === "Enter" && selected >= 0) {
+        event.preventDefault();
+        choose(candidates2[selected].word);
+      } else if (event.key === "Escape" && !matches.hidden) {
+        event.preventDefault();
+        event.stopPropagation();
+        clearMatches();
+      }
+    });
+    panel.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        callbacks.onClose({ restoreFocus: true });
+      }
+    });
+    panel.addEventListener("popuphidden", (event) => {
+      if (event.target === panel && active) {
+        resizer.stop();
+        positioner.stop();
+        active = false;
+        callbacks.onClose({ restoreFocus: false });
+      }
+    });
+    return {
+      show(anchor) {
+        if (active) return;
+        if (!panel.contains(document2.activeElement)) {
+          origin = document2.activeElement;
+          originBrowser = window2.gBrowser.selectedBrowser;
+        }
+        resizer.prepare(anchor);
+        active = true;
+        positioner.open(anchor);
+        query.focus();
+        query.select();
+      },
+      setTextSize,
+      editing({ term, providerId, providers: providers2 }) {
+        clearResult();
+        word.textContent = "";
+        status.textContent = term.status ? messages[term.status] : "Press Enter to look up this word, or choose a suggestion.";
+        status.dir = "ltr";
+        chooseProviders(term, providerId, providers2);
+      },
+      renderSuggestions({ outcome, label }) {
+        clearMatches();
+        if (outcome.status === "unsupported-suggestions") return;
+        matches.hidden = false;
+        matchLabel.textContent = outcome.status === "ok" ? label : outcome.status === "timeout" ? "Suggestions timed out. Press Enter to retry." : outcome.status === "missing-key" ? "Add an API key in Configure to use this dictionary." : "Suggestions unavailable. You can still press Enter to look up a word.";
+        if (outcome.status !== "ok") return;
+        const seen = /* @__PURE__ */ new Set();
+        candidates2 = (outcome.suggestions || []).filter((item) => {
+          const key = wordKey(item.word);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).slice(0, 8);
+        if (!candidates2.length) {
+          matchLabel.textContent = "No matching words found.";
+          return;
+        }
+        query.setAttribute("aria-expanded", "true");
+        for (const [index, item] of candidates2.entries()) {
+          const li = el("li", displayWord2(item.word, item.language));
+          li.id = `dw-match-${index}`;
+          li.setAttribute("role", "option");
+          li.setAttribute("aria-selected", "false");
+          li.dir = item.language === "he" ? "rtl" : "ltr";
+          li.lang = item.language || "en";
+          li.addEventListener("mousedown", (event) => event.preventDefault());
+          li.addEventListener("click", () => choose(item.word));
+          list.append(li);
+        }
+      },
+      render({ term, providerId, providers: providers2, outcome, textSize }) {
+        if (outcome.status === "loading" || wordKey(query.value) !== wordKey(term.original)) {
+          query.value = displayWord2(term.original, term.language);
+          clearMatches();
+        }
+        setTextSize(textSize);
+        chooseProviders(term, providerId, providers2);
+        result.dir = term.language === "he" ? "rtl" : "ltr";
+        result.lang = term.language || "en";
+        word.textContent = displayWord2(term.original, term.language) || "Define";
+        clearResult();
+        status.textContent = messages[outcome.status] || "";
+        status.dir = "ltr";
+        status.lang = "en";
+        if (outcome.status === "no-result") {
+          const label = providers2.find((p) => p.id === providerId)?.label || "This dictionary";
+          status.textContent = term.language === "he" ? `לא נמצא ערך עבור ״${term.original}״ ב${label}. נסו מילה מההצעות או חפשו את צורת הבסיס.` : `No entry for “${term.original}” in ${label}. Try a matching word or edit your search.`;
+          if (providers2.length > 1) status.textContent += term.language === "he" ? " אפשר לבחור מילון אחר." : " Choose another dictionary above.";
+          status.dir = term.language === "he" ? "rtl" : "ltr";
+          status.lang = term.language || "en";
+        }
+        if (outcome.status === "ok") {
+          const d = outcome.definition;
+          result.dir = d.language === "he" ? "rtl" : "ltr";
+          result.lang = d.language;
+          if (d.headword && wordKey(d.headword) !== wordKey(term.original)) {
+            headword.hidden = false;
+            headword.textContent = (d.language === "he" ? "ערך במילון: " : "Dictionary entry: ") + displayWord2(d.headword, d.language);
+          }
+          status.textContent = outcome.normalizedRetry && term.language === "he" ? "נמצא ערך ללא ניקוד." : "";
+          for (const sense of d.senses) {
+            const li = el("li");
+            if (sense.partOfSpeech) {
+              const part = el("span", sense.partOfSpeech);
+              part.className = "dw-part";
+              li.append(part);
+            }
+            li.append(el("p", sense.text));
+            for (const example of sense.examples || []) {
+              const quote = el("blockquote", example);
+              li.append(quote);
+            }
+            senses.append(li);
+          }
+          if (d.attribution.brand === "merriam-webster") {
+            const logo = el("img");
+            logo.src = "chrome://sine/content/define-word/assets/merriam-webster.png";
+            logo.alt = "Merriam-Webster";
+            logo.width = logo.height = 50;
+            attribution.append(logo);
+          }
+          attribution.append(link(d.attribution.url, d.attribution.label));
+          if (d.attribution.licenseLabel) attribution.append(link(d.attribution.licenseUrl, d.attribution.licenseLabel));
+          sourceUrl = safeUrl(d.sourceUrl, hosts);
+          source.hidden = !sourceUrl;
+        }
+      },
+      close,
+      destroy() {
+        close();
+        positioner.destroy();
+        resizer.destroy();
+        panel.remove();
+      }
+    };
+  }
+
+  // project:src/controller.mjs
+  function createController(window2, deps) {
+    const { document: document2 } = window2, menu = document2.getElementById("contentAreaContextMenu");
+    const item = document2.createXULElement("menuitem");
+    item.id = "define-word-menu";
+    item.hidden = true;
+    item.setAttribute("label", "Define");
+    menu?.append(item);
+    function updateAppearance(settings = deps.settings()) {
+      const visible = settings.showIcon !== false;
+      item.classList.toggle("menuitem-iconic", visible);
+      if (visible) item.setAttribute("image", "chrome://sine/content/define-word/assets/define-word.svg");
+      else item.removeAttribute("image");
+      popup?.setTextSize?.(settings.textSize);
+    }
+    let generation = 0, pending, suggestionsPending, debounce, disposed2 = false, opened = false, lastTerm, lastProvider, lastSelection, originBrowser;
+    const available = (language) => [...deps.providers.values()].filter((p) => p.language === language);
+    const current = () => originBrowser === window2.gBrowser.selectedBrowser && (!lastSelection || deps.selection.isCurrent(window2, lastSelection));
+    function cancel() {
+      generation++;
+      pending?.abort();
+      suggestionsPending?.abort();
+      pending = suggestionsPending = null;
+      window2.clearTimeout(debounce);
+    }
+    function close({ restoreFocus = false } = {}) {
+      cancel();
+      opened = false;
+      popup.close({ restoreFocus: restoreFocus && current() });
+    }
+    const popup = (deps.createPopup || createPopup)(window2, {
+      onClose: close,
+      readSize: deps.loadPopupSize,
+      onSizeChange: deps.savePopupSize,
+      onProviderChange(id, query = lastTerm?.original) {
+        if (!lastTerm || !current()) {
+          close();
+          return;
+        }
+        const term = normalizeTerm(query || "");
+        if (deps.providers.get(id)?.language !== term.language) return;
+        deps.saveProvider?.(term.language, id);
+        void run(term, id);
+      },
+      onSearch(query) {
+        if (!current()) {
+          close();
+          return;
+        }
+        const term = normalizeTerm(query);
+        void run(term, chooseProvider(term.language));
+      },
+      onQueryInput(query) {
+        if (!current()) {
+          close();
+          return;
+        }
+        cancel();
+        const token = generation, term = normalizeTerm(query), providerId = chooseProvider(term.language);
+        popup.editing?.({ term, providerId, providers: available(term.language) });
+        debounce = window2.setTimeout(() => {
+          void suggest(term, providerId, token);
+        }, 350);
+      }
+    });
+    updateAppearance();
+    const defaultProvider = (language) => language === "he" ? deps.settings().hebrewProvider : deps.settings().englishProvider;
+    const chooseProvider = (language) => deps.providers.get(lastProvider)?.language === language ? lastProvider : defaultProvider(language);
+    async function suggest(term, providerId, token) {
+      if (term.status || !term.language || !deps.lookup.suggest) return;
+      suggestionsPending?.abort();
+      const operation = new AbortController();
+      suggestionsPending = operation;
+      let outcome;
+      try {
+        outcome = await deps.lookup.suggest({ term, providerId, signal: operation.signal });
+      } catch {
+        outcome = { status: "unavailable" };
+      }
+      if (disposed2 || token !== generation || operation.signal.aborted || outcome?.status === "cancelled") return;
+      if (!current()) {
+        close();
+        return;
+      }
+      popup.renderSuggestions?.({ outcome: outcome || { status: "unavailable" }, label: deps.providers.get(providerId)?.suggestionsLabel || "Matching words" });
+    }
+    async function run(term, providerId, token) {
+      if (disposed2 || !current()) {
+        close();
+        return;
+      }
+      if (token === void 0) {
+        cancel();
+        token = generation;
+      } else {
+        pending?.abort();
+        suggestionsPending?.abort();
+        window2.clearTimeout(debounce);
+      }
+      pending = new AbortController();
+      lastTerm = term;
+      lastProvider = providerId;
+      const state = { term, providerId, providers: available(term.language), textSize: deps.settings().textSize };
+      popup.render({ ...state, outcome: { status: term.status || (!term.language ? "unsupported" : "loading") } });
+      popup.show(lastSelection?.anchor);
+      opened = true;
+      if (term.status || !term.language) return;
+      void suggest(term, providerId, token);
+      let outcome;
+      try {
+        outcome = await deps.lookup.lookup({ term, providerId, signal: pending.signal });
+      } catch {
+        outcome = { status: "unavailable" };
+      }
+      outcome ||= { status: "unavailable" };
+      if (disposed2 || token !== generation || outcome.status === "cancelled") return;
+      if (!current()) {
+        close();
+        return;
+      }
+      popup.render({ ...state, outcome, textSize: deps.settings().textSize });
+      if (outcome.status === "ok" && outcome.definition?.matches?.length) popup.renderSuggestions?.({ outcome: { status: "ok", suggestions: outcome.definition.matches }, label: "Matching dictionary entries" });
+    }
+    async function define(contextMenu) {
+      if (disposed2) return;
+      const repeat = !contextMenu && opened && current() ? lastSelection : null;
+      close();
+      const token = generation;
+      originBrowser = window2.gBrowser.selectedBrowser;
+      let selection;
+      try {
+        selection = await deps.selection.capture(window2, contextMenu);
+      } catch {
+        if (token === generation) close();
+        return;
+      }
+      if (disposed2 || token !== generation) return;
+      if (!contextMenu && !selection?.rawText?.trim() && repeat && deps.selection.isCurrent(window2, repeat)) selection = repeat;
+      lastSelection = selection;
+      const term = normalizeTerm(selection?.rawText || "");
+      await run(term, defaultProvider(term.language), token);
+    }
+    function showing() {
+      const context = window2.gContextMenu;
+      const value = context?.selectionInfo?.text || "";
+      item.hidden = !value.trim() || !!context?.onPassword;
+      item.setAttribute("label", `Define “${value.slice(0, 36)}${value.length > 36 ? "…" : ""}”`);
+    }
+    const command = () => {
+      const context = window2.gContextMenu;
+      if (!context || context.onPassword) return;
+      const point = context.contentData?.context, scale = window2.devicePixelRatio || 1;
+      const anchor = Number.isFinite(point?.screenXDevPx) && Number.isFinite(point?.screenYDevPx) ? { x: point.screenXDevPx / scale, y: point.screenYDevPx / scale, width: 1, height: 1 } : null;
+      void define({ frameBrowsingContext: context.frameBrowsingContext, selectionInfo: { text: context.selectionInfo?.text || "" }, onPassword: context.onPassword, anchor });
+    };
+    item.addEventListener("command", command);
+    menu?.addEventListener("popupshowing", showing);
+    const dismiss = () => close();
+    const progress = { onLocationChange(browser) {
+      if (browser === originBrowser) close();
+    } };
+    const tabClosed = (event) => {
+      if (event.target.linkedBrowser === originBrowser) close();
+    };
+    window2.gBrowser.tabContainer.addEventListener("TabSelect", dismiss);
+    window2.gBrowser.tabContainer.addEventListener("TabClose", tabClosed);
+    window2.gBrowser.addTabsProgressListener(progress);
+    return { define, close, updateAppearance, credentialsChanged(id) {
+      if (id === lastProvider) close();
+    }, destroy() {
+      if (disposed2) return;
+      disposed2 = true;
+      close();
+      item.removeEventListener("command", command);
+      item.remove();
+      menu?.removeEventListener("popupshowing", showing);
+      window2.gBrowser.tabContainer.removeEventListener("TabSelect", dismiss);
+      window2.gBrowser.tabContainer.removeEventListener("TabClose", tabClosed);
+      window2.gBrowser.removeTabsProgressListener(progress);
+      popup.destroy();
+      deps.selection.release();
+    } };
+  }
+
   // project:src/sine-settings.mjs
   function createSineSettingsBridge(window2, options) {
     const { document: document2 } = window2;
     let controls, container, dialog, disposed2 = false;
     const style = document2.createElementNS("http://www.w3.org/1999/xhtml", "link");
     style.rel = "stylesheet";
-    style.href = "chrome://sine/content/define-word/style.css?v=0.3.0";
+    style.href = "chrome://sine/content/define-word/style.css?v=0.3.1";
     document2.documentElement.append(style);
     const reset = () => controls?.reset();
     function openRequestedDialog() {
@@ -1569,7 +1673,7 @@
         });
         return;
       }
-      const { acquireSelectionService } = ChromeUtils.importESModule("chrome://sine/content/define-word/src/selection.sys.mjs?v=0.3.0");
+      const { acquireSelectionService } = ChromeUtils.importESModule("chrome://sine/content/define-word/src/selection.sys.mjs?v=0.3.1");
       selection = acquireSelectionService();
       const lookup = createLookupService({
         providers,

@@ -1,5 +1,5 @@
 const BASE = 'chrome://sine/content/define-word/';
-export const ACTOR_NAME='DefineWordV030';
+export const ACTOR_NAME='DefineWordV031';
 // Screen CSS pixels, including negative coordinates on monitors left/above the
 // primary display. Copy only geometry; never retain actor-provided extra data.
 export function sanitizeSelectionAnchor(value) {
@@ -21,8 +21,8 @@ export function createSelectionService({chrome,services}) {
   let owners=0;
   return {acquire() {
     if (!owners) chrome.registerWindowActor(ACTOR_NAME, {
-      parent:{esModuleURI:`${BASE}actors/DefineWordParent.sys.mjs?v=0.3.0`},
-      child:{esModuleURI:`${BASE}actors/DefineWordChild.sys.mjs?v=0.3.0`},
+      parent:{esModuleURI:`${BASE}actors/DefineWordParent.sys.mjs?v=0.3.1`},
+      child:{esModuleURI:`${BASE}actors/DefineWordChild.sys.mjs?v=0.3.1`},
       allFrames:true, matches:['http://*/*','https://*/*','file:///*'],
     });
     owners++;

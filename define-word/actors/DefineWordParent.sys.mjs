@@ -1,2 +1,2 @@
 export class DefineWordParent extends JSWindowActorParent {}
-export {DefineWordParent as DefineWordV030Parent};
+export {DefineWordParent as DefineWordV031Parent};

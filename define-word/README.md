@@ -25,7 +25,7 @@ Allow JavaScript mods in Sine. Update an existing installation with Sine's updat
 | Hebrew | ויקימילון | No key |
 | Hebrew | Lexicala Hebrew (test) | Approved API access and RapidAPI key |
 
-Set defaults in **Sine → Define Word → Configure**. A failed lookup does not switch providers. Dictionary coverage varies, especially for Hebrew inflections. Wiktionary can retry without niqqud; English searches can retry lowercase. The popup labels a different dictionary headword. Requests time out after ten seconds and show an error instead of loading indefinitely.
+Set defaults in **Sine → Define Word → Configure**. A failed lookup does not switch providers. Dictionary coverage varies, especially for Hebrew inflections. Wiktionary can retry without niqqud; English searches can retry lowercase. The popup labels a different dictionary headword. Requests time out after ten seconds and show an error instead of loading indefinitely. If a provider is unavailable, retry or choose another dictionary; the mod does not silently substitute a different source.
 
 **Merriam-Webster:** [register for API keys](https://dictionaryapi.com/register/index), request Collegiate Dictionary and Learner’s Dictionary, and complete the required verification. Paste each key into its matching masked field under **Configure → Dictionary API keys**. Then select that dictionary. The two products use separate keys.
 
@@ -41,16 +41,16 @@ Existing valid default dictionary preferences are preserved on update. Select th
 
 ## Settings and popup
 
-- **Search:** edit the prefilled word and press Enter or Search. Wiktionary and the Academy offer autocomplete; Merriam-Webster offers spelling suggestions. Milog, Free Dictionary API and this Lexicala test do not request suggestions while typing. Use arrow keys and Enter to select a match.
-- **Text size:** choose 12–24 px in Configure. Headings, definitions and controls scale proportionally.
-- **Resize:** drag any edge or corner. There is no triangle icon; the resize cursor appears on hover. Width and height are remembered across sessions. With the corner focused, arrow keys resize, Shift makes larger steps, and Home or double-click resets.
-- **Position:** opens near the selected word, below or above it as space allows. Drag the header to move it, or focus the header and use arrow keys. Each new selection gets a fresh position. When selection geometry is unavailable for a context-menu lookup, its click location is used. Keyboard invocation without geometry falls back beside the content area.
+- **Search:** edit the prefilled word and press Enter or Search. Wiktionary and the Academy offer autocomplete; Merriam-Webster offers matching headwords and spelling suggestions. English Wiktionary suggestions are checked for English entries and can propose spelling corrections. Milog, Free Dictionary API and this Lexicala test do not request suggestions while typing. Use arrow keys and Enter to select a match.
+- **Text size:** type a base size from 10–32 px in Configure. Headings, definitions and controls scale proportionally.
+- **Resize:** drag any edge or corner. There is no triangle icon; the resize cursor appears on hover. Width and height are remembered across sessions. On opening, the displayed size is limited to the available space so it does not cover the selected word. With the corner focused, arrow keys resize, Shift makes larger steps, and Home or double-click resets.
+- **Position:** opens near the selected word, below or above it as space allows. Drag the top header to move it, or focus the header and use arrow keys. Definition text can be selected and copied. Each new selection gets a fresh position. When selection geometry is unavailable for a context-menu lookup, its click location is used. Keyboard invocation without geometry falls back beside the content area.
 - **Shortcut:** Record shortcut, press your combination, then Save shortcut. Disable shortcut followed by Save disables it. Some browser or OS shortcuts may conflict.
 - **Menu icon:** toggle the outlined open-book icon in Configure.
 - **Settings:** open **Sine → Define Word → Configure**. There is no settings link in the popup. Configure is capped at 800 CSS pixels and fits narrower windows.
 - **Close:** Escape, Close, changing tabs or navigating cancels pending lookups. Colors follow the browser theme.
 
-Version **0.3.0** has automated provider, credential and simulated UI tests. Native Zen behavior and authenticated dictionary responses still need testing; Lexicala uses documentation-based synthetic response fixtures.
+Version **0.3.1** repairs repeated-opening size growth, the title-bar drag area, selectable definition text, duplicate key-reveal icons and English suggestions. Automated and isolated native tests are recorded locally; authenticated dictionary responses and everyday-profile behavior remain separate acceptance checks. Lexicala uses documentation-based synthetic response fixtures.
 
 ## Privacy
 

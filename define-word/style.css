@@ -1,6 +1,6 @@
-#define-word-panel { --panel-padding: 0; max-width: calc(100vw - 32px); }
-#define-word-panel .dw-shell { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 480px; max-width: calc(100vw - 48px); max-height: calc(100vh - 32px); overflow: hidden; color: var(--arrowpanel-color,CanvasText); background: var(--arrowpanel-background,Canvas); color-scheme: inherit; }
-#define-word-panel .dw-card { box-sizing: border-box; font: menu; font-size: var(--dw-text-size,14px); color: inherit; background: inherit; color-scheme: inherit; width: 100%; min-height: 0; max-height: min(650px,80vh); overflow-y: auto; overflow-x: hidden; padding: 14px; }
+#define-word-panel { --panel-padding: 0; --panel-box-shadow-margin: 0px; margin: 0; max-width: calc(100vw - 24px); }
+#define-word-panel .dw-shell { position: relative; display: flex; flex-direction: column; box-sizing: border-box; width: 480px; max-width: calc(100vw - 48px); max-height: min(720px,calc(100vh - 32px)); overflow: hidden; color: var(--arrowpanel-color,CanvasText); background: var(--arrowpanel-background,Canvas); color-scheme: inherit; font: menu; font-size: var(--dw-text-size,14px); }
+#define-word-panel .dw-card { box-sizing: border-box; font: inherit; color: inherit; background: inherit; color-scheme: inherit; width: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 14px 14px; user-select: text; -moz-user-select: text; }
 #define-word-panel .dw-shell[data-resized] .dw-card { flex: 1; max-height: none; }
 #define-word-panel .dw-resize-edge { appearance: none; position: absolute; z-index: 2; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; touch-action: none; user-select: none; }
 #define-word-panel [data-resize-edge="n"], #define-word-panel [data-resize-edge="s"] { left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
@@ -18,7 +18,9 @@
 #define-word-panel .dw-resize-edge:focus-visible { outline-offset: -3px; }
 #define-word-panel .dw-card * { box-sizing: border-box; min-width: 0; }
 #define-word-panel .dw-bar, #define-word-panel .dw-footer, #define-word-panel .dw-search { display: flex; gap: 8px; align-items: center; }
-#define-word-panel .dw-bar { display: grid; grid-template-columns: minmax(5em,1fr) minmax(0,2fr) auto; margin-bottom: 12px; padding-block: 4px; cursor: grab; touch-action: none; user-select: none; }
+#define-word-panel .dw-bar { display: grid; grid-template-columns: minmax(5em,1fr) minmax(0,2fr) auto; flex: none; margin: 0; padding: 16px 14px 12px; cursor: grab; touch-action: none; user-select: none; }
+#define-word-panel .dw-bar > * { min-width: 0; box-sizing: border-box; }
+#define-word-panel [data-result], #define-word-panel [data-result] * { user-select: text; -moz-user-select: text; }
 #define-word-panel .dw-bar[data-dragging] { cursor: grabbing; }
 #define-word-panel .dw-bar strong { margin-inline-end: auto; }
 #define-word-panel .dw-bar select { width: 100%; max-width: 100%; cursor: default; }
@@ -66,5 +68,6 @@
 [mod-id="define-word"] .dw-key-help { justify-self: start; }
 [mod-id="define-word"] .dw-key-field { position: relative; width: 100%; }
 [mod-id="define-word"] .dw-key-field input { padding-inline-end: 40px; }
+[mod-id="define-word"] .dw-key-field > input { appearance: textfield; }
 [mod-id="define-word"] .dw-settings .dw-key-reveal { position: absolute; inset-inline-end: 3px; top: 50%; transform: translateY(-50%); width: 30px; height: 28px; padding: 4px; border: 0; background: transparent; cursor: pointer; }
 [mod-id="define-word"] .dw-key-reveal svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; }
