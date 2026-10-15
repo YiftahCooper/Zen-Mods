@@ -1,7 +1,12 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.1.3.**
+an interactive Sine settings editor. **Version 0.1.4.**
+
+Version 0.1.4 adds the native Share submenu to the editor and gives it an icon.
+Move to Folder and Better Zen Folders' Move to Space now use clearer icons.
+Native submenus keep their live parent in place while their owner fills in
+anonymous service actions; those actions no longer trigger a parent rebuild.
 
 ## Install
 
@@ -15,6 +20,10 @@ an interactive Sine settings editor. **Version 0.1.3.**
 
 3. Install the mod and allow its JavaScript when Sine asks. Restart Zen if
    prompted, then open **Configure** for Context Menu Editor.
+
+After updating from an older editor or disabling the two replaced mods, fully
+exit and reopen Zen once. The older Context-Menu-Icons script does not support
+live unloading, so a browser restart clears any code left from that session.
 
 **Disable Zen Context Menu and Context-Menu-Icons before enabling this editor.**
 It replaces their menu ordering, visibility and icon customization. Their CSS
@@ -176,11 +185,17 @@ controlled by that owner.
 
 ## Verification
 
-Version 0.1.3 adds regression tests for one-time import, late command discovery,
+Version 0.1.3 added regression tests for one-time import, late command discovery,
 per-menu availability, clean-link fallback and retained settings. Its native
 legacy-import test uses two separate headless Zen processes with the same newly
 created disposable profile. It exercises real Sine reloads, later editor edits,
 changed old preferences and exact saved-state readback after restart.
+
+Version 0.1.4 adds native Share discovery, movement-icon and popup-lifecycle
+regressions. The submenu geometry probe measures actual screen adjacency and
+requires each parent to remain attached while Share, Folder and Space popups
+open, across display scales and Sine reloads. It never invokes clipboard or
+external sharing commands.
 
 The RC3 baseline also passed a separate headed disposable Zen run with eight
 checks through the real Windows file picker, including trusted file delivery,

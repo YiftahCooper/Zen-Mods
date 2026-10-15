@@ -1,4 +1,4 @@
-// Context Menu Editor 0.1.3 — generated from src/entry.mjs.
+// Context Menu Editor 0.1.4 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -3362,7 +3362,8 @@
           context_moveTabToSplitView: "split",
           context_moveSplitViewToNewGroup: "TabGroup-add",
           context_ungroupTab: "TabGroup-remove",
-          context_zenMoveToFolder: "TabGroup-remove",
+          context_zenMoveToFolder: "folder-open",
+          "better-zen-folders-move-space": "move-tab",
           "context-openlinkinusercontext-menu": "container-tab",
           context_reopenInContainer: "container-tab",
           "context-openlink": "window",
@@ -3698,7 +3699,8 @@
           context_moveTabOptions: "move-tab",
           context_reverseSplitView: "move-tab",
           context_ungroupTab: "remove-tab",
-          context_zenMoveToFolder: "remove-tab",
+          context_zenMoveToFolder: "folder",
+          "better-zen-folders-move-space": "move-tab",
           context_zenShareWorkspace: "share",
           context_zenShareFolder: "share",
           context_zenShareSplitView: "share",
@@ -4290,6 +4292,16 @@
     for (const n of all) if (n.id) counts.set(n.id, (counts.get(n.id) || 0) + 1);
     const stable = (n) => n?.id && counts.get(n.id) === 1 && !transient(n);
     const sources = new Map(all.map((node) => [node, resolveSource(node)])), signatures = /* @__PURE__ */ new Map(), anonymous = /* @__PURE__ */ new Map(), identities = /* @__PURE__ */ new Map();
+    const nativeShareKey = "native:tab-context-share-url";
+    const nativeShares = root.id === "tabContextMenu" ? all.filter((node) => {
+      const source = sources.get(node);
+      return !node.id && !transient(node) && node.parentElement === root && node.localName === "menu" && node.classList.contains("share-tab-url-item") && node.getAttribute("data-l10n-id") === "tab-context-share-url" && (!source || ["unknown", "browser"].includes(source.kind));
+    }) : [];
+    if (nativeShares.length === 1 && !counts.has(nativeShareKey)) {
+      const node = nativeShares[0];
+      identities.set(node, nativeShareKey);
+      sources.set(node, { kind: "browser", name: "Zen Browser", via: "browser" });
+    }
     function identity(node) {
       if (identities.has(node)) return identities.get(node);
       if (stable(node)) {
@@ -4945,6 +4957,27 @@
         notify();
       }
     }
+    function ownerOnlySubmenuChange(c, record) {
+      const popup = record.target.closest?.("menupopup");
+      if (!popup || popup === c.root) return false;
+      const parent = c.scan.items.find((item) => c.scan.nodes.get(item.key) === popup.parentElement);
+      if (parent?.kind !== "native-menu") return false;
+      const tracked = new Set(c.scan.nodes.values());
+      const ownerOnly = (node) => {
+        if (node.nodeType !== 1) return true;
+        if (node.matches("style,link,script") || node.querySelector("style,link,script")) return false;
+        const selector = "menu,menuitem,menuseparator,menugroup", rows = [...node.querySelectorAll(selector)];
+        if (node.matches(selector)) rows.unshift(node);
+        return rows.every((row) => !row.id && !tracked.has(row) && resolveSource(row)?.kind !== "mod");
+      };
+      if (record.target !== popup) {
+        const row = record.target.closest?.("menu,menuitem,menuseparator,menugroup");
+        if (!row || !ownerOnly(row)) return false;
+      }
+      if (record.type === "attributes") return record.target !== popup && ownerOnly(record.target);
+      const changed = [...record.addedNodes || [], ...record.removedNodes || []];
+      return record.type === "childList" && changed.length > 0 && changed.every(ownerOnly);
+    }
     function attach(root, label, previous) {
       const c = { root, label, scan: discoverRoot(root, { resolveSource }), attrs: /* @__PURE__ */ new Map(), styles: /* @__PURE__ */ new Map(), moves: /* @__PURE__ */ new Map(), owned: /* @__PURE__ */ new Set(), menus: /* @__PURE__ */ new Map(), fallbackWrites: /* @__PURE__ */ new WeakMap(), open: false, bypass: false, epoch: 0, scheduled: false, reconciliations: 0, lastOwners: previous?.lastOwners || /* @__PURE__ */ new Map(), pendingOwners: previous?.pendingOwners || /* @__PURE__ */ new Map(), remembered: previous?.remembered || /* @__PURE__ */ new Map() };
       ownerChanges(c);
@@ -4958,6 +4991,20 @@
         records = records.filter((record) => !derivedPresentation(record));
         if (!records.length) return;
         adoptForeign(c, records);
+        if (c.open) {
+          const ownerOnly = records.filter((record) => ownerOnlySubmenuChange(c, record));
+          if (ownerOnly.length) {
+            records = records.filter((record) => !ownerOnly.includes(record));
+            const state = getState();
+            if (state?.options?.enabled !== false && !c.bypass) {
+              pause(c);
+              const saved = state?.roots?.[c.root.id]?.records || {};
+              for (const popup of new Set(ownerOnly.map((record) => record.target.closest("menupopup")))) accessKeys(c, popup, saved);
+              observe(c);
+            }
+          }
+        }
+        if (!records.length) return;
         if (c.open && !c.scheduled && records.every((record) => record.type === "attributes" && ["label", "accesskey"].includes(record.attributeName)) && c.reconciliations < 24) {
           c.reconciliations++;
           pause(c);
@@ -6452,7 +6499,7 @@
     const icons = createIconService(window2, { baseURL: BASE, fetch: (...args) => browserWindow().fetch(...args) });
     const stylesheet = window2.document.createElementNS("http://www.w3.org/1999/xhtml", "link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = BASE + "style.css?v=0.1.3";
+    stylesheet.href = BASE + "style.css?v=0.1.4";
     stylesheet.setAttribute("data-cme-stylesheet", "true");
     window2.document.documentElement.append(stylesheet);
     const owner = {

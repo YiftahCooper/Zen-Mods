@@ -16,8 +16,10 @@ CSS supplies the exact command/localization mappings. Broken upstream references
 to `sidebars-right`, `edit-theme` and `new-tab` use existing `sidebar-right`,
 `color` and `plus` artwork, respectively. The full upstream styling, settings and
 folding script are not included.
-Eight additional mappings assign Back, Forward, Reload and Stop to existing
-artwork in both packs. These mappings are local to Context Menu Editor.
+Local mappings assign Back, Forward, Reload and Stop to existing artwork in
+both packs. Move to Folder uses a folder glyph, and Better Zen Folders' Move
+to Space uses the move-tab glyph instead of a generic menu fallback. These
+overrides are local to Context Menu Editor.
 
 Fluent SVG context paint is replaced with `#667b91`, and contextual opacity with
 `1`, so it can render in the HTML gallery and native menu decorations.
