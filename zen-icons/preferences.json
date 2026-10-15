@@ -1,0 +1,131 @@
+[
+  {
+    "type": "separator",
+    "id": "zen-icons-behaviour-heading",
+    "label": "Icon Behaviour",
+    "size": "18px"
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.double-click-icons",
+    "label": "Double-Click an Icon to Open the Picker",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.tab.use-space-colour",
+    "label": "Use Space Colour for Default Tab Icons",
+    "defaultValue": true
+  },
+  {
+    "type": "separator",
+    "id": "zen-icons-tab-heading",
+    "label": "Tabs: Picker Defaults",
+    "size": "18px"
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.tab.show-emoji",
+    "label": "Show Emojis by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.tab.show-zen",
+    "label": "Show Zen Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.tab.show-lucide",
+    "label": "Show Lucide by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.tab.show-custom",
+    "label": "Show Custom Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "zen-icons.tab.hidden-categories",
+    "label": "Hidden Categories",
+    "defaultValue": "",
+    "placeholder": "Comma-separated names, e.g. Animals, Flags; or use Filter → Save as Defaults"
+  },
+  {
+    "type": "separator",
+    "id": "zen-icons-folder-heading",
+    "label": "Folders: Picker Defaults",
+    "size": "18px"
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.folder.show-emoji",
+    "label": "Show Emojis by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.folder.show-zen",
+    "label": "Show Zen Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.folder.show-lucide",
+    "label": "Show Lucide by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.folder.show-custom",
+    "label": "Show Custom Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "zen-icons.folder.hidden-categories",
+    "label": "Hidden Categories",
+    "defaultValue": "",
+    "placeholder": "Comma-separated names, e.g. Animals, Flags; or use Filter → Save as Defaults"
+  },
+  {
+    "type": "separator",
+    "id": "zen-icons-space-heading",
+    "label": "Spaces: Picker Defaults",
+    "size": "18px"
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.space.show-emoji",
+    "label": "Show Emojis by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.space.show-zen",
+    "label": "Show Zen Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.space.show-lucide",
+    "label": "Show Lucide by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "zen-icons.space.show-custom",
+    "label": "Show Custom Icons by Default",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "zen-icons.space.hidden-categories",
+    "label": "Hidden Categories",
+    "defaultValue": "",
+    "placeholder": "Comma-separated names, e.g. Animals, Flags; or use Filter → Save as Defaults"
+  }
+]

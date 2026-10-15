@@ -1,0 +1,25 @@
+{
+  "id": "zen-icons-local",
+  "name": "Zen Icons",
+  "description": "Tagged, categorized Zen, Lucide, emoji, and custom icons in Zen's normal picker.",
+  "homepage": "https://github.com/YiftahCooper/Zen-Mods/tree/main/zen-icons",
+  "author": "Yiftah Cooper",
+  "version": "0.3.0-rc.4",
+  "preferences": "preferences.json",
+  "chromeManifest": "chrome.manifest",
+  "createdAt": "2026-08-23",
+  "updatedAt": "2026-10-15",
+  "style": {
+    "chrome": "chrome.css"
+  },
+  "scripts": {
+    "ZenIcons.uc.js": {
+      "name": "Zen Icons runtime",
+      "description": "Enhances Zen's existing icon picker.",
+      "include": ["chrome://browser/content/browser.xhtml"]
+    }
+  },
+  "supportsUnload": true,
+  "tags": ["Javascript", "Icons", "Spaces", "Folders"],
+  "fork": ["zen"]
+}
