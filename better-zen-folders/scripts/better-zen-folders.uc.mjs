@@ -2849,8 +2849,9 @@ export class StickyFolderVisibilityManager {
 }
 
 /** A per-window animation adapter, never a prototype patch. Native collapse
- * events (including SessionStore observers) still run. Only Sticky/projected
- * branches use this measured accordion; ordinary native branches delegate.
+ * events (including SessionStore observers) still run. Every branch whose rows
+ * are projected here uses this measured accordion, including ordinary folders.
+ * Unmanaged and live folders retain their native animation.
  * Height is interpolated on changed rows only. A new gesture snapshots the
  * current heights and retires the old writer before reversing direction. */
 export class StickyProjectionMotion {
@@ -2893,8 +2894,9 @@ export class StickyProjectionMotion {
     if (!this.hooks.length || !group?.isZenFolder || group.isLiveFolder) return false;
     if (this.contains(group)) return true;
     const container = group.parentElement?.collapsiblePins === group ? group.groupContainer : group;
-    return [...this.manager.projection].some(([item, state]) => container?.contains?.(item)
-      && (state.sticky || state.pathOnly || this.manager.exposure.has(item)));
+    // Projection hides ordinary children too. Delegating those branches to
+    // native motion measures rows after they vanished and produces a snap.
+    return [...this.manager.projection].some(([item]) => container?.contains?.(item));
   }
   prepare(group) {
     if (!this.owns(group) || this.before.has(group)) return;
@@ -3168,7 +3170,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.19", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.20", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -8961,7 +8963,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.19 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.20 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),
