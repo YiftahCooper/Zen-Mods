@@ -1,0 +1,3341 @@
+{
+  "revision": "71750239d6fd114800989d91f2567cd4c47635e9",
+  "archiveSha256": "fe56ff77df086c56dca51977334d293e3715cd01fae6b389e6a5bd60a3fa0b0f",
+  "packs": [
+    {
+      "id": "fluent",
+      "label": "FluentUI",
+      "icons": [
+        {
+          "id": "AI-chat",
+          "label": "Ai chat",
+          "tags": [
+            "ai",
+            "chat"
+          ],
+          "path": "assets/packs/fluent/AI-chat.svg",
+          "sha256": "5115e6a02fb9730149bbfc8e7704d25a6ce439cc4de319ed16f244225a8a728d",
+          "originalSha256": "bb77c748965d2371529ab2e104ea27e5e83f38427123a896c541b23f03b20bab"
+        },
+        {
+          "id": "AI-summarize",
+          "label": "Ai summarize",
+          "tags": [
+            "ai",
+            "summarize"
+          ],
+          "path": "assets/packs/fluent/AI-summarize.svg",
+          "sha256": "502f7a59388997ade090b343918062c7be6ad9a8c128705e0161edd6dc426ee0",
+          "originalSha256": "f685b22601df9b87712f7fcaa73d994777db01ae2e2eae4cf4cc3cf304bf5c12"
+        },
+        {
+          "id": "TabGroup-add",
+          "label": "Tab group add",
+          "tags": [
+            "tab",
+            "group",
+            "add"
+          ],
+          "path": "assets/packs/fluent/TabGroup-add.svg",
+          "sha256": "4c133330b842d33a435c01128a5f0834c5d3237431f0b122352c190d0349b346",
+          "originalSha256": "54b64410b363c8077ab78d3a6307bdf90825f39f543c351e5838a9dc56ddb6db"
+        },
+        {
+          "id": "TabGroup-remove",
+          "label": "Tab group remove",
+          "tags": [
+            "tab",
+            "group",
+            "remove"
+          ],
+          "path": "assets/packs/fluent/TabGroup-remove.svg",
+          "sha256": "e587167508d07134b0e07e4062b3e91b718aeffb8da9cfda324d85bf1f091957",
+          "originalSha256": "fac4f250fa9e7ac1053ff5b8446d15c821c13447632f2ff05f0706aad5284fd6"
+        },
+        {
+          "id": "accessibility",
+          "label": "Accessibility",
+          "tags": [
+            "accessibility"
+          ],
+          "path": "assets/packs/fluent/accessibility.svg",
+          "sha256": "4661dafbb9ac8648fe36580dc327156a10d6e74fee714a8ecaa7589ec8e08e96",
+          "originalSha256": "a48334900551ae1a25af4346b7f3b3729e3a9593789e4889cece7f3f4f040331"
+        },
+        {
+          "id": "add-to-dictionary",
+          "label": "Add to dictionary",
+          "tags": [
+            "add",
+            "to",
+            "dictionary"
+          ],
+          "path": "assets/packs/fluent/add-to-dictionary.svg",
+          "sha256": "0a94637c8539d829cf4fb4ed458acd138f22712b560a870ea7cda40b90e946c7",
+          "originalSha256": "a62d2c6f15182e1f036687b15e4cede40fb1d1a1bdf19f30f94b27c6b215cea5"
+        },
+        {
+          "id": "arrow-down",
+          "label": "Arrow down",
+          "tags": [
+            "arrow",
+            "down"
+          ],
+          "path": "assets/packs/fluent/arrow-down.svg",
+          "sha256": "8e8fc63c6caa2cdf9223c0025195d341059a7ff17ed8c377c81abcfca8fa3120",
+          "originalSha256": "4cebbfa2e12186dfbd3cd2812003866182aecde226bc707456ac1b212b5be283"
+        },
+        {
+          "id": "arrow-left",
+          "label": "Arrow left",
+          "tags": [
+            "arrow",
+            "left"
+          ],
+          "path": "assets/packs/fluent/arrow-left.svg",
+          "sha256": "2c4f1e4a859fa280bb9038e76adfe125ed67ca01836fc9fe6710b0e4584713a6",
+          "originalSha256": "9eb680deb49047cc0cb565843fcd755dd882cc2f21a88803ece41a9d6a7bdf3b"
+        },
+        {
+          "id": "arrow-right",
+          "label": "Arrow right",
+          "tags": [
+            "arrow",
+            "right"
+          ],
+          "path": "assets/packs/fluent/arrow-right.svg",
+          "sha256": "4475378f87d795b5882652dc80bf5bcc0639446f5572542a916be8c59d6999e5",
+          "originalSha256": "2ade83c957517888c560a252684bab1f36bcb1212bbaed4704725aa9500e77a1"
+        },
+        {
+          "id": "arrow-up",
+          "label": "Arrow up",
+          "tags": [
+            "arrow",
+            "up"
+          ],
+          "path": "assets/packs/fluent/arrow-up.svg",
+          "sha256": "5b188d351bd2224595c9b1b180e70769fc2a9d9039caec2cb744c4d983a66955",
+          "originalSha256": "094dc5eb4cccd31ed2c061c587a042e58f1871487dc266190b0eb77b55f812ae"
+        },
+        {
+          "id": "ask-chat",
+          "label": "Ask chat",
+          "tags": [
+            "ask",
+            "chat"
+          ],
+          "path": "assets/packs/fluent/ask-chat.svg",
+          "sha256": "4d87e26da00d5025eb38653dfc3f03552d0e8b3375c2513dcf23c801909dd62b",
+          "originalSha256": "e147c9ced5c97f8f611041ccce745a186e59bb1cb9691dd15e168d37ebf1d383"
+        },
+        {
+          "id": "audio-save",
+          "label": "Audio save",
+          "tags": [
+            "audio",
+            "save"
+          ],
+          "path": "assets/packs/fluent/audio-save.svg",
+          "sha256": "75ff420a04395b88c601da3f55eed187fbb7655d023b65e7eb3546611cb985b4",
+          "originalSha256": "5191d40dba3045a6fcc353d247af5ca6b8cbf1a58e4f5ec72080ea1091f179c9"
+        },
+        {
+          "id": "autoplay-media-blocked",
+          "label": "Autoplay media blocked",
+          "tags": [
+            "autoplay",
+            "media",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/autoplay-media-blocked.svg",
+          "sha256": "2897dd017f5b5f083cc95b2410ddb8d48694d26ce57719754feeb99e8cdd14b9",
+          "originalSha256": "0ea3e4458f5c62812e86f856ec67512e6826f156db7649a04dcf8b903b2ed635"
+        },
+        {
+          "id": "autoplay-media",
+          "label": "Autoplay media",
+          "tags": [
+            "autoplay",
+            "media"
+          ],
+          "path": "assets/packs/fluent/autoplay-media.svg",
+          "sha256": "77e1e94f78a77ef1409ddad098e216284a12fd695bbf788265ab2ca9cae9957d",
+          "originalSha256": "bb81e1a19ab8295bb793afbf56dcd381e69f39891940ddc559ef0a3e07bff1ff"
+        },
+        {
+          "id": "bookmark-hollow",
+          "label": "Bookmark hollow",
+          "tags": [
+            "bookmark",
+            "hollow"
+          ],
+          "path": "assets/packs/fluent/bookmark-hollow.svg",
+          "sha256": "cf6b64ad5a40734d922494476cf1a00b06316e8c73aa7c3fdce122a03e504b3f",
+          "originalSha256": "71eb7c921ffc861b8a0fc8f5147a38f7ab47cd91d5aa2f7632940c99d487cf91"
+        },
+        {
+          "id": "bookmark-star-on-tray",
+          "label": "Bookmark star on tray",
+          "tags": [
+            "bookmark",
+            "star",
+            "on",
+            "tray"
+          ],
+          "path": "assets/packs/fluent/bookmark-star-on-tray.svg",
+          "sha256": "d01ab35df3a56aed14a5182928bbd9a7e75e9ecb1c9b62d952b930caf99f4205",
+          "originalSha256": "bf292b2ac30da4971aa8b3f157dc368414a88deb5e602c11b3ea4dbc959292e1"
+        },
+        {
+          "id": "bookmark",
+          "label": "Bookmark",
+          "tags": [
+            "bookmark"
+          ],
+          "path": "assets/packs/fluent/bookmark.svg",
+          "sha256": "7bb3a36421e9c1fb5db99978b0bc32514837610c4605b156119fd3f563ef68ea",
+          "originalSha256": "e34c4b834652cea48e51b8549caadee0fe3eb581f81eecc1c8b2425d4ca77be4"
+        },
+        {
+          "id": "camera-blocked",
+          "label": "Camera blocked",
+          "tags": [
+            "camera",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/camera-blocked.svg",
+          "sha256": "3192ddab764683527aca6ee529415188d34e203f779b2fd15297878e5b0671c6",
+          "originalSha256": "1d192802606c8d062782b4f55c0568bb5b498d29598f5707bcf3699e8cde9cd6"
+        },
+        {
+          "id": "camera",
+          "label": "Camera",
+          "tags": [
+            "camera"
+          ],
+          "path": "assets/packs/fluent/camera.svg",
+          "sha256": "28b3cd3b1fb77db9938ba23bcd31eadf2e0834277cabf2b52eebccd754817c78",
+          "originalSha256": "b032c934383db3a39ed637346fa5dfff58947a1b3efbb6d1bafdb71bfaa1a635"
+        },
+        {
+          "id": "canvas-blocked",
+          "label": "Canvas blocked",
+          "tags": [
+            "canvas",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/canvas-blocked.svg",
+          "sha256": "e1ee687a852be7a9bd31d7b18318fa6f11795a7cc4416f8dfdc0e7c10f0bd585",
+          "originalSha256": "9b88fdb8e087900bc48e4d43512b40fde050fba3b5ce24cd3a3fd4210bbdb224"
+        },
+        {
+          "id": "canvas",
+          "label": "Canvas",
+          "tags": [
+            "canvas"
+          ],
+          "path": "assets/packs/fluent/canvas.svg",
+          "sha256": "607b65885dd77cb732bccb6af5f4581f708dc9034f458dfe2f8da883b194fcc5",
+          "originalSha256": "a61fa4fe2f1a252acd18efcd8292b58b1d33a908e1d3c910a846399b8a456bed"
+        },
+        {
+          "id": "checkmark",
+          "label": "Checkmark",
+          "tags": [
+            "checkmark"
+          ],
+          "path": "assets/packs/fluent/checkmark.svg",
+          "sha256": "a10bcf547daaeb43df5fabd93cb473053bbaa48e78eccf4feea37dbb7edcf164",
+          "originalSha256": "2e8eadea213b47c424dfea3cb965ca70b7da698dea978412be6261f3b5e40914"
+        },
+        {
+          "id": "chevron",
+          "label": "Chevron",
+          "tags": [
+            "chevron"
+          ],
+          "path": "assets/packs/fluent/chevron.svg",
+          "sha256": "9d5d00302758721a4a159a4cdad4edbef873fc7258e41eb2a56dbfe0c6357963",
+          "originalSha256": "e514d64e52e9b66dbb566d72436c178539d66b31365cc1db7464f39ff93ac192"
+        },
+        {
+          "id": "close-all",
+          "label": "Close all",
+          "tags": [
+            "close",
+            "all"
+          ],
+          "path": "assets/packs/fluent/close-all.svg",
+          "sha256": "70eac5b17fb428183968fcaaf915262236890cf95b2491c4b99f4738200c1736",
+          "originalSha256": "5909384133c3549050a968f229665cbc5bc0247e010d6b5719f7d50dd33b2ed4"
+        },
+        {
+          "id": "close",
+          "label": "Close",
+          "tags": [
+            "close"
+          ],
+          "path": "assets/packs/fluent/close.svg",
+          "sha256": "34c15f4ed3434afe502a568e35a1fe4d802fcf5d73d3170476c31d8aa6e70471",
+          "originalSha256": "9cd8bb02da4a44a8ce898dcd24cc3a354867f0d8748c33aa7d8086f6b9e4e40f"
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "tags": [
+            "color"
+          ],
+          "path": "assets/packs/fluent/color.svg",
+          "sha256": "6244f62e745fd372336fded1895a70876bbc5b5974d543e1d3428ab329529643",
+          "originalSha256": "967edfab49916699cddf9d4f153614afaf947e2e01038f1b3363f203e5143abb"
+        },
+        {
+          "id": "container-tab",
+          "label": "Container tab",
+          "tags": [
+            "container",
+            "tab"
+          ],
+          "path": "assets/packs/fluent/container-tab.svg",
+          "sha256": "1f809122e9ff18e776a55fab700f2c1eacccb3d66f048920182f4ee53e4c5c05",
+          "originalSha256": "b026ddbc1e5da38183672d780fe7cc2fc1a61b7e50a8931a431a0438c34a40a1"
+        },
+        {
+          "id": "customize",
+          "label": "Customize",
+          "tags": [
+            "customize"
+          ],
+          "path": "assets/packs/fluent/customize.svg",
+          "sha256": "d6b9141d7838f34ee0b26d216c83e2f4391c500b8000ee24a6ff1873548a8f8a",
+          "originalSha256": "0bec396787ba9b4dbef413b730bd74fa1bddd046e7072aa87038f017bcea7dcf"
+        },
+        {
+          "id": "desktop-notification-blocked",
+          "label": "Desktop notification blocked",
+          "tags": [
+            "desktop",
+            "notification",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/desktop-notification-blocked.svg",
+          "sha256": "2578686dffd73eea1825e8c6ab99a3a7901f1a1e8e5f2f641317c984c747d93b",
+          "originalSha256": "db12bc10f5d6a8a4c52c2fdb90725024bfc5459522fdee753dc9862f697a417d"
+        },
+        {
+          "id": "desktop-notification",
+          "label": "Desktop notification",
+          "tags": [
+            "desktop",
+            "notification"
+          ],
+          "path": "assets/packs/fluent/desktop-notification.svg",
+          "sha256": "201cfcb643acb7278b0de51252eb65dc4a49be8257a6487822c7f30782da158e",
+          "originalSha256": "f79e253c4813d4748e9dafd126493163d249e4962522f4f68ff75fd112949584"
+        },
+        {
+          "id": "downloads",
+          "label": "Downloads",
+          "tags": [
+            "downloads"
+          ],
+          "path": "assets/packs/fluent/downloads.svg",
+          "sha256": "a47e363b55f5495d20185656cc76f4c9b3fefb48df5abd20010968f1b01c57b1",
+          "originalSha256": "b2e0ac378c5e17bc3651b99ff3e4f5c4771e4195c0e6c129495241b38debe576"
+        },
+        {
+          "id": "duplicate-tab",
+          "label": "Duplicate tab",
+          "tags": [
+            "duplicate",
+            "tab"
+          ],
+          "path": "assets/packs/fluent/duplicate-tab.svg",
+          "sha256": "56977e72f9aa7941718f0a094f9577dd9072ec1bcb82eb582db82aabeafa286f",
+          "originalSha256": "c4ababa015249cf2660dfd3d8a56b4a1f90ea6152f9a8f87055a027ac2155259"
+        },
+        {
+          "id": "edit-copy",
+          "label": "Edit copy",
+          "tags": [
+            "edit",
+            "copy"
+          ],
+          "path": "assets/packs/fluent/edit-copy.svg",
+          "sha256": "f40dd251a7bce57f2b42ff92bfe73370f95991dcda61b234ad1fffe89515481d",
+          "originalSha256": "ff0c933742a52e1dc4db8e4bf61fc9dd5b1c51d98aaf94ce73b04787f1ba64a0"
+        },
+        {
+          "id": "edit-cut",
+          "label": "Edit cut",
+          "tags": [
+            "edit",
+            "cut"
+          ],
+          "path": "assets/packs/fluent/edit-cut.svg",
+          "sha256": "d2dd07a416c0d0f166f59d95311591cae2870f7ba93956440157756d5e2d3e25",
+          "originalSha256": "b6df66bed3e73188ba0a5dd9c566200a0f0edfe863538c2f279a0685e64d42d9"
+        },
+        {
+          "id": "edit-delete",
+          "label": "Edit delete",
+          "tags": [
+            "edit",
+            "delete"
+          ],
+          "path": "assets/packs/fluent/edit-delete.svg",
+          "sha256": "284a0a51ddfc5dbbc5c0b23da18ac735ef954e860304b2a17a9e943dbb176a4d",
+          "originalSha256": "db083332458c1d8362c74c5d22166cb57cafadf159174fa500bbbfd36d40e2f3"
+        },
+        {
+          "id": "edit-paste",
+          "label": "Edit paste",
+          "tags": [
+            "edit",
+            "paste"
+          ],
+          "path": "assets/packs/fluent/edit-paste.svg",
+          "sha256": "4c60793baeee3c3620fd560888f338c99576f6a15979e4d7fcbb85ede31bda41",
+          "originalSha256": "073d24abd1323980f09bd5747533b463f82516be6540075b7b0995b4cb2f4938"
+        },
+        {
+          "id": "edit-redo",
+          "label": "Edit redo",
+          "tags": [
+            "edit",
+            "redo"
+          ],
+          "path": "assets/packs/fluent/edit-redo.svg",
+          "sha256": "fad5ed5965132bb26709be3f2eeda5c74d40c2f20da4083a7efb8c0800f751ac",
+          "originalSha256": "4d7663e7fc3d409fc7a3bbbeca29d980937f3f92f66b937425177a15d7a1701d"
+        },
+        {
+          "id": "edit-select-all",
+          "label": "Edit select all",
+          "tags": [
+            "edit",
+            "select",
+            "all"
+          ],
+          "path": "assets/packs/fluent/edit-select-all.svg",
+          "sha256": "c04d127635af4cdf30f1473f81368b90b24b01a0ef14b4cb385e24058c8fa2ac",
+          "originalSha256": "50fbec3d07813f191fbd9b2db541d00a17c0797467b5331dab15b6e04ca73d70"
+        },
+        {
+          "id": "edit-undo",
+          "label": "Edit undo",
+          "tags": [
+            "edit",
+            "undo"
+          ],
+          "path": "assets/packs/fluent/edit-undo.svg",
+          "sha256": "181fc34850d3f0912299f8b7e1f1addb556b631c1509b315ec399a454a732533",
+          "originalSha256": "cc7eb4831ec700d75c3d427d0be7a9edb4ec53ca98947053804bfd312f44d170"
+        },
+        {
+          "id": "edit",
+          "label": "Edit",
+          "tags": [
+            "edit"
+          ],
+          "path": "assets/packs/fluent/edit.svg",
+          "sha256": "95e8f4efbc836b7f61a9120f5cde8d3874b07e3f4ab66f6ac98aab4c8e515ca5",
+          "originalSha256": "13251b7055785f00be71307510c7becd0ae4a54999a445c8d69b25d37899e1cc"
+        },
+        {
+          "id": "essential-add",
+          "label": "Essential add",
+          "tags": [
+            "essential",
+            "add"
+          ],
+          "path": "assets/packs/fluent/essential-add.svg",
+          "sha256": "a880826520f9f26db94b9736164d34d121e37ebc69f6ded113d64633eac11e25",
+          "originalSha256": "1ead7a8fd9a3a5dc131fa110ec4ed78a5ff4ed85605ea4030a27ef7323933d7b"
+        },
+        {
+          "id": "essential-remove",
+          "label": "Essential remove",
+          "tags": [
+            "essential",
+            "remove"
+          ],
+          "path": "assets/packs/fluent/essential-remove.svg",
+          "sha256": "b60206987613701ae6adf84f3c834346c0547145305bd64cd7db8f6f52563e50",
+          "originalSha256": "b5f0ed994f918a3e2611b691654d89e0092a1ce0e3b6c1613f440da7fa55366a"
+        },
+        {
+          "id": "ext-link",
+          "label": "Ext link",
+          "tags": [
+            "ext",
+            "link"
+          ],
+          "path": "assets/packs/fluent/ext-link.svg",
+          "sha256": "9a40db4c96cb1606b680e527a2137e887581b00800e25762e3e842e937d285b4",
+          "originalSha256": "0792316e6b4b5ab15b07fdf8e8f34b50fd85ea3c80546bea9394ed1c5d705655"
+        },
+        {
+          "id": "extension-blocked",
+          "label": "Extension blocked",
+          "tags": [
+            "extension",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/extension-blocked.svg",
+          "sha256": "80f3ce971da015f1b4c0677a859680344c9df0dc44bbb759d13c016eb5a1d707",
+          "originalSha256": "0f9b10930246bc4054dd37ae78ec6d8f37ea1185403fd3738f8c3737942a9e1c"
+        },
+        {
+          "id": "extension",
+          "label": "Extension",
+          "tags": [
+            "extension"
+          ],
+          "path": "assets/packs/fluent/extension.svg",
+          "sha256": "6984607dc30e499f60d94b261d7451a7933125866b9b46be1a53a9951a91d3ee",
+          "originalSha256": "126917b186fc66248a7015c9fb8b1390f5a9b8a85d08e2639f230d6c2bc9b1e5"
+        },
+        {
+          "id": "firefox-logo",
+          "label": "Firefox logo",
+          "tags": [
+            "firefox",
+            "logo"
+          ],
+          "path": "assets/packs/fluent/firefox-logo.svg",
+          "sha256": "0935b695ea8d8dbd56683894d00416cd98be281983f2ea3fef7193a03f94659a",
+          "originalSha256": "0935b695ea8d8dbd56683894d00416cd98be281983f2ea3fef7193a03f94659a"
+        },
+        {
+          "id": "firefox",
+          "label": "Firefox",
+          "tags": [
+            "firefox"
+          ],
+          "path": "assets/packs/fluent/firefox.svg",
+          "sha256": "4d12988bdc382e43960bb30db45457c8f7b836edb2ea68c8f09865abc0bfbecc",
+          "originalSha256": "e5b189abd913de69dd29d813346a5d1b23e0ee87079683e58ab829a8fc5dd6e9"
+        },
+        {
+          "id": "folder-add",
+          "label": "Folder add",
+          "tags": [
+            "folder",
+            "add"
+          ],
+          "path": "assets/packs/fluent/folder-add.svg",
+          "sha256": "6f4f7618b58f95a7299326df3d4635c187a779060ce8c39f1e6bb5c7d025389c",
+          "originalSha256": "c230581bf7a29629ea7e2d32791b50b8680d2915f897bea1ae3cca27cf797f38"
+        },
+        {
+          "id": "folder-open",
+          "label": "Folder open",
+          "tags": [
+            "folder",
+            "open"
+          ],
+          "path": "assets/packs/fluent/folder-open.svg",
+          "sha256": "a4793be4087e24f4b9e4adb235eb2e711c6cf6ed373d66f17172d2fa8102a7e7",
+          "originalSha256": "a82449f939ab2347d897fef9f2bbbf6acf56fec6ae18d8ed2811a2a547a44471"
+        },
+        {
+          "id": "folder-unpack",
+          "label": "Folder unpack",
+          "tags": [
+            "folder",
+            "unpack"
+          ],
+          "path": "assets/packs/fluent/folder-unpack.svg",
+          "sha256": "882dd756fb637ad00c7122b956f846de8a04adfbed462ec05c718b8a73185576",
+          "originalSha256": "d0125a1e05d68130f8eaccd7dc7cec8a3a1eb505e964a1418cb267719340f490"
+        },
+        {
+          "id": "folder_sync_convert",
+          "label": "Folder sync convert",
+          "tags": [
+            "folder",
+            "sync",
+            "convert"
+          ],
+          "path": "assets/packs/fluent/folder_sync_convert.svg",
+          "sha256": "4e17d77e4b1c2fd61f9d65bef339844cb3ddac3e35513830fafbae8dd7f6bc35",
+          "originalSha256": "4c65e788beda85da04df76c871b8fdc0f76510fc2eab007f5ae811869513e8ac"
+        },
+        {
+          "id": "forget",
+          "label": "Forget",
+          "tags": [
+            "forget"
+          ],
+          "path": "assets/packs/fluent/forget.svg",
+          "sha256": "f627c348639d11d1bdee2b5c30850e59399422fe8a522666ab9398760eacb700",
+          "originalSha256": "13510757ffedc044997a87ce1b96dab7bac77be428d2c02a6840cc366c006203"
+        },
+        {
+          "id": "fullscreen-exit",
+          "label": "Fullscreen exit",
+          "tags": [
+            "fullscreen",
+            "exit"
+          ],
+          "path": "assets/packs/fluent/fullscreen-exit.svg",
+          "sha256": "7e5ef1ffb8ef5ba724ac28bc41e9a3e331034cf43deaec467845098ab8118b6c",
+          "originalSha256": "b8e15e2d1205cb26704adf211633c741162f42b54fcc6e5442ff3786ee5ca9a3"
+        },
+        {
+          "id": "fullscreen",
+          "label": "Fullscreen",
+          "tags": [
+            "fullscreen"
+          ],
+          "path": "assets/packs/fluent/fullscreen.svg",
+          "sha256": "ae8d628e9a4aba2215970185e2c848eb22d1ae85a86a89b931d4b6a036edceee",
+          "originalSha256": "0d4a66b79666868fd76608338c7f15d24e583a36d145f32a20f9313bc4896c35"
+        },
+        {
+          "id": "geo-blocked",
+          "label": "Geo blocked",
+          "tags": [
+            "geo",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/geo-blocked.svg",
+          "sha256": "10e30654e5af82fd21baeb552192b6711032f04d3a57569dc3afa675fec84a33",
+          "originalSha256": "f027d43bab5ee2a7f0ab80f1cc515b91ab4a9e75aa2c9363cddfa4b5e2cab0a4"
+        },
+        {
+          "id": "geo",
+          "label": "Geo",
+          "tags": [
+            "geo"
+          ],
+          "path": "assets/packs/fluent/geo.svg",
+          "sha256": "a7a98826d9493351b4992dcff4f8c29743c4041805c81961b8bbf7d7f74be8c2",
+          "originalSha256": "c862bd18091d544ba8f139cc419e04e81babcb15d34087df98a47d6bd098f726"
+        },
+        {
+          "id": "help",
+          "label": "Help",
+          "tags": [
+            "help"
+          ],
+          "path": "assets/packs/fluent/help.svg",
+          "sha256": "f3f126bf4de4b8a4ac5814dd14a0c0ae4350c07f5103ab73bc1d7b037ef3ffdc",
+          "originalSha256": "1a9ed2e97e46a28cc8b896e103d7fee7e8af7a988b3e1d77a79326088ecbf0b0"
+        },
+        {
+          "id": "hide",
+          "label": "Hide",
+          "tags": [
+            "hide"
+          ],
+          "path": "assets/packs/fluent/hide.svg",
+          "sha256": "32e73937115b5fedb54c3c91ac9a926824339cdaea14d0eafee9aabb8645cd37",
+          "originalSha256": "cf2cca612d53400d975b2d0e9ee6aff20663a0e7c598d397636da4652528c1f9"
+        },
+        {
+          "id": "history",
+          "label": "History",
+          "tags": [
+            "history"
+          ],
+          "path": "assets/packs/fluent/history.svg",
+          "sha256": "ca6af3455c27cfcd30aecbb1448b0de21730c8dd83c25dc9a83b8298b02c0f78",
+          "originalSha256": "e9845a362da904007359fdb48e00282507db4bbae2acab662e32089cfe438c2a"
+        },
+        {
+          "id": "home",
+          "label": "Home",
+          "tags": [
+            "home"
+          ],
+          "path": "assets/packs/fluent/home.svg",
+          "sha256": "564ad21200ca7e9998e811828aa24bab4d1d74f4d4acda3d1b7f21574cb7f500",
+          "originalSha256": "60b815c3e11fe988a9e0f0c41a3d919dd495a39d138d53f8dfefafe874337576"
+        },
+        {
+          "id": "image-copy",
+          "label": "Image copy",
+          "tags": [
+            "image",
+            "copy"
+          ],
+          "path": "assets/packs/fluent/image-copy.svg",
+          "sha256": "dbaa6abfdf2f95086b7d519c8082e27dc2a107348ed1f1cb3e6d0f11c7236bb8",
+          "originalSha256": "74e491d5ad3d339fdf3804e0ed6fc62ec84d20be39ab77b7b003332341a48202"
+        },
+        {
+          "id": "image-open",
+          "label": "Image open",
+          "tags": [
+            "image",
+            "open"
+          ],
+          "path": "assets/packs/fluent/image-open.svg",
+          "sha256": "29dda75918b7f8ff22801a414a5cab50651a780436b8bca1d10a10c9e3a856f1",
+          "originalSha256": "99eab6a111c2ded0ba4a1419a97011b362c4ac1a5fd3adba64c9b91d2949207f"
+        },
+        {
+          "id": "image-save",
+          "label": "Image save",
+          "tags": [
+            "image",
+            "save"
+          ],
+          "path": "assets/packs/fluent/image-save.svg",
+          "sha256": "33f64cffacf7159cfa86e1a1748cb4d0990c83f9215a5f8f3fdfbb3cad5c4538",
+          "originalSha256": "6a59f9412e30f49ba02985450223e41e1a7f2f05d832229358c46756c7eca1ce"
+        },
+        {
+          "id": "info",
+          "label": "Info",
+          "tags": [
+            "info"
+          ],
+          "path": "assets/packs/fluent/info.svg",
+          "sha256": "08407ac1ba4449301a79716b3ed3e6de1f6fa4954a70e1b90f76b303d70188c1",
+          "originalSha256": "4d92c3eec8cbcc635f30e123affd7ca7c5122adbc3dccbe67437d7932317234d"
+        },
+        {
+          "id": "inspect",
+          "label": "Inspect",
+          "tags": [
+            "inspect"
+          ],
+          "path": "assets/packs/fluent/inspect.svg",
+          "sha256": "44b8993231397a07a7acaa3e9787c10513c896f1bc896f7200f291bd81aed32f",
+          "originalSha256": "e169b9f5e30ec2f52df2ebb77dd518dd84e8feb9069cc7f4b212890e794d9132"
+        },
+        {
+          "id": "library",
+          "label": "Library",
+          "tags": [
+            "library"
+          ],
+          "path": "assets/packs/fluent/library.svg",
+          "sha256": "ef5af00330dc59d75cea9102829fc472d984ad6ec9f3c413631338aaa647148e",
+          "originalSha256": "cec97ec8430c8001bde70dbb2307af8930e33d718bd72c87cde0bf05f6429729"
+        },
+        {
+          "id": "link",
+          "label": "Link",
+          "tags": [
+            "link"
+          ],
+          "path": "assets/packs/fluent/link.svg",
+          "sha256": "9ef1a6ab37870135f07fb7fe8e27f350c131283c5427c6b1b619fd51b12584bc",
+          "originalSha256": "97f5b92d4020e230f7d7d7aed009cd57806b6f52c5d7f5a902f50b0d7166a3fe"
+        },
+        {
+          "id": "mail",
+          "label": "Mail",
+          "tags": [
+            "mail"
+          ],
+          "path": "assets/packs/fluent/mail.svg",
+          "sha256": "cddfb08a0b94d48b10267a504980e823574523030613f94a4e5a0e2dc0a2c9c3",
+          "originalSha256": "4f43b42f922ac7947ab7c6f7ca21557b435dd4bc2fb9237613a89ae035ebc417"
+        },
+        {
+          "id": "manage",
+          "label": "Manage",
+          "tags": [
+            "manage"
+          ],
+          "path": "assets/packs/fluent/manage.svg",
+          "sha256": "5d3e257360a2758c9adf1d5dd7c845367c025c63a97a9badbb3f94faecba222d",
+          "originalSha256": "3963e1e17a35041e6c2e119349dc9176f2675576feeb20eac355924dc9b351e8"
+        },
+        {
+          "id": "media-loop",
+          "label": "Media loop",
+          "tags": [
+            "media",
+            "loop"
+          ],
+          "path": "assets/packs/fluent/media-loop.svg",
+          "sha256": "33012fd60bbb7c7902fec7cd9da84358fc553c8eae7d247fe52d6e307facea43",
+          "originalSha256": "8638b7de329db30f6160eed434ddf828403bc6c5a1a7771481c526475af922bc"
+        },
+        {
+          "id": "media-mute",
+          "label": "Media mute",
+          "tags": [
+            "media",
+            "mute"
+          ],
+          "path": "assets/packs/fluent/media-mute.svg",
+          "sha256": "36e4d30e72eb37e7931827b96d28c6f25f5dc7e9b63a9c3da81792dc10a3efd3",
+          "originalSha256": "fea6876677b028bf86de4e86fc577f0e79ac5a461ba1080039e55ec622a04f1c"
+        },
+        {
+          "id": "media-pause",
+          "label": "Media pause",
+          "tags": [
+            "media",
+            "pause"
+          ],
+          "path": "assets/packs/fluent/media-pause.svg",
+          "sha256": "8b0441d12d8ce6ca87f382526a8ad19b2274cf398797bbc55599ca08748b1561",
+          "originalSha256": "cd573a6ed1179ba68fb76738139292c288318e131bd0998d95e97ee48816ee6e"
+        },
+        {
+          "id": "media-pip",
+          "label": "Media pip",
+          "tags": [
+            "media",
+            "pip"
+          ],
+          "path": "assets/packs/fluent/media-pip.svg",
+          "sha256": "b92b8cabac922101d78235b9b1cd6c0edca1d7d606b3250ae3179cab9492e1d8",
+          "originalSha256": "cbca8c4a9ea21d047183722d042d7fa75eb96ccacf6209d8a196e825b754c276"
+        },
+        {
+          "id": "media-play",
+          "label": "Media play",
+          "tags": [
+            "media",
+            "play"
+          ],
+          "path": "assets/packs/fluent/media-play.svg",
+          "sha256": "e5d38bb970e9f48e8702b644f31c718507c3e5f14021da6d8927245193118c13",
+          "originalSha256": "ae6e1ff6bab77c2a2b2f335791afc56d1461509564814ba6e0d7ee59f70e19f5"
+        },
+        {
+          "id": "media-speed",
+          "label": "Media speed",
+          "tags": [
+            "media",
+            "speed"
+          ],
+          "path": "assets/packs/fluent/media-speed.svg",
+          "sha256": "237abf801ca8a8ca2beb9ae47fe002f94c60a0e18551b2d16739947342b44fcb",
+          "originalSha256": "69e2d792e0d97ef61df11f0150827ce3928b76cd22d2256aa506f5c02f327ab5"
+        },
+        {
+          "id": "media-unmute",
+          "label": "Media unmute",
+          "tags": [
+            "media",
+            "unmute"
+          ],
+          "path": "assets/packs/fluent/media-unmute.svg",
+          "sha256": "c07fcb25d7c2d7baae588ec9c3cabd50bb83335f88092f06d1ead609262a6e5d",
+          "originalSha256": "b721abff91062619da2f909375ad3fcafcf8d0871bee0007b58c5137911006a5"
+        },
+        {
+          "id": "menu-bar",
+          "label": "Menu bar",
+          "tags": [
+            "menu",
+            "bar"
+          ],
+          "path": "assets/packs/fluent/menu-bar.svg",
+          "sha256": "5e2ff63b95fb44b6a67d1e7e28cd3e7beafddbddb558a24192f563a6a749ad68",
+          "originalSha256": "fdd5d792dec632d93eb6b29cc3f607cbf8b5cbe69ee1ce1c9cb3eb381f50f86a"
+        },
+        {
+          "id": "menu",
+          "label": "Menu",
+          "tags": [
+            "menu"
+          ],
+          "path": "assets/packs/fluent/menu.svg",
+          "sha256": "68f59aeeac74c37089fce31becc9999414757f8d98fa6ebc278051e545f8dd42",
+          "originalSha256": "9887294817499ac016abff8f4de2e0384f0493dee21af91a385b867df70730d4"
+        },
+        {
+          "id": "microphone-blocked",
+          "label": "Microphone blocked",
+          "tags": [
+            "microphone",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/microphone-blocked.svg",
+          "sha256": "dd8d9dabf7de2c9a46add7983e17b55ec5af13cd7d058ee50c91100bac6268fd",
+          "originalSha256": "f7f7bf295783869ae3a2b03c6ab5302b0da9305b5e6eaba2ae064cbdbb3062d1"
+        },
+        {
+          "id": "microphone",
+          "label": "Microphone",
+          "tags": [
+            "microphone"
+          ],
+          "path": "assets/packs/fluent/microphone.svg",
+          "sha256": "3e260467db87dc8cb38151cdf1b64bbaed6c57c05db6650777e1845b1d18e410",
+          "originalSha256": "7d0244b5d3bb60692baa4792f41c102c2582f1e4c47a381d7ad53eb722ff35e9"
+        },
+        {
+          "id": "midi-blocked",
+          "label": "Midi blocked",
+          "tags": [
+            "midi",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/midi-blocked.svg",
+          "sha256": "b3914debbbc304f28f9efc14c684acd3dc87bb98d804559c8739567ccaa2efda",
+          "originalSha256": "f012983ce903c0f95a96de430b1bf9a430dbb81274d52012ebcd432a214e9b5f"
+        },
+        {
+          "id": "midi",
+          "label": "Midi",
+          "tags": [
+            "midi"
+          ],
+          "path": "assets/packs/fluent/midi.svg",
+          "sha256": "7a3f80f12c4d4a1be06d48563c6313665d6a857b35f71a2b856e9675ba898ffd",
+          "originalSha256": "401a41217fc340e52dfbd0c9d8e0a67f428bd8bd1b18a89af99567b91de39011"
+        },
+        {
+          "id": "move-tab",
+          "label": "Move tab",
+          "tags": [
+            "move",
+            "tab"
+          ],
+          "path": "assets/packs/fluent/move-tab.svg",
+          "sha256": "d94aab8620e1af049472fd4dd7f31052633a4a63a08c69b3942ebf79ef9bc229",
+          "originalSha256": "7ab105e99fb4a031c05ba433386aa909d13be8f19fedd83f852689a8c5270906"
+        },
+        {
+          "id": "new-tab-image",
+          "label": "New tab image",
+          "tags": [
+            "new",
+            "tab",
+            "image"
+          ],
+          "path": "assets/packs/fluent/new-tab-image.svg",
+          "sha256": "bd703f3341224718b7df992e1b74cbce007ecee1c30076edc0db103a095fe7a9",
+          "originalSha256": "a845de15f16686750203df66143d28dbc4f5632f4260d99f119803cd0ca633e9"
+        },
+        {
+          "id": "new-tab",
+          "label": "New tab",
+          "tags": [
+            "new",
+            "tab"
+          ],
+          "path": "assets/packs/fluent/new-tab.svg",
+          "sha256": "7ead3c2262529fefa15652760a426a026341eb27f01d69ebcfa59cfb5c29f30e",
+          "originalSha256": "35dcaba80704311716a5161847709e66257e710bf6affb584fcd359c9a58d5d0"
+        },
+        {
+          "id": "open",
+          "label": "Open",
+          "tags": [
+            "open"
+          ],
+          "path": "assets/packs/fluent/open.svg",
+          "sha256": "4bb47872afb4a49d69fae25f9456244f0e3b94525731ca66ee4b4f337186e257",
+          "originalSha256": "e3afd2d7ac9e9df8f88f9af154cb13d33e4e2c476239252e6c94a9a1cc25aefe"
+        },
+        {
+          "id": "page-portrait",
+          "label": "Page portrait",
+          "tags": [
+            "page",
+            "portrait"
+          ],
+          "path": "assets/packs/fluent/page-portrait.svg",
+          "sha256": "44496991994a8a1a4a1d0a49a2b80cb7a2cfb12bcdcf77c13ab44303bd42efa3",
+          "originalSha256": "fc6d71b52e634094900a365e29c21dc4c266a53ee720d03419758bdf7cff7872"
+        },
+        {
+          "id": "passwords",
+          "label": "Passwords",
+          "tags": [
+            "passwords"
+          ],
+          "path": "assets/packs/fluent/passwords.svg",
+          "sha256": "0b7bf010ce981db7f22cf108c40b7de318556c7415ceb672186aa9cc457e70fa",
+          "originalSha256": "f1a869b75c8bba7cdb15016dd54bb0e70eae6715af60f810802b533f46e26acf"
+        },
+        {
+          "id": "paste-and-go",
+          "label": "Paste and go",
+          "tags": [
+            "paste",
+            "and",
+            "go"
+          ],
+          "path": "assets/packs/fluent/paste-and-go.svg",
+          "sha256": "ea64f9404c1be9ed02017c156145079488a446827df9d47423e4dbcb98e54f00",
+          "originalSha256": "dc681daa95761889ae2a85bbbc65ae16140be77573acefaa237989bff287109f"
+        },
+        {
+          "id": "permissions-fill",
+          "label": "Permissions fill",
+          "tags": [
+            "permissions",
+            "fill"
+          ],
+          "path": "assets/packs/fluent/permissions-fill.svg",
+          "sha256": "fb15ceec0e4e24b8530f69188156cd06cb1b6da9a29b68e5de17752145af9107",
+          "originalSha256": "c08ddece37bda240991c7f80c6b36ff6ee02c08d3e2117ccbd82ad8253317892"
+        },
+        {
+          "id": "permissions",
+          "label": "Permissions",
+          "tags": [
+            "permissions"
+          ],
+          "path": "assets/packs/fluent/permissions.svg",
+          "sha256": "cd13854d4cc9fb47452f2cc0af42a1f16c219d8243be8c4a6b796c87c65556ca",
+          "originalSha256": "34026a206fbff56eccc2350fdc36045f683a50b78d151439c4e5679a43eed04e"
+        },
+        {
+          "id": "persistent-storage-blocked",
+          "label": "Persistent storage blocked",
+          "tags": [
+            "persistent",
+            "storage",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/persistent-storage-blocked.svg",
+          "sha256": "d73cf845dbe66faf7fa57cb4fa90c974d573817f2614a8b8353527a8baffd8d4",
+          "originalSha256": "07d335e147ce3c29c119174b168fad8b411ba6c41341f7d4e5bd3b74b3cf964c"
+        },
+        {
+          "id": "persistent-storage",
+          "label": "Persistent storage",
+          "tags": [
+            "persistent",
+            "storage"
+          ],
+          "path": "assets/packs/fluent/persistent-storage.svg",
+          "sha256": "d3e07970f16ce2613f114dbf9384444f20791f5c6cf28c01dbb59f08d0e54ac3",
+          "originalSha256": "cd645ab48d86feb951ec648ac408caea112306ac3c8ce986c97971bb870393c7"
+        },
+        {
+          "id": "pin",
+          "label": "Pin",
+          "tags": [
+            "pin"
+          ],
+          "path": "assets/packs/fluent/pin.svg",
+          "sha256": "8cb61d97b7f5845cccdbf10b7c148a54869d8a796132afe0ad173504ffb79e9b",
+          "originalSha256": "066260a73417776370dab2d11d65ed8caffe74a42abeb009e633e20de6611530"
+        },
+        {
+          "id": "plus",
+          "label": "Plus",
+          "tags": [
+            "plus"
+          ],
+          "path": "assets/packs/fluent/plus.svg",
+          "sha256": "3860ea7039525c9f2ec3c28d53c3aa009342fbc24a2c1c1917a9078780c05b61",
+          "originalSha256": "41b9632a93a34df2870d3bfacb83e44d291aa471f073b77dcebd67d49f1a9b4e"
+        },
+        {
+          "id": "pocket-outline",
+          "label": "Pocket outline",
+          "tags": [
+            "pocket",
+            "outline"
+          ],
+          "path": "assets/packs/fluent/pocket-outline.svg",
+          "sha256": "2a5fb5ae08e6f46a089e50fa870a8260f553d8519571980e160c3309f28fb90b",
+          "originalSha256": "56ac2207c8ac5c969a942248d78f3be95efc17a345fa4617005deb97162baabf"
+        },
+        {
+          "id": "popup",
+          "label": "Popup",
+          "tags": [
+            "popup"
+          ],
+          "path": "assets/packs/fluent/popup.svg",
+          "sha256": "fdcc2426516f715b3a00c29280d1d34a5d751e8d4c40adba69465cbc267a4987",
+          "originalSha256": "1dd4971ac6ea98433d3ca4cbbb7081f8b3446a25d287c669f4963651d682b218"
+        },
+        {
+          "id": "print",
+          "label": "Print",
+          "tags": [
+            "print"
+          ],
+          "path": "assets/packs/fluent/print.svg",
+          "sha256": "ad1b82839db1388743dd77c12442c93870c4a2a0487d7a5c253c24a0ff77f94c",
+          "originalSha256": "ecdf8e92a61691832fdaec075f26e37ee4dbda5650ae620a5ef399ecd38f5cf4"
+        },
+        {
+          "id": "private-window",
+          "label": "Private window",
+          "tags": [
+            "private",
+            "window"
+          ],
+          "path": "assets/packs/fluent/private-window.svg",
+          "sha256": "08849d6fa3d132449db065a2b9ea3331e11fdcd91a34b507d16fb06d461244e7",
+          "originalSha256": "369ef94590e3c66c32d6aca92655b78ae3f8bfbeb039e5d8493bd0d93dd6203f"
+        },
+        {
+          "id": "privateBrowsing",
+          "label": "Private browsing",
+          "tags": [
+            "private",
+            "browsing"
+          ],
+          "path": "assets/packs/fluent/privateBrowsing.svg",
+          "sha256": "5fe913db217a4a617a95a970b496125e78358eb1fbab3a2cf83b24cb4fc3f026",
+          "originalSha256": "360e9d042cb4c436449d01f2e479345666e21102eaebd2c7ad60cf48820860b2"
+        },
+        {
+          "id": "reader-mode",
+          "label": "Reader mode",
+          "tags": [
+            "reader",
+            "mode"
+          ],
+          "path": "assets/packs/fluent/reader-mode.svg",
+          "sha256": "7f73fa748bbda305a646f9ce64b4880dc8a893d92c04a2b0b859696910fd8a32",
+          "originalSha256": "acefeebbc1b5044c7d3d2807d1ba88766fe9d98f7092299568b218432bc1c167"
+        },
+        {
+          "id": "reload-to-stop",
+          "label": "Reload to stop",
+          "tags": [
+            "reload",
+            "to",
+            "stop"
+          ],
+          "path": "assets/packs/fluent/reload-to-stop.svg",
+          "sha256": "b450278283813082e7746c86b6d2ad25f767092a4d221a9d408efe9a0e850933",
+          "originalSha256": "89dc5905edc325094d21a39fd9a48d2f1d22afad34083caa05ad6f4a14eff807"
+        },
+        {
+          "id": "reload",
+          "label": "Reload",
+          "tags": [
+            "reload"
+          ],
+          "path": "assets/packs/fluent/reload.svg",
+          "sha256": "9cb3ed0b96760ae341e97c372c116d12b06bab93ec584cc10099a81896de990c",
+          "originalSha256": "6c26ff2147a62842af120409f613bbcfda7c37bd942efc373bfc64dd1cd6bc7f"
+        },
+        {
+          "id": "report",
+          "label": "Report",
+          "tags": [
+            "report"
+          ],
+          "path": "assets/packs/fluent/report.svg",
+          "sha256": "de302587a42833fe3dbd37b5f99797f9f05fa0e1023179b89ea6d1b16f0a571a",
+          "originalSha256": "d77ee78e5fa3b1d4f83672e857b97d6adb2030a2f76d9463760dd15601715757"
+        },
+        {
+          "id": "save",
+          "label": "Save",
+          "tags": [
+            "save"
+          ],
+          "path": "assets/packs/fluent/save.svg",
+          "sha256": "fc847c23d232020f39dc5073f9211aa7f28e56b0cf2655b9c5ece52f0a59fade",
+          "originalSha256": "cd809071f04a54964aa1658bb7559b962574557d2e1287b6269420d763c968a2"
+        },
+        {
+          "id": "screen-blocked",
+          "label": "Screen blocked",
+          "tags": [
+            "screen",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/screen-blocked.svg",
+          "sha256": "14d075bb3c92affe6d3800d46c4af2d87f5c7f43bc5472bbb9c5ee2e5425a8da",
+          "originalSha256": "def72a1ea329212a869b2c8cebb4cd27f6fc1e9d1020f96d6aa5d555d644fcec"
+        },
+        {
+          "id": "screen",
+          "label": "Screen",
+          "tags": [
+            "screen"
+          ],
+          "path": "assets/packs/fluent/screen.svg",
+          "sha256": "20e863dfc31c35ebfb7b7bbadb9794689581820c7ff7b43352c2e0d1c18232dc",
+          "originalSha256": "250c525390a90ea8551afe17feba65066c54557bb4aafbc07fdb50be591ffb8f"
+        },
+        {
+          "id": "screenshot",
+          "label": "Screenshot",
+          "tags": [
+            "screenshot"
+          ],
+          "path": "assets/packs/fluent/screenshot.svg",
+          "sha256": "5fa101d8c1be383d1c11e93854eecc63fe8827d41e13d321771551605ca6e290",
+          "originalSha256": "bee733e3e9afbdb3107112c6c19bda450cd9cdf61a1d7c9a0348a78c7c6f4498"
+        },
+        {
+          "id": "search-add",
+          "label": "Search add",
+          "tags": [
+            "search",
+            "add"
+          ],
+          "path": "assets/packs/fluent/search-add.svg",
+          "sha256": "9f2e99d2bffe9fff3aa2c7da987636b9458074202ba0f8081f8792ac8455abc0",
+          "originalSha256": "96d1d3714de5d8ae947bd867c491b95343cd43ef2506f931ef3dc4869d371ef7"
+        },
+        {
+          "id": "search-glass",
+          "label": "Search glass",
+          "tags": [
+            "search",
+            "glass"
+          ],
+          "path": "assets/packs/fluent/search-glass.svg",
+          "sha256": "8ebf75dbba1a4a3a7ac5a5b69c9d0772cae42c57b8c3e037d48602250a880a2d",
+          "originalSha256": "689050c6ce63a3a47029cceabdd5a44bd8336c05642eb5b71e14fd08f6b617bd"
+        },
+        {
+          "id": "search-page",
+          "label": "Search page",
+          "tags": [
+            "search",
+            "page"
+          ],
+          "path": "assets/packs/fluent/search-page.svg",
+          "sha256": "c84daf264239778c827c3d6b16f0f941d1b0f51cd7f85f8f9d1927985415ccac",
+          "originalSha256": "1242b117c453a6436b5955c7e88b34c802c1ebfc7163096316cd817014020856"
+        },
+        {
+          "id": "security-broken",
+          "label": "Security broken",
+          "tags": [
+            "security",
+            "broken"
+          ],
+          "path": "assets/packs/fluent/security-broken.svg",
+          "sha256": "9dac83c20b38643575e89671daed84d1a83888489e4cd2e97244aad050181ea4",
+          "originalSha256": "e3418bf647e6655c312b06875a5ef42e7dc8fbef55cc1957dd7632d4cce7f4b9"
+        },
+        {
+          "id": "security-warning",
+          "label": "Security warning",
+          "tags": [
+            "security",
+            "warning"
+          ],
+          "path": "assets/packs/fluent/security-warning.svg",
+          "sha256": "a1a485ee7dc78d20567ee70617cc70c730dc0b195d83eac848a7107576e2c103",
+          "originalSha256": "a2c9b54c0cdfa6cf7385c0d6f283ed19e1e30d65fa010f1411ebc47d0b3db1df"
+        },
+        {
+          "id": "security",
+          "label": "Security",
+          "tags": [
+            "security"
+          ],
+          "path": "assets/packs/fluent/security.svg",
+          "sha256": "1dc4a8e28cce8f5d69a3511d50176d7fafb1f668f2cd4c5adb8388fe2f26700d",
+          "originalSha256": "e690ab01443fa229ec0297363d5c56b5cda3a1a1f02ca0b475cb8716084e413f"
+        },
+        {
+          "id": "send-to-device",
+          "label": "Send to device",
+          "tags": [
+            "send",
+            "to",
+            "device"
+          ],
+          "path": "assets/packs/fluent/send-to-device.svg",
+          "sha256": "c7f4ba816c9dc926769ac663cd640bf1addda3e9274b7c571480d17738d5f582",
+          "originalSha256": "71f582c1de1250099a14a38053ccd25b8fa8384abb303ad2ed256fde3f96b699"
+        },
+        {
+          "id": "settings",
+          "label": "Settings",
+          "tags": [
+            "settings"
+          ],
+          "path": "assets/packs/fluent/settings.svg",
+          "sha256": "6cc01defc2098a2714927c88bc1967b513811481bdf3e513e46a9ebc06df7fc4",
+          "originalSha256": "531dfd68ffa68396569f227572ff9660abd3f7f1d8bfd82b9b588304927668f8"
+        },
+        {
+          "id": "share",
+          "label": "Share",
+          "tags": [
+            "share"
+          ],
+          "path": "assets/packs/fluent/share.svg",
+          "sha256": "8058704cb323f641e57587fafb2db3202a1cd4115263fea8daba07728f35239b",
+          "originalSha256": "4377642faab90f454defae48d0422347653eac05747777eb1638a53a7d33580c"
+        },
+        {
+          "id": "sidebar-right",
+          "label": "Sidebar right",
+          "tags": [
+            "sidebar",
+            "right"
+          ],
+          "path": "assets/packs/fluent/sidebar-right.svg",
+          "sha256": "8012dfcf20edf0c6c1b57486ee78a1c9b58b924fad3b8e7eac7888e8ad6ef26d",
+          "originalSha256": "c29f1d1100e91253fc68c8629ac412403e7751e06042c3141f4f7c8261ce4aca"
+        },
+        {
+          "id": "sidebar",
+          "label": "Sidebar",
+          "tags": [
+            "sidebar"
+          ],
+          "path": "assets/packs/fluent/sidebar.svg",
+          "sha256": "0f9ca8c7bef39c3caa7d35191c4d133dcb1a82176ec40b6a6158e1f56f3eadbb",
+          "originalSha256": "8e0cd8744fc5ed032caf68799fb71875c4f32bcac2a2af5628d71c28d2b0e6fc"
+        },
+        {
+          "id": "sort",
+          "label": "Sort",
+          "tags": [
+            "sort"
+          ],
+          "path": "assets/packs/fluent/sort.svg",
+          "sha256": "f2b662b7a99b9cbca37741d7f34c97a60fc82c37d8fcc262b9bc1fcb8d040a21",
+          "originalSha256": "90dc937c5249bad77a08c0d94bd5b8f76b875a89633d784cc50157aff5960142"
+        },
+        {
+          "id": "source-code",
+          "label": "Source code",
+          "tags": [
+            "source",
+            "code"
+          ],
+          "path": "assets/packs/fluent/source-code.svg",
+          "sha256": "9984d35700d7b6898f79781bc125ec826e0139e7ab64092aa95c63119bdcb87a",
+          "originalSha256": "7e4c1e4d6c53cfaa75b44aa0c090a9649010522aeaf0170e915140934f5350c8"
+        },
+        {
+          "id": "spell-check",
+          "label": "Spell check",
+          "tags": [
+            "spell",
+            "check"
+          ],
+          "path": "assets/packs/fluent/spell-check.svg",
+          "sha256": "1a302274cbee0e4f99be8c7a5538c017fed15f8a1bbf195818092bdea3ca2a1e",
+          "originalSha256": "1a302274cbee0e4f99be8c7a5538c017fed15f8a1bbf195818092bdea3ca2a1e"
+        },
+        {
+          "id": "split",
+          "label": "Split",
+          "tags": [
+            "split"
+          ],
+          "path": "assets/packs/fluent/split.svg",
+          "sha256": "cc97e64caec3ac40c24183d55f06f18ade3232645c7c023e4f429f2d90397f50",
+          "originalSha256": "2460872d559093bab522cbc6061da567a26b34bd8940f58bf2c7750fc1a09b12"
+        },
+        {
+          "id": "stop-to-reload",
+          "label": "Stop to reload",
+          "tags": [
+            "stop",
+            "to",
+            "reload"
+          ],
+          "path": "assets/packs/fluent/stop-to-reload.svg",
+          "sha256": "97de7e97694c311910f354bacaa8210dab3d50e0e83e28614de4fc9428dc6e9d",
+          "originalSha256": "1ff11d7770309ddfec292775a9ea40489591a71844689b700e87e0c513d2a411"
+        },
+        {
+          "id": "tab-right",
+          "label": "Tab right",
+          "tags": [
+            "tab",
+            "right"
+          ],
+          "path": "assets/packs/fluent/tab-right.svg",
+          "sha256": "4096fdf8f2a0110b01bd3399db4ca8872e9ce70fa65d0f2819630baef9ec8cea",
+          "originalSha256": "3b2d685047ad90f4e0a8230a18ca9d3a1f090c09f2b5f111f7d8c09adc41e91f"
+        },
+        {
+          "id": "tab",
+          "label": "Tab",
+          "tags": [
+            "tab"
+          ],
+          "path": "assets/packs/fluent/tab.svg",
+          "sha256": "6ad434f35adadf868f040b4cde4fe1e671f642129aafdb4a3630430f8f8b0788",
+          "originalSha256": "2ad6d9679d1ee14c79d8ee1498bdbe01e2c75b581173fac03f2ee799008e8f6b"
+        },
+        {
+          "id": "tool-profiler",
+          "label": "Tool profiler",
+          "tags": [
+            "tool",
+            "profiler"
+          ],
+          "path": "assets/packs/fluent/tool-profiler.svg",
+          "sha256": "c104167b581113e7c49e177a55cdc0296ab2a1a157987462c11a2e367bedb0c0",
+          "originalSha256": "c3de3278e36b9a09c44027f74f5e3f4ed2c1ecc11a8f2dedf1634a4cdef1ca5d"
+        },
+        {
+          "id": "tracking-protection",
+          "label": "Tracking protection",
+          "tags": [
+            "tracking",
+            "protection"
+          ],
+          "path": "assets/packs/fluent/tracking-protection.svg",
+          "sha256": "ee0df87076c1078836ddaa62e046d164b4b4b28fa51dd194eba3754e107f302c",
+          "originalSha256": "9ea874356b3c5b213cfd0d1b6ea53cda3d23ecd334de166b69f1cef67bfb6f7b"
+        },
+        {
+          "id": "translations",
+          "label": "Translations",
+          "tags": [
+            "translations"
+          ],
+          "path": "assets/packs/fluent/translations.svg",
+          "sha256": "7e5765dcfaedf8b4ce532be4b46b2c7ac7bcd7b787c47da9ab8c4c985ad9daef",
+          "originalSha256": "3f522e025d1d20c479b5180183a5d97c24378cd1a3e265eac47de43dd857d336"
+        },
+        {
+          "id": "unloadTab",
+          "label": "Unload tab",
+          "tags": [
+            "unload",
+            "tab"
+          ],
+          "path": "assets/packs/fluent/unloadTab.svg",
+          "sha256": "af9d250d4a845fae67f2b6f3f5e7e7c93140720c688d901b4a05b625190d00d3",
+          "originalSha256": "eb3a9b564396d8896d0f82e5d797be54e6872ffb07de949632131f70a7f5d3b9"
+        },
+        {
+          "id": "unpin",
+          "label": "Unpin",
+          "tags": [
+            "unpin"
+          ],
+          "path": "assets/packs/fluent/unpin.svg",
+          "sha256": "66fb64943eb4c12da440fd32248874098bbd3785a564fc8edfc3c44856b303da",
+          "originalSha256": "d3279af93cc2c12a8e15597f433bb931335bd9388a1a2d53fd5e27edebb63e6b"
+        },
+        {
+          "id": "video-open",
+          "label": "Video open",
+          "tags": [
+            "video",
+            "open"
+          ],
+          "path": "assets/packs/fluent/video-open.svg",
+          "sha256": "4f8b757699081fcdced3e49739f940cb173bac7c34b254f578c635619d723ae1",
+          "originalSha256": "3a33727b91d8a3525e97ea993f52093ddd13636f0eae462630c3beb93f49d960"
+        },
+        {
+          "id": "video-save",
+          "label": "Video save",
+          "tags": [
+            "video",
+            "save"
+          ],
+          "path": "assets/packs/fluent/video-save.svg",
+          "sha256": "b8cd3c87edfe0accc8eb41456dcb074d0b4ea1c532a927bec0ae8236c5641ecf",
+          "originalSha256": "844ed6e4c6807fd126a4cf2a3d8f8c0bad4d7da837798c5c183adb324b6845da"
+        },
+        {
+          "id": "window",
+          "label": "Window",
+          "tags": [
+            "window"
+          ],
+          "path": "assets/packs/fluent/window.svg",
+          "sha256": "5fc46aa1756ac00197d057f53b6c1b498470d4bfebb18351e931e7f0155ec5b3",
+          "originalSha256": "56a9ecaa5904e834fb5b0fd752a45ff2c15d553daac65d594f975af708b7cfc8"
+        },
+        {
+          "id": "xr-blocked",
+          "label": "Xr blocked",
+          "tags": [
+            "xr",
+            "blocked"
+          ],
+          "path": "assets/packs/fluent/xr-blocked.svg",
+          "sha256": "8bd22d1e6399398b74803e2425b0ef3967ee4b200a420280e20366bcabe1e2a8",
+          "originalSha256": "7cc63eeec4bfe4e5a635e833d8a9a926d3b9b93aef8000f87b97059983181e2a"
+        },
+        {
+          "id": "xr",
+          "label": "Xr",
+          "tags": [
+            "xr"
+          ],
+          "path": "assets/packs/fluent/xr.svg",
+          "sha256": "de0bde65ffa3b0d0d500ea4e28158623e75e786f2f716817342edb7cdb2f7824",
+          "originalSha256": "162740af03a776737ee058446d65afc12a11b78ca66e096481a4b0d127609a2e"
+        },
+        {
+          "id": "zoom-control",
+          "label": "Zoom control",
+          "tags": [
+            "zoom",
+            "control"
+          ],
+          "path": "assets/packs/fluent/zoom-control.svg",
+          "sha256": "4c52b78907d610a72a498f940b1fbe740288cf7822783256dca654db639d90f0",
+          "originalSha256": "3b56bcc4550250fdd66d5173f4a61b888e22db7fc9f7a3495f3ccc935b688ed7"
+        },
+        {
+          "id": "zoom-out",
+          "label": "Zoom out",
+          "tags": [
+            "zoom",
+            "out"
+          ],
+          "path": "assets/packs/fluent/zoom-out.svg",
+          "sha256": "8ae5bda8be89522f4c4fd82213fe0c2c207f0814beff056156084a8fb0e8cd22",
+          "originalSha256": "8e16c69c224d4195f3524ec4ea47aa5e2e102d2c2b94b3e2febf3c0499a60a33"
+        }
+      ]
+    },
+    {
+      "id": "zen",
+      "label": "ZenUI",
+      "icons": [
+        {
+          "id": "accessibility",
+          "label": "Accessibility",
+          "tags": [
+            "accessibility"
+          ],
+          "browserPath": "chrome://browser/skin/preferences/category-accessibility.svg"
+        },
+        {
+          "id": "add-to-dictionary",
+          "label": "Add to dictionary",
+          "tags": [
+            "add",
+            "to",
+            "dictionary"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/spell-check.svg"
+        },
+        {
+          "id": "arrow-down",
+          "label": "Arrow down",
+          "tags": [
+            "arrow",
+            "down"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-down.svg"
+        },
+        {
+          "id": "arrow-left",
+          "label": "Arrow left",
+          "tags": [
+            "arrow",
+            "left"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-left.svg"
+        },
+        {
+          "id": "arrow-right",
+          "label": "Arrow right",
+          "tags": [
+            "arrow",
+            "right"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-right.svg"
+        },
+        {
+          "id": "arrow-up",
+          "label": "Arrow up",
+          "tags": [
+            "arrow",
+            "up"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-up.svg"
+        },
+        {
+          "id": "audio-save",
+          "label": "Audio save",
+          "tags": [
+            "audio",
+            "save"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/downloads.svg"
+        },
+        {
+          "id": "autoplay-media-blocked",
+          "label": "Autoplay media blocked",
+          "tags": [
+            "autoplay",
+            "media",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/autoplay-media-blocked.svg"
+        },
+        {
+          "id": "autoplay-media-fill",
+          "label": "Autoplay media fill",
+          "tags": [
+            "autoplay",
+            "media",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/autoplay-media-fill.svg"
+        },
+        {
+          "id": "autoplay-media",
+          "label": "Autoplay media",
+          "tags": [
+            "autoplay",
+            "media"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/autoplay-media.svg"
+        },
+        {
+          "id": "back",
+          "label": "Back",
+          "tags": [
+            "back"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/back.svg"
+        },
+        {
+          "id": "bookmark-hollow",
+          "label": "Bookmark hollow",
+          "tags": [
+            "bookmark",
+            "hollow"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/bookmark-hollow.svg"
+        },
+        {
+          "id": "bookmark-star-on-tray",
+          "label": "Bookmark star on tray",
+          "tags": [
+            "bookmark",
+            "star",
+            "on",
+            "tray"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/bookmark-star-on-tray.svg"
+        },
+        {
+          "id": "bookmark",
+          "label": "Bookmark",
+          "tags": [
+            "bookmark"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/bookmark.svg"
+        },
+        {
+          "id": "camera-blocked",
+          "label": "Camera blocked",
+          "tags": [
+            "camera",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/camera-blocked.svg"
+        },
+        {
+          "id": "camera-fill",
+          "label": "Camera fill",
+          "tags": [
+            "camera",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/camera-fill.svg"
+        },
+        {
+          "id": "camera",
+          "label": "Camera",
+          "tags": [
+            "camera"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/camera.svg"
+        },
+        {
+          "id": "canvas",
+          "label": "Canvas",
+          "tags": [
+            "canvas"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/canvas.svg"
+        },
+        {
+          "id": "checkmark",
+          "label": "Checkmark",
+          "tags": [
+            "checkmark"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/checkbox.svg"
+        },
+        {
+          "id": "chevron",
+          "label": "Chevron",
+          "tags": [
+            "chevron"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/chevron.svg"
+        },
+        {
+          "id": "close-all",
+          "label": "Close all",
+          "tags": [
+            "close",
+            "all"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/close.svg"
+        },
+        {
+          "id": "close",
+          "label": "Close",
+          "tags": [
+            "close"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/close.svg"
+        },
+        {
+          "id": "container-tab",
+          "label": "Container tab",
+          "tags": [
+            "container",
+            "tab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/container-tab.svg"
+        },
+        {
+          "id": "cookies-fill",
+          "label": "Cookies fill",
+          "tags": [
+            "cookies",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/cookies-fill.svg"
+        },
+        {
+          "id": "customize",
+          "label": "Customize",
+          "tags": [
+            "customize"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/customize.svg"
+        },
+        {
+          "id": "dart-down",
+          "label": "Dart down",
+          "tags": [
+            "dart",
+            "down"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/dart-down.svg"
+        },
+        {
+          "id": "desktop-notification-blocked",
+          "label": "Desktop notification blocked",
+          "tags": [
+            "desktop",
+            "notification",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/desktop-notification-blocked.svg"
+        },
+        {
+          "id": "desktop-notification-fill",
+          "label": "Desktop notification fill",
+          "tags": [
+            "desktop",
+            "notification",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/desktop-notification-fill.svg"
+        },
+        {
+          "id": "desktop-notification",
+          "label": "Desktop notification",
+          "tags": [
+            "desktop",
+            "notification"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/desktop-notification.svg"
+        },
+        {
+          "id": "developer",
+          "label": "Developer",
+          "tags": [
+            "developer"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/developer.svg"
+        },
+        {
+          "id": "downloads",
+          "label": "Downloads",
+          "tags": [
+            "downloads"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/downloads.svg"
+        },
+        {
+          "id": "duplicate-tab",
+          "label": "Duplicate tab",
+          "tags": [
+            "duplicate",
+            "tab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/duplicate-tab.svg"
+        },
+        {
+          "id": "edit-copy",
+          "label": "Edit copy",
+          "tags": [
+            "edit",
+            "copy"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-copy.svg"
+        },
+        {
+          "id": "edit-cut",
+          "label": "Edit cut",
+          "tags": [
+            "edit",
+            "cut"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-cut.svg"
+        },
+        {
+          "id": "edit-delete",
+          "label": "Edit delete",
+          "tags": [
+            "edit",
+            "delete"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-delete.svg"
+        },
+        {
+          "id": "edit-paste",
+          "label": "Edit paste",
+          "tags": [
+            "edit",
+            "paste"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-paste.svg"
+        },
+        {
+          "id": "edit-redo",
+          "label": "Edit redo",
+          "tags": [
+            "edit",
+            "redo"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/forward.svg"
+        },
+        {
+          "id": "edit-select-all",
+          "label": "Edit select all",
+          "tags": [
+            "edit",
+            "select",
+            "all"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/checkbox.svg"
+        },
+        {
+          "id": "edit-theme",
+          "label": "Edit theme",
+          "tags": [
+            "edit",
+            "theme"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-theme.svg"
+        },
+        {
+          "id": "edit-undo",
+          "label": "Edit undo",
+          "tags": [
+            "edit",
+            "undo"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/u-turn-to-left.svg"
+        },
+        {
+          "id": "edit",
+          "label": "Edit",
+          "tags": [
+            "edit"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-theme.svg"
+        },
+        {
+          "id": "essential-add",
+          "label": "Essential add",
+          "tags": [
+            "essential",
+            "add"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/essential-add.svg"
+        },
+        {
+          "id": "essential-remove",
+          "label": "Essential remove",
+          "tags": [
+            "essential",
+            "remove"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/essential-remove.svg"
+        },
+        {
+          "id": "expand-sidebar",
+          "label": "Expand sidebar",
+          "tags": [
+            "expand",
+            "sidebar"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/expand-sidebar.svg"
+        },
+        {
+          "id": "ext-link",
+          "label": "Ext link",
+          "tags": [
+            "ext",
+            "link"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/open.svg"
+        },
+        {
+          "id": "extension-blocked",
+          "label": "Extension blocked",
+          "tags": [
+            "extension",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/extension-blocked.svg"
+        },
+        {
+          "id": "extension-fill",
+          "label": "Extension fill",
+          "tags": [
+            "extension",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/extension-fill.svg"
+        },
+        {
+          "id": "extension",
+          "label": "Extension",
+          "tags": [
+            "extension"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/extension.svg"
+        },
+        {
+          "id": "folder",
+          "label": "Folder",
+          "tags": [
+            "folder"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/folder.svg"
+        },
+        {
+          "id": "forget",
+          "label": "Forget",
+          "tags": [
+            "forget"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/forget.svg"
+        },
+        {
+          "id": "forward",
+          "label": "Forward",
+          "tags": [
+            "forward"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/forward.svg"
+        },
+        {
+          "id": "fullscreen-exit",
+          "label": "Fullscreen exit",
+          "tags": [
+            "fullscreen",
+            "exit"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/fullscreen-exit.svg"
+        },
+        {
+          "id": "fullscreen",
+          "label": "Fullscreen",
+          "tags": [
+            "fullscreen"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/fullscreen.svg"
+        },
+        {
+          "id": "geo-blocked",
+          "label": "Geo blocked",
+          "tags": [
+            "geo",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/geo-blocked.svg"
+        },
+        {
+          "id": "geo-fill",
+          "label": "Geo fill",
+          "tags": [
+            "geo",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/geo-fill.svg"
+        },
+        {
+          "id": "geo",
+          "label": "Geo",
+          "tags": [
+            "geo"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/geo.svg"
+        },
+        {
+          "id": "help",
+          "label": "Help",
+          "tags": [
+            "help"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/help.svg"
+        },
+        {
+          "id": "history",
+          "label": "History",
+          "tags": [
+            "history"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/history.svg"
+        },
+        {
+          "id": "home",
+          "label": "Home",
+          "tags": [
+            "home"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/home.svg"
+        },
+        {
+          "id": "image-copy",
+          "label": "Image copy",
+          "tags": [
+            "image",
+            "copy"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-copy.svg"
+        },
+        {
+          "id": "image-open",
+          "label": "Image open",
+          "tags": [
+            "image",
+            "open"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/image.svg"
+        },
+        {
+          "id": "image-save",
+          "label": "Image save",
+          "tags": [
+            "image",
+            "save"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/save.svg"
+        },
+        {
+          "id": "info",
+          "label": "Info",
+          "tags": [
+            "info"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/info.svg"
+        },
+        {
+          "id": "inspect",
+          "label": "Inspect",
+          "tags": [
+            "inspect"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/developer.svg"
+        },
+        {
+          "id": "library",
+          "label": "Library",
+          "tags": [
+            "library"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/library.svg"
+        },
+        {
+          "id": "link",
+          "label": "Link",
+          "tags": [
+            "link"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/link.svg"
+        },
+        {
+          "id": "mail",
+          "label": "Mail",
+          "tags": [
+            "mail"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/mail.svg"
+        },
+        {
+          "id": "manage",
+          "label": "Manage",
+          "tags": [
+            "manage"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/manage.svg"
+        },
+        {
+          "id": "media-loop",
+          "label": "Media loop",
+          "tags": [
+            "media",
+            "loop"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-rotate-anticlockwise.svg"
+        },
+        {
+          "id": "media-mute",
+          "label": "Media mute",
+          "tags": [
+            "media",
+            "mute"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-mute.svg"
+        },
+        {
+          "id": "media-next",
+          "label": "Media next",
+          "tags": [
+            "media",
+            "next"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-next.svg"
+        },
+        {
+          "id": "media-pause",
+          "label": "Media pause",
+          "tags": [
+            "media",
+            "pause"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-pause.svg"
+        },
+        {
+          "id": "media-pip",
+          "label": "Media pip",
+          "tags": [
+            "media",
+            "pip"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/window.svg"
+        },
+        {
+          "id": "media-play",
+          "label": "Media play",
+          "tags": [
+            "media",
+            "play"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-play.svg"
+        },
+        {
+          "id": "media-previous",
+          "label": "Media previous",
+          "tags": [
+            "media",
+            "previous"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-previous.svg"
+        },
+        {
+          "id": "media-speed",
+          "label": "Media speed",
+          "tags": [
+            "media",
+            "speed"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/time.svg"
+        },
+        {
+          "id": "media-unmute",
+          "label": "Media unmute",
+          "tags": [
+            "media",
+            "unmute"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/media-unmute.svg"
+        },
+        {
+          "id": "menu-bar",
+          "label": "Menu bar",
+          "tags": [
+            "menu",
+            "bar"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/menu.svg"
+        },
+        {
+          "id": "menu",
+          "label": "Menu",
+          "tags": [
+            "menu"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/menu.svg"
+        },
+        {
+          "id": "microphone-blocked-fill",
+          "label": "Microphone blocked fill",
+          "tags": [
+            "microphone",
+            "blocked",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/microphone-blocked-fill.svg"
+        },
+        {
+          "id": "microphone-blocked",
+          "label": "Microphone blocked",
+          "tags": [
+            "microphone",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/microphone-blocked.svg"
+        },
+        {
+          "id": "microphone-fill",
+          "label": "Microphone fill",
+          "tags": [
+            "microphone",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/microphone-fill.svg"
+        },
+        {
+          "id": "microphone",
+          "label": "Microphone",
+          "tags": [
+            "microphone"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/microphone.svg"
+        },
+        {
+          "id": "midi",
+          "label": "Midi",
+          "tags": [
+            "midi"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/midi.svg"
+        },
+        {
+          "id": "move-tab",
+          "label": "Move tab",
+          "tags": [
+            "move",
+            "tab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/arrow-corner-down-right.svg"
+        },
+        {
+          "id": "new-tab-image",
+          "label": "New tab image",
+          "tags": [
+            "new",
+            "tab",
+            "image"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/new-tab-image.svg"
+        },
+        {
+          "id": "open",
+          "label": "Open",
+          "tags": [
+            "open"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/open.svg"
+        },
+        {
+          "id": "page-portrait",
+          "label": "Page portrait",
+          "tags": [
+            "page",
+            "portrait"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/page-portrait.svg"
+        },
+        {
+          "id": "palette",
+          "label": "Palette",
+          "tags": [
+            "palette"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/palette.svg"
+        },
+        {
+          "id": "passwords",
+          "label": "Passwords",
+          "tags": [
+            "passwords"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/passwords.svg"
+        },
+        {
+          "id": "paste-and-go",
+          "label": "Paste and go",
+          "tags": [
+            "paste",
+            "and",
+            "go"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/edit-paste.svg"
+        },
+        {
+          "id": "permissions-fill",
+          "label": "Permissions fill",
+          "tags": [
+            "permissions",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/permissions-fill.svg"
+        },
+        {
+          "id": "permissions",
+          "label": "Permissions",
+          "tags": [
+            "permissions"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/permissions.svg"
+        },
+        {
+          "id": "persistent-storage-blocked",
+          "label": "Persistent storage blocked",
+          "tags": [
+            "persistent",
+            "storage",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/persistent-storage-blocked.svg"
+        },
+        {
+          "id": "persistent-storage-fill",
+          "label": "Persistent storage fill",
+          "tags": [
+            "persistent",
+            "storage",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/persistent-storage-fill.svg"
+        },
+        {
+          "id": "persistent-storage",
+          "label": "Persistent storage",
+          "tags": [
+            "persistent",
+            "storage"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/persistent-storage.svg"
+        },
+        {
+          "id": "pin",
+          "label": "Pin",
+          "tags": [
+            "pin"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/pin.svg"
+        },
+        {
+          "id": "plus",
+          "label": "Plus",
+          "tags": [
+            "plus"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/plus.svg"
+        },
+        {
+          "id": "popup-fill",
+          "label": "Popup fill",
+          "tags": [
+            "popup",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/popup-fill.svg"
+        },
+        {
+          "id": "popup",
+          "label": "Popup",
+          "tags": [
+            "popup"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/popup.svg"
+        },
+        {
+          "id": "print",
+          "label": "Print",
+          "tags": [
+            "print"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/print.svg"
+        },
+        {
+          "id": "private-window",
+          "label": "Private window",
+          "tags": [
+            "private",
+            "window"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/private-window.svg"
+        },
+        {
+          "id": "privateBrowsing",
+          "label": "Private browsing",
+          "tags": [
+            "private",
+            "browsing"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/privateBrowsing.svg"
+        },
+        {
+          "id": "reader-mode",
+          "label": "Reader mode",
+          "tags": [
+            "reader",
+            "mode"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/reader-mode.svg"
+        },
+        {
+          "id": "reload",
+          "label": "Reload",
+          "tags": [
+            "reload"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/reload.svg"
+        },
+        {
+          "id": "remove-tab",
+          "label": "Remove tab",
+          "tags": [
+            "remove",
+            "tab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/close.svg"
+        },
+        {
+          "id": "report",
+          "label": "Report",
+          "tags": [
+            "report"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/security-warning.svg"
+        },
+        {
+          "id": "save",
+          "label": "Save",
+          "tags": [
+            "save"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/save.svg"
+        },
+        {
+          "id": "screen-blocked",
+          "label": "Screen blocked",
+          "tags": [
+            "screen",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/screen-blocked.svg"
+        },
+        {
+          "id": "screen",
+          "label": "Screen",
+          "tags": [
+            "screen"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/screen.svg"
+        },
+        {
+          "id": "screenshot",
+          "label": "Screenshot",
+          "tags": [
+            "screenshot"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/screenshot.svg"
+        },
+        {
+          "id": "search-add",
+          "label": "Search add",
+          "tags": [
+            "search",
+            "add"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/search-glass.svg"
+        },
+        {
+          "id": "search-glass",
+          "label": "Search glass",
+          "tags": [
+            "search",
+            "glass"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/search-glass.svg"
+        },
+        {
+          "id": "search-page",
+          "label": "Search page",
+          "tags": [
+            "search",
+            "page"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/search-page.svg"
+        },
+        {
+          "id": "security-broken",
+          "label": "Security broken",
+          "tags": [
+            "security",
+            "broken"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/security-broken.svg"
+        },
+        {
+          "id": "security-warning",
+          "label": "Security warning",
+          "tags": [
+            "security",
+            "warning"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/security-warning.svg"
+        },
+        {
+          "id": "security",
+          "label": "Security",
+          "tags": [
+            "security"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/security.svg"
+        },
+        {
+          "id": "send-to-device",
+          "label": "Send to device",
+          "tags": [
+            "send",
+            "to",
+            "device"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/send-to-device.svg"
+        },
+        {
+          "id": "settings-fill",
+          "label": "Settings fill",
+          "tags": [
+            "settings",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/settings-fill.svg"
+        },
+        {
+          "id": "settings",
+          "label": "Settings",
+          "tags": [
+            "settings"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/settings.svg"
+        },
+        {
+          "id": "share",
+          "label": "Share",
+          "tags": [
+            "share"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/share.svg"
+        },
+        {
+          "id": "sidebar-right",
+          "label": "Sidebar right",
+          "tags": [
+            "sidebar",
+            "right"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/sidebar-right.svg"
+        },
+        {
+          "id": "sidebar",
+          "label": "Sidebar",
+          "tags": [
+            "sidebar"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/sidebar.svg"
+        },
+        {
+          "id": "sidebars-right",
+          "label": "Sidebars right",
+          "tags": [
+            "sidebars",
+            "right"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/sidebars-right.svg"
+        },
+        {
+          "id": "source-code",
+          "label": "Source code",
+          "tags": [
+            "source",
+            "code"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/brackets-curly.svg"
+        },
+        {
+          "id": "spell-check",
+          "label": "Spell check",
+          "tags": [
+            "spell",
+            "check"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/spell-check.svg"
+        },
+        {
+          "id": "split",
+          "label": "Split",
+          "tags": [
+            "split"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/split.svg"
+        },
+        {
+          "id": "tab-audio-blocked-small",
+          "label": "Tab audio blocked small",
+          "tags": [
+            "tab",
+            "audio",
+            "blocked",
+            "small"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tab-audio-blocked-small.svg"
+        },
+        {
+          "id": "tab-audio-muted-small",
+          "label": "Tab audio muted small",
+          "tags": [
+            "tab",
+            "audio",
+            "muted",
+            "small"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tab-audio-muted-small.svg"
+        },
+        {
+          "id": "tab-audio-playing-small",
+          "label": "Tab audio playing small",
+          "tags": [
+            "tab",
+            "audio",
+            "playing",
+            "small"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tab-audio-playing-small.svg"
+        },
+        {
+          "id": "tab",
+          "label": "Tab",
+          "tags": [
+            "tab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tab.svg"
+        },
+        {
+          "id": "tool-profiler",
+          "label": "Tool profiler",
+          "tags": [
+            "tool",
+            "profiler"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tool-profiler.svg"
+        },
+        {
+          "id": "tracking-protection-fill",
+          "label": "Tracking protection fill",
+          "tags": [
+            "tracking",
+            "protection",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tracking-protection-fill.svg"
+        },
+        {
+          "id": "tracking-protection",
+          "label": "Tracking protection",
+          "tags": [
+            "tracking",
+            "protection"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/tracking-protection.svg"
+        },
+        {
+          "id": "translations",
+          "label": "Translations",
+          "tags": [
+            "translations"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/translations.svg"
+        },
+        {
+          "id": "trash",
+          "label": "Trash",
+          "tags": [
+            "trash"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/trash.svg"
+        },
+        {
+          "id": "unpin",
+          "label": "Unpin",
+          "tags": [
+            "unpin"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/unpin.svg"
+        },
+        {
+          "id": "video-blocked-fill",
+          "label": "Video blocked fill",
+          "tags": [
+            "video",
+            "blocked",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/video-blocked-fill.svg"
+        },
+        {
+          "id": "video-fill",
+          "label": "Video fill",
+          "tags": [
+            "video",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/video-fill.svg"
+        },
+        {
+          "id": "video-open",
+          "label": "Video open",
+          "tags": [
+            "video",
+            "open"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/video.svg"
+        },
+        {
+          "id": "video-save",
+          "label": "Video save",
+          "tags": [
+            "video",
+            "save"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/save.svg"
+        },
+        {
+          "id": "window",
+          "label": "Window",
+          "tags": [
+            "window"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/window.svg"
+        },
+        {
+          "id": "xr-blocked",
+          "label": "Xr blocked",
+          "tags": [
+            "xr",
+            "blocked"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/xr-blocked.svg"
+        },
+        {
+          "id": "xr-fill",
+          "label": "Xr fill",
+          "tags": [
+            "xr",
+            "fill"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/xr-fill.svg"
+        },
+        {
+          "id": "xr",
+          "label": "Xr",
+          "tags": [
+            "xr"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/xr.svg"
+        },
+        {
+          "id": "zoom-control",
+          "label": "Zoom control",
+          "tags": [
+            "zoom",
+            "control"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/plus.svg"
+        },
+        {
+          "id": "zoom-out",
+          "label": "Zoom out",
+          "tags": [
+            "zoom",
+            "out"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/zoom-out.svg"
+        }
+      ]
+    }
+  ],
+  "mappings": {
+    "fluent": {
+      "byId": {
+        "node-menu-scrollnodeintoview": "arrow-down",
+        "cMenu_findAgain": "arrow-down",
+        "se-menu-gotoLine": "arrow-right",
+        "spell-check-enabled": "spell-check",
+        "context-video-pictureinpicture": "media-pip",
+        "context-media-loop": "media-loop",
+        "request-list-context-resend-only": "media-loop",
+        "request-list-context-edit-resend": "media-loop",
+        "context-savepage": "save",
+        "context-selectall": "edit-select-all",
+        "context_selectAllTabs": "edit-select-all",
+        "toolbar-context-selectAllTabs": "edit-select-all",
+        "context-undo": "edit-undo",
+        "context_undoCloseTab": "edit-undo",
+        "toolbar-context-undoCloseTab": "edit-undo",
+        "context_unloadTab": "unloadTab",
+        "context_zenUnloadWorkspace": "unloadTab",
+        "context_zenFolderUnloadAll": "unloadTab",
+        "context_zenUnloadAllOtherWorkspace": "unloadTab",
+        "viewColumns": "menu-bar",
+        "toggle_toolbar-menubar": "menu-bar",
+        "context-redo": "edit-redo",
+        "context-copy": "edit-copy",
+        "placesContext_copy": "edit-copy",
+        "context-copyurl": "edit-copy",
+        "console-menu-copy": "edit-copy",
+        "console-menu-copy-object": "edit-copy",
+        "console-menu-export-clipboard": "edit-copy",
+        "node-menu-copy-source-url": "edit-copy",
+        "node-menu-copy-to-clipboard": "edit-copy",
+        "variable-view-popup-copy": "edit-copy",
+        "context-paste": "edit-paste",
+        "placesContext_paste_group": "edit-paste",
+        "placesContext_paste": "edit-paste",
+        "context-paste-no-formatting": "edit-paste",
+        "context-cut": "edit-cut",
+        "placesContext_cut": "edit-cut",
+        "placesContext_open": "ext-link",
+        "context-openlinkincurrent": "ext-link",
+        "context-zenOpenLinkInGlance": "ext-link",
+        "placesContext_showInFolder": "folder-open",
+        "viewSort": "sort",
+        "context-delete": "edit-delete",
+        "pageActionContextMenuRemoveExtension": "edit-delete",
+        "placesContext_removeTag": "edit-delete",
+        "node-menu-delete": "edit-delete",
+        "storage-table-popup-delete": "edit-delete",
+        "storage-table-popup-delete-all-from": "edit-delete",
+        "storage-table-popup-delete-all": "edit-delete",
+        "storage-table-popup-delete-all-session-cookies": "edit-delete",
+        "storage-tree-popup-delete-all": "edit-delete",
+        "storage-tree-popup-delete-all-session-cookies": "edit-delete",
+        "paste-and-go": "paste-and-go",
+        "context-print-selection": "print",
+        "context-take-screenshot": "screenshot",
+        "node-menu-screenshotnode": "screenshot",
+        "frame": "info",
+        "context-ask-chat": "AI-chat",
+        "context_askChat": "AI-chat",
+        "context-previewlink": "AI-summarize",
+        "context-viewsource": "source-code",
+        "context-inspect-a11y": "accessibility",
+        "context-inspect": "inspect",
+        "request-list-context-use-as-fetch": "inspect",
+        "context-searchselect": "search-glass",
+        "context-visual-search": "search-glass",
+        "context-searchselect-private": "search-glass",
+        "context-add-engine": "search-add",
+        "context-translate-selection": "translations",
+        "context-viewimage": "image-open",
+        "context-viewimageinfo": "info",
+        "context-saveimage": "image-save",
+        "context-video-saveimage": "image-save",
+        "context-savevideo": "video-save",
+        "context-viewvideo": "video-open",
+        "context-saveaudio": "audio-save",
+        "context-copyimage-contents": "image-copy",
+        "context-copyimage": "link",
+        "context-copyvideourl": "link",
+        "context-copylink": "link",
+        "context-copy-link-to-highlight": "link",
+        "context-copy-clean-link-to-highlight": "link",
+        "context-stripOnShareLink": "link",
+        "context-pdfjs-copy": "link",
+        "context-viewframesource": "source-code",
+        "context-viewpartialsource-selection": "source-code",
+        "context-sendimage": "mail",
+        "context-sendvideo": "mail",
+        "context-sendaudio": "mail",
+        "context-setDesktopBackground": "customize",
+        "toolbar-context-customize": "customize",
+        "toolbar-context-customize-sidebar": "customize",
+        "context-reloadimage": "reload",
+        "context_reloadTab": "reload",
+        "context_reloadSelectedTabs": "reload",
+        "toolbar-context-reloadSelectedTab": "reload",
+        "toolbar-context-reloadSelectedTabs": "reload",
+        "context-sendlinktodevice": "send-to-device",
+        "context_sendTabToDevice": "send-to-device",
+        "context-sendpagetodevice": "send-to-device",
+        "context-openlinkintab": "tab",
+        "context-openlinkincontainertab": "tab",
+        "context-openlinknewtab": "tab",
+        "request-list-context-newtab": "tab",
+        "context_openANewTab": "new-tab-image",
+        "toolbar-context-openANewTab": "new-tab-image",
+        "context_moveTabToGroup": "TabGroup-add",
+        "context_moveTabToNewGroup": "TabGroup-add",
+        "context_moveTabToSplitView": "split",
+        "context_moveSplitViewToNewGroup": "TabGroup-add",
+        "context_ungroupTab": "TabGroup-remove",
+        "context_zenMoveToFolder": "TabGroup-remove",
+        "context-openlinkinusercontext-menu": "container-tab",
+        "context_reopenInContainer": "container-tab",
+        "context-openlink": "window",
+        "context-openlinkprivate": "private-window",
+        "context-savelink": "downloads",
+        "request-list-context-save-as-har": "downloads",
+        "request-list-context-save-all-as-har": "downloads",
+        "request-list-context-save-response-as": "downloads",
+        "spell-add-to-dictionary": "add-to-dictionary",
+        "spell-add-dictionaries": "add-to-dictionary",
+        "spell-dictionaries": "add-to-dictionary",
+        "fill-login": "passwords",
+        "manage-saved-logins": "passwords",
+        "sidebar-switcher-megalist": "passwords",
+        "fill-login-generated-password": "passwords",
+        "context-media-play": "media-play",
+        "context_playTab": "media-play",
+        "context_playSelectedTabs": "media-play",
+        "context-media-pause": "media-pause",
+        "context-media-mute": "media-mute",
+        "context_toggleMuteTab": "media-unmute",
+        "context_toggleMuteSelectedTabs": "media-unmute",
+        "context-media-unmute": "media-unmute",
+        "context-media-playbackrate": "media-speed",
+        "request-list-context-perf": "media-speed",
+        "context-video-fullscreen": "fullscreen",
+        "context-leave-dom-fullscreen": "fullscreen-exit",
+        "context-media-hidecontrols": "permissions",
+        "context-media-showcontrols": "permissions",
+        "context_pinTab": "pin",
+        "context_pinSelectedTabs": "pin",
+        "context_unpinTab": "unpin",
+        "context_unpinSelectedTabs": "unpin",
+        "context_duplicateTab": "duplicate-tab",
+        "context_duplicateTabs": "duplicate-tab",
+        "context_bookmarkTab": "bookmark-hollow",
+        "context_bookmarkSelectedTabs": "bookmark-hollow",
+        "toggle_PersonalToolbar": "bookmark-hollow",
+        "context-bookmarklink": "bookmark-hollow",
+        "toolbar-context-bookmarkSelectedTab": "bookmark-hollow",
+        "toolbar-context-bookmarkSelectedTabs": "bookmark-hollow",
+        "placesContext_createBookmark": "bookmark-hollow",
+        "node-menu-edithtml": "edit",
+        "context_addNote": "edit",
+        "context_editNote": "edit",
+        "BMB_bookmarksShowAllTop": "manage",
+        "BMB_bookmarksShowAll": "manage",
+        "pageActionContextMenuManageExtension": "manage",
+        "BMB_viewBookmarksSidebar": "sidebar",
+        "BMB_searchBookmarks": "search-page",
+        "se-menu-find": "search-page",
+        "PanelUI-historyMore": "manage",
+        "newbookmark": "plus",
+        "newfolder": "plus",
+        "newseparator": "plus",
+        "node-menu-add": "plus",
+        "context_zen-add-domain-to-routing": "plus",
+        "context-savelinktopocket": "pocket-outline",
+        "context-pocket": "pocket-outline",
+        "context_moveTabOptions": "move-tab",
+        "context_reverseSplitView": "move-tab",
+        "context_zenShareWorkspace": "share",
+        "context_zenShareFolder": "share",
+        "context_zenShareSplitView": "share",
+        "context_closeTab": "close",
+        "context_closeDuplicateTabs": "close",
+        "orgClose": "close",
+        "sidebar-menu-close": "close",
+        "context_closeTabOptions": "close-all",
+        "sidebar-switcher-bookmarks": "bookmark-star-on-tray",
+        "sidebar-switcher-history": "history",
+        "sidebar-switcher-tabs": "send-to-device",
+        "zen-toolbar-context-tabs-right": "tab-right",
+        "sidebar-reverse-position": "tab-right",
+        "context_zen-add-essential": "essential-add",
+        "context_zen-edit-pinned-page": "essential-add",
+        "context_zen-remove-essential": "essential-remove",
+        "context-zen-change-workspace-tab": "move-tab",
+        "context_separateSplitView": "split",
+        "context_zenSplitTabs": "split",
+        "context-zenSplitLink": "split",
+        "zenToolbarThemePicker": "customize",
+        "zen-context-menu-compact-mode": "sidebar",
+        "zen-context-menu-compact-mode-toggle": "sidebar",
+        "context_zen-reset-pinned-tab": "reload",
+        "context_zen-replace-pinned-url-with-current": "reload",
+        "zen-context-menu-new-folder": "folder-add",
+        "zen-context-menu-new-folder-toolbar": "folder-add",
+        "zen-panel-ui-live-folder-create": "folder-add",
+        "context_zenEditWorkspace": "edit",
+        "context_zen-edit-tab-title": "edit",
+        "context_zenEditWorkspaceIcon": "image-save",
+        "context_zen-edit-tab-icon": "image-save",
+        "context_zenChangeWorkspaceTheme": "customize",
+        "context_zenWorkspacesOpenInContainerTab": "container-tab",
+        "context_zenReorderWorkspaces": "sort",
+        "context_zenDeleteWorkspace": "edit-delete",
+        "context_zenFolderRename": "edit",
+        "context_zenFolderChangeIcon": "image-save",
+        "context_zenFolderNewSubfolder": "folder-add",
+        "context_zenFolderUnpack": "folder-unpack",
+        "context_zenChangeFolderSpace": "move-tab",
+        "context_zenFolderToSpace": "folder_sync_convert",
+        "convert-folder-to-group": "folder_sync_convert",
+        "context_zenFolderDelete": "edit-delete",
+        "zen-boost-edit-rename": "edit",
+        "zen-boost-edit-reset": "media-loop",
+        "zen-boost-load": "edit-undo",
+        "zen-boost-save": "edit-redo",
+        "zen-boost-edit-delete": "edit-delete",
+        "context_zenSpaceRoutingSettings": "settings",
+        "cmi-show-more-menu": "menu-bar",
+        "cmi-show-more-menu-tab": "menu-bar",
+        "quicktabs-context-menuitem": "ext-link",
+        "quicktabs-tab-context-menuitem": "ext-link",
+        "quicksearch-context-menuitem": "search-glass",
+        "context_renameTab": "edit",
+        "context-back": "arrow-left",
+        "context-forward": "arrow-right",
+        "context-reload": "reload",
+        "context-stop": "close"
+      },
+      "byL10n": {
+        "library-media-turn-off": "unloadTab",
+        "library-media-menu-copy": "edit-copy",
+        "library-downloads-menu-copy": "edit-copy",
+        "library-media-menu-open": "ext-link",
+        "library-downloads-menu-open": "ext-link",
+        "library-downloads-menu-trash": "edit-delete",
+        "zen-boost-edit-delete": "edit-delete",
+        "library-downloads-clear-all": "edit-delete",
+        "library-history-clear": "edit-delete",
+        "library-downloads-menu-delete": "edit-delete",
+        "downloads-cmd-delete-file": "edit-delete",
+        "downloads-cmd-remove-from-history": "edit-delete",
+        "downloads-cmd-clear-list": "edit-delete",
+        "downloads-cmd-clear-downloads": "edit-delete",
+        "downloads-cmd-copy-download-link": "link",
+        "library-downloads-menu-hide": "hide",
+        "library-boosts-menu-edit": "edit",
+        "library-open-legacy": "manage",
+        "zen-boost-save": "share",
+        "text-action-undo": "edit-undo",
+        "text-action-redo": "edit-redo",
+        "text-action-cut": "edit-cut",
+        "text-action-copy": "edit-copy",
+        "text-action-paste": "edit-paste",
+        "text-action-delete": "edit-delete",
+        "text-action-select-all": "edit-select-all",
+        "downloads-cmd-show-menuitem-2": "folder-add",
+        "zen-panel-ui-workspaces-create": "plus",
+        "user-context-new-tab": "new-tab-image",
+        "user-context-add-container": "container-tab",
+        "user-context-manage-containers": "manage"
+      }
+    },
+    "zen": {
+      "byId": {
+        "viewSort": "move-tab",
+        "context-zen-change-workspace-tab": "move-tab",
+        "context_moveTabToSplitView": "container-tab",
+        "context_separateSplitView": "split",
+        "context_zenSplitTabs": "split",
+        "context-zenSplitLink": "split",
+        "context-previewlink": "open",
+        "context-zenOpenLinkInGlance": "open",
+        "context_zenOpenWorkspace": "manage",
+        "context_zenOpenWorkspacePanel": "manage",
+        "zenToolbarThemePicker": "edit-theme",
+        "context-video-pictureinpicture": "media-pip",
+        "context-media-loop": "media-loop",
+        "request-list-context-resend-only": "media-loop",
+        "request-list-context-edit-resend": "media-loop",
+        "context-savepage": "save",
+        "context-selectall": "edit-select-all",
+        "context_selectAllTabs": "edit-select-all",
+        "toolbar-context-selectAllTabs": "edit-select-all",
+        "context-add-engine": "search-add",
+        "context-undo": "edit-undo",
+        "context_undoCloseTab": "edit-undo",
+        "toolbar-context-undoCloseTab": "edit-undo",
+        "toggle_toolbar-menubar": "menu-bar",
+        "context-redo": "edit-redo",
+        "node-menu-scrollnodeintoview": "edit-redo",
+        "cMenu_findAgain": "edit-redo",
+        "se-menu-gotoLine": "edit-redo",
+        "context-copy": "edit-copy",
+        "placesContext_copy": "edit-copy",
+        "context-copyurl": "edit-copy",
+        "console-menu-copy": "edit-copy",
+        "console-menu-copy-object": "edit-copy",
+        "console-menu-export-clipboard": "edit-copy",
+        "node-menu-copy-source-url": "edit-copy",
+        "node-menu-copy-to-clipboard": "edit-copy",
+        "variable-view-popup-copy": "edit-copy",
+        "context-paste": "edit-paste",
+        "placesContext_paste_group": "edit-paste",
+        "placesContext_paste": "edit-paste",
+        "context-paste-no-formatting": "edit-paste",
+        "context-cut": "edit-cut",
+        "placesContext_cut": "edit-cut",
+        "context-delete": "edit-delete",
+        "pageActionContextMenuRemoveExtension": "edit-delete",
+        "context_zenDeleteWebPanel": "edit-delete",
+        "context_zenDeleteWorkspace": "edit-delete",
+        "placesContext_removeTag": "edit-delete",
+        "node-menu-delete": "edit-delete",
+        "storage-table-popup-delete": "edit-delete",
+        "storage-table-popup-delete-all-from": "edit-delete",
+        "storage-table-popup-delete-all": "edit-delete",
+        "storage-table-popup-delete-all-session-cookies": "edit-delete",
+        "storage-tree-popup-delete-all": "edit-delete",
+        "storage-tree-popup-delete-all-session-cookies": "edit-delete",
+        "paste-and-go": "paste-and-go",
+        "context-print-selection": "print",
+        "spell-check-enabled": "spell-check",
+        "context-take-screenshot": "screenshot",
+        "node-menu-screenshotnode": "screenshot",
+        "frame": "info",
+        "context-viewsource": "source-code",
+        "context-inspect-a11y": "accessibility",
+        "context-inspect": "inspect",
+        "request-list-context-use-as-fetch": "inspect",
+        "context-searchselect": "search-glass",
+        "context-visual-search": "search-glass",
+        "context-searchselect-private": "search-glass",
+        "context-viewimage": "image-open",
+        "context-viewimageinfo": "info",
+        "context-saveimage": "image-save",
+        "context-video-saveimage": "image-save",
+        "context-savevideo": "video-save",
+        "context-viewvideo": "video-open",
+        "context-saveaudio": "audio-save",
+        "context-copyimage-contents": "image-copy",
+        "context-copyimage": "link",
+        "context-copyvideourl": "link",
+        "context-copylink": "link",
+        "context-copy-link-to-highlight": "link",
+        "context-copy-clean-link-to-highlight": "link",
+        "context-stripOnShareLink": "link",
+        "context_zenOpenNewTabWebPanel": "link",
+        "context-pdfjs-copy": "link",
+        "context-openlinkincurrent": "ext-link",
+        "context-translate-selection": "translations",
+        "appMenu-translate-button": "translations",
+        "context-viewframesource": "source-code",
+        "context-viewpartialsource-selection": "source-code",
+        "context-sendimage": "mail",
+        "context-sendvideo": "mail",
+        "context-sendaudio": "mail",
+        "context-setDesktopBackground": "customize",
+        "context-reloadimage": "reload",
+        "context_reloadTab": "reload",
+        "context_reloadSelectedTabs": "reload",
+        "toolbar-context-reloadSelectedTab": "reload",
+        "toolbar-context-reloadSelectedTabs": "reload",
+        "context_zen-reset-pinned-tab": "reload",
+        "context-sendlinktodevice": "send-to-device",
+        "context_sendTabToDevice": "send-to-device",
+        "context-sendpagetodevice": "send-to-device",
+        "sidebar-switcher-tabs": "send-to-device",
+        "context-openlinkintab": "tab",
+        "context-openlinkincontainertab": "tab",
+        "context_zenWebPanelContextInContainer": "tab",
+        "context-openlinknewtab": "tab",
+        "request-list-context-newtab": "tab",
+        "context_openANewTab": "new-tab-image",
+        "toolbar-context-openANewTab": "new-tab-image",
+        "context-openlinkinusercontext-menu": "container-tab",
+        "context-openlink": "window",
+        "context-openlinkprivate": "private-window",
+        "context-savelink": "downloads",
+        "request-list-context-save-as-har": "downloads",
+        "request-list-context-save-all-as-har": "downloads",
+        "request-list-context-save-response-as": "downloads",
+        "spell-add-to-dictionary": "add-to-dictionary",
+        "spell-add-dictionaries": "add-to-dictionary",
+        "spell-dictionaries": "add-to-dictionary",
+        "fill-login": "passwords",
+        "manage-saved-logins": "passwords",
+        "sidebar-switcher-megalist": "passwords",
+        "fill-login-generated-password": "passwords",
+        "context-media-play": "media-play",
+        "context_playTab": "media-play",
+        "context_playSelectedTabs": "media-play",
+        "context-media-pause": "media-pause",
+        "context-media-mute": "media-mute",
+        "context_toggleMuteTab": "media-unmute",
+        "context_toggleMuteSelectedTabs": "media-unmute",
+        "context_zenToggleMuteWebPanel": "media-unmute",
+        "context-media-unmute": "media-unmute",
+        "context-media-playbackrate": "media-speed",
+        "request-list-context-perf": "media-speed",
+        "context-video-fullscreen": "fullscreen",
+        "context-leave-dom-fullscreen": "fullscreen-exit",
+        "context-media-hidecontrols": "permissions",
+        "context-media-showcontrols": "permissions",
+        "context_pinTab": "pin",
+        "context_unpinTab": "pin",
+        "context_pinSelectedTabs": "pin",
+        "context_unpinSelectedTabs": "pin",
+        "context_zen-replace-pinned-url-with-current": "pin",
+        "context_zen-add-essential": "essential-add",
+        "context_zen-edit-pinned-page": "essential-add",
+        "context_zen-remove-essential": "essential-remove",
+        "context_duplicateTab": "duplicate-tab",
+        "context_duplicateTabs": "duplicate-tab",
+        "node-menu-duplicatenode": "duplicate-tab",
+        "zen-context-menu-compact-mode": "sidebar",
+        "zen-context-menu-compact-mode-toggle": "sidebar",
+        "context_bookmarkTab": "bookmark-hollow",
+        "context_bookmarkSelectedTabs": "bookmark-hollow",
+        "toggle_PersonalToolbar": "bookmark-hollow",
+        "context-bookmarklink": "bookmark-hollow",
+        "toolbar-context-bookmarkSelectedTab": "bookmark-hollow",
+        "toolbar-context-bookmarkSelectedTabs": "bookmark-hollow",
+        "placesContext_createBookmark": "bookmark-hollow",
+        "sidebar-switcher-bookmarks": "bookmark-star-on-tray",
+        "sidebar-switcher-history": "history",
+        "node-menu-edithtml": "edit",
+        "context_addNote": "edit",
+        "context_editNote": "edit",
+        "BMB_bookmarksShowAllTop": "manage",
+        "BMB_bookmarksShowAll": "manage",
+        "pageActionContextMenuManageExtension": "manage",
+        "BMB_searchBookmarks": "search-page",
+        "se-menu-find": "search-page",
+        "newbookmark": "plus",
+        "newfolder": "plus",
+        "newseparator": "plus",
+        "node-menu-add": "plus",
+        "context_zen-add-domain-to-routing": "plus",
+        "context_moveTabOptions": "move-tab",
+        "context_reverseSplitView": "move-tab",
+        "context_ungroupTab": "remove-tab",
+        "context_zenMoveToFolder": "remove-tab",
+        "context_zenShareWorkspace": "share",
+        "context_zenShareFolder": "share",
+        "context_zenShareSplitView": "share",
+        "context_moveTabToGroup": "container-tab",
+        "context_moveTabToNewGroup": "container-tab",
+        "context_moveSplitViewToNewGroup": "container-tab",
+        "context_reopenInContainer": "container-tab",
+        "context_closeTab": "close",
+        "context_closeDuplicateTabs": "close",
+        "orgClose": "close",
+        "sidebar-menu-close": "close",
+        "context_closeTabOptions": "close-all",
+        "placesContext_open": "ext-link",
+        "context_zenEditWorkspace": "edit",
+        "context_zen-edit-tab-title": "edit",
+        "context_zenEditWorkspaceIcon": "canvas",
+        "context_zen-edit-tab-icon": "canvas",
+        "context_zenChangeWorkspaceTheme": "customize",
+        "context_zenWorkspacesOpenInContainerTab": "container-tab",
+        "context_zenReorderWorkspaces": "move-tab",
+        "context_zenFolderRename": "edit",
+        "context_zenFolderChangeIcon": "canvas",
+        "zen-context-menu-new-folder": "folder",
+        "zen-context-menu-new-folder-toolbar": "folder",
+        "zen-panel-ui-live-folder-create": "folder",
+        "context_zenFolderNewSubfolder": "folder",
+        "placesContext_showInFolder": "folder",
+        "context_zenFolderUnpack": "close-all",
+        "context_zenChangeFolderSpace": "move-tab",
+        "context_zenFolderToSpace": "edit-redo",
+        "convert-folder-to-group": "edit-redo",
+        "context_zenFolderDelete": "edit-delete",
+        "zen-boost-edit-rename": "edit",
+        "zen-boost-edit-reset": "media-loop",
+        "zen-boost-load": "edit-undo",
+        "zen-boost-save": "edit-redo",
+        "zen-boost-edit-delete": "edit-delete",
+        "viewColumns": "menu",
+        "cmi-show-more-menu": "menu",
+        "cmi-show-more-menu-tab": "menu",
+        "quicktabs-context-menuitem": "ext-link",
+        "quicktabs-tab-context-menuitem": "ext-link",
+        "quicksearch-context-menuitem": "search-glass",
+        "context_renameTab": "edit",
+        "context-back": "arrow-left",
+        "context-forward": "arrow-right",
+        "context-reload": "reload",
+        "context-stop": "close"
+      },
+      "byL10n": {
+        "text-action-select-all": "edit-select-all",
+        "text-action-undo": "edit-undo",
+        "text-action-redo": "edit-redo",
+        "text-action-copy": "edit-copy",
+        "library-media-menu-copy": "edit-copy",
+        "library-downloads-menu-copy": "edit-copy",
+        "text-action-paste": "edit-paste",
+        "text-action-cut": "edit-cut",
+        "text-action-delete": "edit-delete",
+        "library-downloads-menu-trash": "edit-delete",
+        "zen-boost-edit-delete": "edit-delete",
+        "library-downloads-clear-all": "edit-delete",
+        "library-history-clear": "edit-delete",
+        "library-downloads-menu-delete": "edit-delete",
+        "downloads-cmd-delete-file": "edit-delete",
+        "downloads-cmd-remove-from-history": "edit-delete",
+        "downloads-cmd-clear-list": "edit-delete",
+        "downloads-cmd-clear-downloads": "edit-delete",
+        "downloads-cmd-copy-download-link": "link",
+        "library-media-menu-open": "ext-link",
+        "library-downloads-menu-open": "ext-link",
+        "library-boosts-menu-edit": "edit",
+        "library-open-legacy": "manage",
+        "zen-boost-save": "share",
+        "zen-panel-ui-workspaces-create": "plus",
+        "downloads-cmd-show-menuitem-2": "folder",
+        "user-context-new-tab": "tab",
+        "user-context-add-container": "container-tab",
+        "user-context-manage-containers": "manage"
+      }
+    }
+  },
+  "unresolvedReferences": [
+    {
+      "pack": "fluent",
+      "requested": "edit-theme",
+      "replacement": "color"
+    },
+    {
+      "pack": "zen",
+      "requested": "pocket-outline",
+      "replacement": null
+    }
+  ],
+  "zenBrowserReference": {
+    "version": "1.23.2b",
+    "buildID": "20261009073723",
+    "sourceStamp": "185e856f68a451dc71988e988bc080c56452ea66"
+  },
+  "transformation": "Fluent SVG context-fill/context-stroke replaced by #667b91; contextual opacity replaced by 1. Zen artwork referenced from the installed browser, not copied."
+}

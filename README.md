@@ -11,6 +11,7 @@ Each mod has its own settings, version and README. Install only the mods you wan
 | [Better Zen Folders](better-zen-folders/) | Sticky tabs, clearer folder controls, colours, grouped previews and precise drag destinations. | [Better Zen Folders folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/better-zen-folders) |
 | [Zen Icons](zen-icons/) | Searchable icons, emoji and custom images for tabs, folders and Spaces. | [Zen Icons folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/zen-icons) |
 | [Glance Controls](glance-controls/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-controls) |
+| [Context Menu Editor](context-menu-editor/) | Arrange right-click menus, create submenus and customize item names and icons. | [Context Menu Editor folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/context-menu-editor) |
 | [Define Word](define-word/) | Compact English and Hebrew definitions, configurable dictionaries and a keyboard shortcut. | [Define Word folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word) |
 
 ## Forks
