@@ -1,4 +1,4 @@
-// Define Word 0.3.3 - generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.4 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
@@ -618,6 +618,16 @@
       return { x: x + 12, y: y + 12, right: x + window2.innerWidth - 12, bottom: y + window2.innerHeight - 12 };
     }
     function size() {
+      const content = shell.getBoundingClientRect();
+      if (content.width > 0 && content.height > 0) {
+        let width = content.width, height = content.height;
+        for (const node of [panel, panel.panelContent].filter(Boolean)) {
+          const css = window2.getComputedStyle(node), px = (name) => parseFloat(css[name]) || 0;
+          width += px("paddingLeft") + px("paddingRight") + px("borderLeftWidth") + px("borderRightWidth");
+          height += px("paddingTop") + px("paddingBottom") + px("borderTopWidth") + px("borderBottomWidth");
+        }
+        return { width, height };
+      }
       const r = panel.getOuterScreenRect?.() || panel.getBoundingClientRect();
       return { width: r.width || parseFloat(shell.style.width) || 480, height: r.height || parseFloat(shell.style.height) || 300 };
     }

@@ -23,6 +23,10 @@ export function createSelectionService({chrome,services}) {
     if (!owners) chrome.registerWindowActor(ACTOR_NAME, {
       parent:{esModuleURI:`${BASE}actors/DefineWordParent.sys.mjs?v=0.3.1`},
       child:{esModuleURI:`${BASE}actors/DefineWordChild.sys.mjs?v=0.3.1`},
+      // This actor only reads selected text/geometry; its parent exposes no
+      // privileged message handlers. Gecko 157 enforces this declaration for
+      // web and file content processes. Keep the explicit document allowlist.
+      safeForUntrustedWebProcess:true,
       allFrames:true, matches:['http://*/*','https://*/*','file:///*'],
     });
     owners++;
