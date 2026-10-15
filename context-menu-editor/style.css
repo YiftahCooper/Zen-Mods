@@ -1,4 +1,5 @@
 /* Only this Sine dialog and this editor's owned native presentation. */
+[data-cme-root][data-cme-separators="off"] menuseparator { display: none !important; }
 [mod-id="context-menu-editor"] .sineItemPreferenceDialog {
   box-sizing: border-box;
   width: min(620px, calc(100vw - 32px)) !important;

@@ -1,7 +1,7 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.1.2 — RC3.**
+an interactive Sine settings editor. **Version 0.1.3.**
 
 ## Install
 
@@ -19,13 +19,40 @@ an interactive Sine settings editor. **Version 0.1.2 — RC3.**
 **Disable Zen Context Menu and Context-Menu-Icons before enabling this editor.**
 It replaces their menu ordering, visibility and icon customization. Their CSS
 can conflict with the editor. You can keep them installed but disabled while
-trying this version, then remove them when satisfied. Their saved settings are
-not automatically imported. Some separate upstream styling and folding behavior
-is not included.
+trying this version, then remove them when satisfied. Supported saved preferences
+are imported once when this editor has no saved configuration. Some separate
+upstream styling and folding behavior is not included.
 
 Keep other mods that add commands or submenus enabled. This editor discovers
 their entries and identifies their source when sufficient evidence is available.
 Open the relevant right-click menu once if its owner creates entries lazily.
+
+## Keep your existing preferences
+
+On its first run, the editor checks for saved settings from Zen Context Menu
+(`uc.hidecontext.*` and supported `uc.fixcontext.*` values) and
+Context-Menu-Icons (`cmi-*`). It imports supported choices only when
+`extension.context-menu-editor.settings` is empty. Existing editor data,
+including data it cannot read, is preserved.
+
+The import covers supported command visibility groups, icon visibility and
+pack, separator visibility and strength, preference for clean links, per-menu
+hiding of disabled commands, extension icon monochrome and basic corner/hover
+choices. Old preferences are left untouched. Commands that appear later receive
+their imported visibility once; re-enabling one here keeps your newer choice.
+
+These choices become your profile's saved configuration. Zen restarts, Sine
+reloads and mod updates do not reset it or rerun the import over it. Public
+defaults remain Fluent icons, visible separators and visible disabled commands.
+A profile with no old preferences starts with those normal defaults.
+
+Legacy pixel offsets, toolbar-only styling, stale options with no corresponding
+menu action and arbitrary CSS folding selectors are not imported. The editor's
+size, alignment and spacing controls replace the older pack-specific offsets.
+Use **Appearance → Spacing and style → Show separators** and
+**Menu options → Prefer clean links** to change those imported choices. Clean
+links are preferred only when the clean command and its containing submenus
+are usable; otherwise ordinary Copy Link remains available.
 
 ## Use the editor
 
@@ -56,9 +83,9 @@ The top controls keep occasional settings out of the rows:
 | Control | What it does |
 | --- | --- |
 | Add | Create a submenu or separator at the selected location. |
-| Appearance | Choose the icon pack, size, alignment and gap. Open Spacing and style for row spacing, corners, hover shading, separator strength and monochrome extension icons. |
+| Appearance | Choose the icon pack, size, alignment and gap. Open Spacing and style for row spacing, corners, hover shading, separator visibility and strength, and monochrome extension icons. |
 | Find an item (⌕) | Highlight a name or source mod, expand its parents and jump between matches. Every row stays in the list. |
-| Menu options (⋯) | Enable customization, hide unavailable commands, enable Shift bypass, restore removed items, restore order or reset this menu. |
+| Menu options (⋯) | Enable customization, hide unavailable commands for this menu, prefer clean links in the Page menu, enable Shift bypass, restore removed items, restore order or reset this menu. |
 | Undo | Undo the last completed change. |
 
 Each completed edit saves immediately. Opening settings does not save or
@@ -147,13 +174,18 @@ credentials and referrers and reject redirects. Pack and imported artwork need
 no network request when a menu opens. Existing owner-provided icon URLs remain
 controlled by that owner.
 
-## RC3 verification
+## Verification
 
-The selected RC3 runtime was checked with 195 JavaScript tests, six Python
-harness tests and 486 native assertions across 19 headless Zen/Sine stages.
-A separate headed disposable Zen run passed eight checks through the real
-Windows file picker, including trusted file delivery, draft/save behavior and
-transparent 32 × 32 PNG normalization.
+Version 0.1.3 adds regression tests for one-time import, late command discovery,
+per-menu availability, clean-link fallback and retained settings. Its native
+legacy-import test uses two separate headless Zen processes with the same newly
+created disposable profile. It exercises real Sine reloads, later editor edits,
+changed old preferences and exact saved-state readback after restart.
+
+The RC3 baseline also passed a separate headed disposable Zen run with eight
+checks through the real Windows file picker, including trusted file delivery,
+draft/save behavior and transparent 32 × 32 PNG normalization. This picker
+result belongs to RC3; the image-import implementation is unchanged in 0.1.3.
 
 Native coverage includes 15 page contexts, actual bookmark/folder commands,
 eight local mods in both load orders, two browser windows, Sine unload/reload,

@@ -1,4 +1,4 @@
-// Context Menu Editor 0.1.2 — generated from src/entry.mjs.
+// Context Menu Editor 0.1.3 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -22,7 +22,9 @@
     separatorOpacity: 0.5,
     monochromeExtensions: false,
     hideUnavailable: false,
-    shiftBypass: true
+    shiftBypass: true,
+    showSeparators: true,
+    preferCleanLinks: false
   });
   function fail(message) {
     throw new Error(message);
@@ -114,6 +116,8 @@
       };
       keyCheck(rootId);
       if (!object(root) || !Array.isArray(root.children) || !object(root.records)) fail("Invalid menu hierarchy.");
+      if ("hideUnavailable" in root && typeof root.hideUnavailable !== "boolean") fail("Invalid unavailable-command menu option.");
+      if ("legacyHiddenIds" in root && (!Array.isArray(root.legacyHiddenIds) || root.legacyHiddenIds.length > 512 || new Set(root.legacyHiddenIds).size !== root.legacyHiddenIds.length || root.legacyHiddenIds.some((id) => !validKey(id) || !/^[a-zA-Z][a-zA-Z0-9_-]{0,127}$/u.test(id)))) fail("Invalid legacy menu identities.");
       for (const [key, record] of Object.entries(root.records)) {
         keyCheck(key);
         if (++count > MAX_RECORDS) fail("Too many saved menu items.");
@@ -191,6 +195,11 @@
         if (root.records[key].kind !== item.kind || root.records[key].owned) fail("A menu item identity conflicts with saved settings.");
       } else {
         root.records[key] = newRecord(item.kind);
+        if (root.legacyHiddenIds?.includes(key)) {
+          root.records[key].hidden = true;
+          root.legacyHiddenIds = root.legacyHiddenIds.filter((id) => id !== key);
+          if (!root.legacyHiddenIds.length) delete root.legacyHiddenIds;
+        }
         added.push(key);
       }
     }
@@ -4740,7 +4749,8 @@
     function decorate(c, node, descriptor, record, options) {
       attr(c, node, "data-cme-item", "true");
       rename(c, node, descriptor, record);
-      if (record.hidden || record.removed || options.hideUnavailable && bool(node, "disabled") || !descriptor.available) attr(c, node, "hidden", "true");
+      const preferClean = options.preferCleanLinks && c.root.id === "contentAreaContextMenu";
+      if (record.hidden || record.removed || options.hideUnavailable && bool(node, "disabled") || !descriptor.available || preferClean && (descriptor.key === "context-copylink" && c.cleanLinkAvailable || descriptor.key === "context-stripOnShareLink" && bool(node, "disabled"))) attr(c, node, "hidden", "true");
       if (descriptor.kind === "separator") return;
       if (record.iconOwner) {
         attr(c, node, "data-cme-icons", "owner");
@@ -4775,16 +4785,31 @@
       }
     }
     function apply(c) {
-      const state = getState(), options = state?.options || {};
+      const initial = getState(), state = initial?.roots?.[c.root.id]?.legacyHiddenIds?.length ? mergeInventory(initial, c.root.id, c.scan.items) : initial;
+      const options = { ...state?.options, hideUnavailable: state?.roots?.[c.root.id]?.hideUnavailable ?? state?.options?.hideUnavailable };
       if (options.enabled === false || c.bypass) {
         restore(c);
         return;
       }
       const saved = state?.roots?.[c.root.id] || { children: [], records: {} }, records = saved.records || {};
       const descriptors = new Map(c.scan.items.map((d) => [d.key, d]));
+      const parents = new Map(c.scan.items.map((item) => [item.key, item.parentKey]));
+      for (const key of saved.children || []) parents.set(key, null);
+      for (const [key, record] of Object.entries(records)) for (const child of record.children || []) parents.set(child, key);
+      function usable(key, seen2 = /* @__PURE__ */ new Set()) {
+        if (seen2.has(key)) return false;
+        seen2.add(key);
+        const record = records[key], descriptor = descriptors.get(key), node = c.scan.nodes.get(key);
+        if (record?.hidden || record?.removed) return false;
+        if (descriptor ? !descriptor.available || !node || bool(node, "disabled") : record?.kind !== "submenu") return false;
+        const parent = parents.get(key);
+        return parent == null || usable(parent, seen2);
+      }
+      c.cleanLinkAvailable = usable("context-stripOnShareLink");
       attr(c, c.root, "data-cme-root", c.root.id);
       attr(c, c.root, "data-cme-rounded", String(options.rounded !== false));
       attr(c, c.root, "data-cme-hover", String(options.hoverShade !== false));
+      attr(c, c.root, "data-cme-separators", options.showSeparators === false ? "off" : "on");
       style(c, c.root, "--cme-icon-size", `${options.iconSize ?? 16}px`);
       style(c, c.root, "--cme-icon-gap", `${options.iconGap ?? 8}px`);
       style(c, c.root, "--cme-row-spacing", `${options.rowSpacing ?? 2}px`);
@@ -5338,7 +5363,7 @@
         control.value = String(view.options[key]);
       } else {
         control = node("input", null, { type: kind });
-        if (kind === "checkbox") control.checked = Boolean(view.options[key]);
+        if (kind === "checkbox") control.checked = Boolean(key === "hideUnavailable" ? view.roots[currentRoot]?.hideUnavailable ?? view.options[key] : view.options[key]);
         else {
           control.value = String(view.options[key]);
           control.min = values[0];
@@ -5353,6 +5378,7 @@
       control.addEventListener("change", () => {
         const value = kind === "checkbox" ? control.checked : kind === "number" ? Number(control.value) : control.value;
         commit((state) => {
+          if (key === "hideUnavailable") return { ...state, roots: { ...state.roots, [currentRoot]: { ...state.roots[currentRoot], hideUnavailable: value } } };
           const next = { ...state, options: { ...state.options, [key]: value } };
           if (["showIcons", "iconPack", "iconSize", "iconAlignment", "iconGap", "monochromeExtensions"].includes(key)) {
             next.roots = Object.fromEntries(Object.entries(state.roots).map(([id2, root]) => [id2, { ...root, records: Object.fromEntries(Object.entries(root.records).map(([item, record]) => {
@@ -5921,13 +5947,15 @@
         optionControl(more, "rowSpacing", "Row spacing", "Extra vertical space, in pixels.", "number", [0, 8]);
         optionControl(more, "rounded", "Rounded corners", "Round menu item corners.");
         optionControl(more, "hoverShade", "Hover shading", "Shade the item under the pointer.");
+        optionControl(more, "showSeparators", "Show separators", "Display enabled separators between items.");
         optionControl(more, "separatorOpacity", "Separator strength", "0 is invisible; 1 is solid.", "number", [0, 1, 0.05]);
         optionControl(more, "monochromeExtensions", "Monochrome extension icons", "Show extension artwork in one color.");
         panel.append(more);
       } else if (kind === "options") {
-        panel.append(node("p", "Behavior applies to all menus. Restore actions affect this menu.", { class: "cme-help" }));
+        panel.append(node("p", "Unavailable commands and restore actions affect this menu. Other switches apply to all menus.", { class: "cme-help" }));
         optionControl(panel, "enabled", "Enable customization", "Use your saved arrangement.");
-        optionControl(panel, "hideUnavailable", "Hide unavailable commands", "Hide commands their owner has disabled.");
+        optionControl(panel, "hideUnavailable", "Hide unavailable commands", "Hide disabled commands in this menu.");
+        optionControl(panel, "preferCleanLinks", "Prefer clean links", "On page menus, use Copy Clean Link when available.");
         optionControl(panel, "shiftBypass", "Shift shows the original menu", "Hold Shift when you right-click.");
         panel.append(button("Restore removed items…", () => openTopPanel("removed"), { "data-cme-restore-removed": "" }));
         const order = button("Restore original order", () => commit((state) => restoreOriginalOrder(state, currentRoot, descriptors()), "Original order restored."), { "data-cme-restore-order": "" });
@@ -6312,12 +6340,109 @@
     } };
   }
 
+  // project:src/legacy.mjs
+  var PAGE = "contentAreaContextMenu";
+  var TAB = "tabContextMenu";
+  var HIDDEN = {
+    bookmark: { [PAGE]: ["context-bookmarklink"], [TAB]: ["context_bookmarkSelectedTabs", "context_bookmarkTab"] },
+    mutetab: { [TAB]: ["context_toggleMuteTab", "context_toggleMuteSelectedTabs", "context_playTab", "context_playSelectedTabs"] },
+    newtab: { [TAB]: ["context_openANewTab"] },
+    movetaboptions: { [TAB]: ["context_moveTabOptions"] },
+    newcontainer: { [PAGE]: ["context-openlinkinusercontext-menu"], [TAB]: ["context_reopenInContainer"] },
+    sendtodevice: { [PAGE]: ["context-sendpagetodevice", "context-sendlinktodevice", "context-sep-sendlinktodevice"], [TAB]: ["context_sendTabToDevice"] },
+    closetab: { [TAB]: ["context_closeTab", "context_closeDuplicateTabs"] },
+    closemultiple: { [TAB]: ["context_closeTabOptions"] },
+    search: { [PAGE]: ["context-searchselect"] },
+    searchinpriv: { [PAGE]: ["context-searchselect-private"] },
+    translate: { [PAGE]: ["context-translate-selection", "frame-sep"] },
+    askchatbot: { [PAGE]: ["context-ask-chat"] },
+    printselection: { [PAGE]: ["context-print-selection"] },
+    image: { [PAGE]: ["context-sendimage", "context-sep-setbackground", "context-setDesktopBackground", "context-sep-sharing", "context-viewimageinfo"] },
+    audiovideo: { [PAGE]: ["context-copyvideourl", "context-copyaudiourl", "context-sendvideo", "context-sendaudio", "context-sep-sharing"] },
+    checkspelling: { [PAGE]: ["spell-separator", "spell-check-enabled", "spell-add-dictionaries-main", "spell-dictionaries", "context-sep-bidi", "context-bidi-text-direction-toggle", "context-bidi-page-direction-toggle"] },
+    screenshot: { [PAGE]: ["context-take-screenshot", "context-sep-screenshots", "frame-sep"] },
+    frame: { [PAGE]: ["frame-sep", "frame"] },
+    selectalltext: { [PAGE]: ["context-selectall", "context-sep-selectall"] },
+    selectalltabs: { [TAB]: ["context_selectAllTabs", "context_selectedAllTabs"] },
+    reloadtab: { [TAB]: ["context_reloadTab", "context_reloadSelectedTabs"] },
+    duplicatetab: { [TAB]: ["context_duplicateTab", "context_duplicateTabs"] },
+    inspect: { [PAGE]: ["context-viewsource", "context-inspect-a11y", "context-inspect", "inspect-separator", "context-media-eme-separator", "context-viewpartialsource-selection"] },
+    savelink: { [PAGE]: ["context-savepage", "context-savelink"] },
+    pin: { [TAB]: ["context_pinTab", "context_unpinTab", "context_pinSelectedTabs", "context_unpinSelectedTabs", "context_zen-add-essential", "context_zen-remove-essential"] },
+    navigation: { [PAGE]: ["context-back", "context-forward", "context-reload", "context-stop", "context-bookmarkpage", "context-sep-navigation"] }
+  };
+  function initializeLegacySettings(prefs) {
+    let before;
+    try {
+      before = prefs.getStringPref(SETTINGS_PREF, "");
+    } catch {
+      return { imported: false, reason: "unreadable" };
+    }
+    if (before !== "") return { imported: false, reason: "existing" };
+    const state = createState();
+    let found = 0;
+    const read = (name, type, valid = () => true) => {
+      try {
+        if (!prefs.prefHasUserValue?.(name)) return void 0;
+        const value = prefs[type === "boolean" ? "getBoolPref" : type === "number" ? "getIntPref" : "getStringPref"](name);
+        if (typeof value !== type || !valid(value)) return void 0;
+        found++;
+        return value;
+      } catch {
+        return void 0;
+      }
+    };
+    const root = (id) => state.roots[id] ??= { children: [], records: {} };
+    for (const [preference, menus] of Object.entries(HIDDEN)) if (read("uc.hidecontext." + preference, "boolean") === true) {
+      for (const [id, ids] of Object.entries(menus)) {
+        const menu = root(id);
+        menu.legacyHiddenIds = [.../* @__PURE__ */ new Set([...menu.legacyHiddenIds || [], ...ids])];
+      }
+    }
+    const separators = read("uc.hidecontext.separators", "boolean");
+    if (separators !== void 0) state.options.showSeparators = !separators;
+    const cleanLinks = read("uc.hidecontext.copylink", "boolean");
+    if (cleanLinks !== void 0) state.options.preferCleanLinks = cleanLinks;
+    const restoreIcons = read("uc.fixcontext.restoreicons", "boolean");
+    if (restoreIcons === true) state.options.iconPack = "zen";
+    const pack = read("cmi-Switch-Icon-Package", "number", (value) => Number.isInteger(value) && [0, 1, 2].includes(value));
+    if (pack !== void 0) {
+      state.options.showIcons = pack !== 0;
+      state.options.iconPack = pack === 2 ? "zen" : "fluent";
+    }
+    if (read("uc.hidecontext.icons", "boolean") === true) state.options.showIcons = false;
+    const opacity = read("cmi-menuseparator-opacity", "string", (value) => /^(?:0(?:\.\d+)?|1(?:\.0+)?)$/u.test(value.trim()));
+    if (opacity !== void 0) state.options.separatorOpacity = Number(opacity);
+    const gray = read("cmi-Grayscale-Extensions-Icons", "boolean");
+    if (gray !== void 0) state.options.monochromeExtensions = gray;
+    const betterMenu = read("cmi-Disable-Better-Context-Menu", "boolean");
+    if (betterMenu !== void 0) {
+      state.options.rounded = !betterMenu;
+      state.options.hoverShade = !betterMenu;
+    }
+    if (read("cmi-Disable-BCM-Gradient-Effect", "boolean") === true) state.options.hoverShade = false;
+    for (const [id, suffix] of [[PAGE, "ContentAreaContextMenu"], [TAB, "TabContextMenu"]]) {
+      const hidden = read("cmi-Hide-Inactive-Items-" + suffix, "boolean");
+      if (hidden !== void 0) root(id).hideUnavailable = hidden;
+    }
+    if (!found) return { imported: false, reason: "none" };
+    const encoded = serializeState(state);
+    if (prefs.getStringPref(SETTINGS_PREF, "") !== before) return { imported: false, reason: "changed" };
+    prefs.setStringPref(SETTINGS_PREF, encoded);
+    return { imported: true };
+  }
+
   // project:src/entry.mjs
   var TOPIC = "context-menu-editor-inventory";
   var BASE = "chrome://sine/content/context-menu-editor/";
   function startContextMenuEditor(window2, { Services: services } = {}) {
     services ??= typeof Services !== "undefined" ? Services : globalThis.Services;
     if (!services?.prefs) throw new Error("Context Menu Editor needs the browser preference service.");
+    try {
+      initializeLegacySettings(services.prefs);
+    } catch (problem) {
+      window2.console?.warn?.("Context Menu Editor could not import previous settings.", problem);
+    }
     window2.__contextMenuEditor?.unload();
     let disposed = false, offStore = () => {
     }, offRegistry = () => {
@@ -6327,7 +6452,7 @@
     const icons = createIconService(window2, { baseURL: BASE, fetch: (...args) => browserWindow().fetch(...args) });
     const stylesheet = window2.document.createElementNS("http://www.w3.org/1999/xhtml", "link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = BASE + "style.css?v=0.1.2";
+    stylesheet.href = BASE + "style.css?v=0.1.3";
     stylesheet.setAttribute("data-cme-stylesheet", "true");
     window2.document.documentElement.append(stylesheet);
     const owner = {
