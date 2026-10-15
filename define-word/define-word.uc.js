@@ -1,4 +1,4 @@
-// Define Word 0.3.2 - generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.3 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
@@ -80,7 +80,8 @@
     return { headword: text(data[0]?.word) || query, language: "en", senses: senses.slice(0, 20), sourceUrl: sourceUrl || "https://dictionaryapi.dev/", attribution: { label: "Free Dictionary API", url: "https://dictionaryapi.dev/", licenseLabel: text(license?.name), licenseUrl: safeUrl(license?.url, ["creativecommons.org"]) } };
   }
   var freeDictionary = { id: "free-en", label: "Free Dictionary API", language: "en", keyRequired: false, suggestionsLabel: null, async lookup(options) {
-    return parseFreeDictionary(await requestJson(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(options.query)}`, options), options.query);
+    const query = options.query.toLocaleLowerCase("en");
+    return parseFreeDictionary(await requestJson(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`, options), options.query);
   } };
 
   // project:src/normalize.mjs

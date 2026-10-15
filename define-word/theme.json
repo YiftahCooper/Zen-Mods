@@ -3,9 +3,9 @@
   "name": "Define Word",
   "description": "Compact English and Hebrew dictionary definitions for selected words.",
   "author": "YiftahCooper",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "createdAt": "2026-09-29",
-  "updatedAt": "2026-10-15T12:00:00Z",
+  "updatedAt": "2026-10-15T16:10:00Z",
   "supportsUnload": true,
   "preferences": "preferences.json",
   "style": {
