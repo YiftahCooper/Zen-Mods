@@ -1,0 +1,347 @@
+[
+  { "type": "separator", "label": "Creating and Moving" },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.new-tab-position",
+    "label": "New Tab Position in Folder",
+    "defaultValue": "bottom",
+    "placeholder": false,
+    "options": [
+      { "value": "top", "label": "Top" },
+      { "value": "bottom", "label": "Bottom" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.moved-tab-position",
+      "label": "Place Moved Tabs\nWhen using Move to Folder or dropping onto a folder header. Dropping between items keeps your chosen position.",
+    "defaultValue": "bottom",
+    "placeholder": false,
+    "options": [
+      { "value": "top", "label": "At the Top" },
+      { "value": "bottom", "label": "At the Bottom" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.subfolder-position",
+    "label": "New Subfolder Position",
+    "defaultValue": "bottom",
+    "placeholder": false,
+    "options": [
+      { "value": "top", "label": "Top" },
+      { "value": "bottom", "label": "Bottom" }
+    ]
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.moved-folder-position",
+      "label": "Place Moved Folders\nWhen using Move to Folder or dropping onto a folder header. Dropping between items keeps your chosen position.",
+    "defaultValue": "bottom",
+    "placeholder": false,
+    "options": [
+      { "value": "top", "label": "At the Top" },
+      { "value": "bottom", "label": "At the Bottom" }
+    ]
+  },
+  { "type": "separator", "label": "URL Pins in Folders" },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.show-root-pin-badge",
+    "label": "Show Pin Badge on Top-Level Pinned Tabs\nClick the badge to unpin the tab and move it to the regular tab area.",
+    "defaultValue": false
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.folder-url-pins-enabled",
+    "label": "Separate URL Pins in Folders\nFolder tabs keep a reset address only when you choose Pin URL. First activation explains existing tabs and asks before changing Zen's startup-reset setting. Turning this off restores native behaviour but keeps your saved choices.",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.pin-new-folder-tab-urls",
+    "label": "Pin URLs for New Folder Tabs\nApplies only to newly created tabs. Moving or restoring a tab keeps its existing choice.",
+    "defaultValue": false
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.url-unpin-grace-seconds",
+    "label": "Delay Before Unpinning a URL (seconds)\nClick the pin again during this delay to cancel. 0 unpins immediately. This is separate from Sticky.",
+    "defaultValue": "0",
+    "placeholder": "0"
+  },
+  { "type": "separator", "label": "Sticky and Collapsing" },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.sticky-tabs-enabled",
+    "label": "Enable Sticky Tabs\nKeep chosen tabs visible when their folders or Space are collapsed. Turning this off preserves your choices.",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.sticky-folders-enabled",
+    "label": "Enable Sticky Folders\nKeep chosen folders visible when their parents or Space are collapsed. Turning this off preserves your choices.",
+    "defaultValue": true
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.sticky-marker",
+    "label": "Sticky Marker",
+    "defaultValue": "underline",
+    "placeholder": false,
+    "options": [
+      { "value": "underline", "label": "Icon Underline" },
+      { "value": "corner", "label": "Folded Corner" }
+    ]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.sticky-removal-delay-seconds",
+    "label": "Delay Before Removing Sticky (seconds)\nAfter clicking the marker, click again during this delay to keep it Sticky. 0 removes it immediately.",
+    "defaultValue": "0.5",
+    "placeholder": "0.5"
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.subfolder-collapse-policy",
+    "label": "Subfolders When Parent Is Collapsed\nSticky items and the paths to them always remain visible. Child folders keep their remembered state.",
+    "defaultValue": "hide",
+    "placeholder": false,
+    "options": [
+      { "value": "hide", "label": "Hide Non-Sticky Subfolders" },
+      { "value": "expanded", "label": "Show Expanded Subfolders Only" },
+      { "value": "all", "label": "Show All Subfolders" }
+    ]
+  },
+  { "type": "separator", "label": "Folder Previews" },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.preview-subfolders",
+    "label": "Subfolders in Folder Previews\nChoose how subfolders appear when a preview opens. This does not change the sidebar.",
+    "defaultValue": "expanded",
+    "placeholder": false,
+    "options": [
+      { "value": "expanded", "label": "Start Expanded" },
+      { "value": "children", "label": "Expand Child Folders Only" },
+      { "value": "collapsed", "label": "Start Collapsed" },
+      { "value": "hide", "label": "Hide Subfolders" }
+    ]
+  },
+  { "type": "separator", "label": "Folder Controls" },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.new-tab-button-visibility",
+    "label": "Show the New Tab Button",
+    "defaultValue": "hover",
+    "placeholder": false,
+    "options": [
+      { "value": "hover", "label": "On Hover or Keyboard Focus" },
+      { "value": "always", "label": "Always Visible" },
+      { "value": "hidden", "label": "Hidden" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.double-click-rename",
+    "label": "Double-Click a Folder Name to Rename It",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.folder-title-click-delay-ms",
+    "label": "Folder Title Click Delay (ms)\nWait for a second click before toggling the folder. 0 means no waiting.",
+    "defaultValue": 300,
+    "value": "num",
+    "placeholder": "300",
+    "conditions": [{ "if": { "property": "better-zen-folders.double-click-rename", "value": true } }]
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.rename-escape-action",
+    "label": "Escape While Renaming a Tab or Folder\nClicking away or leaving the rename field saves the name.",
+    "defaultValue": "save",
+    "placeholder": false,
+    "options": [
+      { "value": "save", "label": "Save Name" },
+      { "value": "cancel", "label": "Cancel Changes" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.middle-click-delete",
+      "label": "Middle-Click a Folder to Delete It",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.delete-empty-regular-folders",
+    "label": "Delete Regular Folders When They Become Empty",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.show-folder-unload-button",
+    "label": "Show Unload Button on Folder Rows\nShow Zen's minus button on eligible hovered folders. New Tab, chevrons and the Unload All Tabs menu command are independent.",
+    "defaultValue": false
+  },
+  { "type": "separator", "label": "Dragging" },
+  {
+    "type": "string",
+    "property": "better-zen-folders.drag-hover-delay-ms",
+    "label": "Drag-to-Expand Delay (ms)\nHover time before a collapsed folder expands. 0 means immediate.",
+    "defaultValue": 500,
+    "value": "num",
+    "placeholder": "500"
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.drag-destination-delay-ms",
+    "label": "Drag Destination Hover Delay (ms)\nWait at a folder's bottom edge before showing where to place the tab. 0 means immediate.",
+    "defaultValue": 300,
+    "value": "num",
+    "placeholder": "300"
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.colour-code-drag-destinations",
+    "label": "Colour-Code Drag Destinations\nShow each receiving folder's colour beside its drag destination. Turn off for neutral icons and no colour strips.",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.drag-recollapse-delay-ms",
+    "label": "Re-collapse Drag-Opened Folders After Leaving (ms)\nApplies only if the drag opened the folder and no tab was dropped inside. 0 means immediate.",
+    "defaultValue": 500,
+    "value": "num",
+    "placeholder": "500"
+  },
+  { "type": "separator", "label": "Appearance" },
+  {
+    "type": "string",
+    "property": "better-zen-folders.folder-name-size",
+    "label": "Folder Name Font Size (px)\nCSS pixels; decimals such as 14.5 are supported.",
+    "defaultValue": "14",
+    "placeholder": "14"
+  },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.folder-state-chevron",
+    "label": "Show Folder State Chevron\nA small right/down arrow at the end of the folder row shows whether clicking will expand or collapse it.",
+    "defaultValue": "outline-free",
+    "placeholder": false,
+    "options": [
+        { "value": "outline-free", "label": "Only for Folders With Outline Disabled" },
+      { "value": "always", "label": "All Folders" },
+      { "value": "hidden", "label": "Hidden" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.show-hierarchy-guides",
+    "label": "Show Folder Hierarchy Guide Lines",
+    "defaultValue": true
+  },
+  { "type": "separator", "label": "Menus" },
+  {
+    "type": "dropdown",
+    "property": "better-zen-folders.command-icon-mode",
+    "label": "BZF Menu Command Icons\nIcons for Better Zen Folders commands only. Sticky keeps its checkmark. Compatibility works with Context Menu Icons.",
+    "defaultValue": "mod",
+    "placeholder": false,
+    "options": [
+      { "value": "off", "label": "Off" },
+      { "value": "mod", "label": "Mod Icons" },
+      { "value": "compatibility", "label": "Context Menu Icons Compatibility" }
+    ]
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.decorate-move-to-folder-menu",
+    "label": "Show Icons and Colours in Move Menus",
+    "defaultValue": true
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.menu-icon-size-percent",
+    "label": "Outline-Free Icon Size in Move Menus (%)\nMove to Folder only. 100% uses the original size; outlined and sidebar icons are unchanged.",
+    "defaultValue": "120",
+    "placeholder": "120",
+    "conditions": [{ "if": { "property": "better-zen-folders.decorate-move-to-folder-menu", "value": true } }]
+  },
+  { "type": "separator", "label": "Folder Colours" },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.use-space-colour",
+    "label": "Use Space Colour for Default Folders\nTurn off for neutral grey defaults. Your manually chosen folder colours are unchanged.",
+    "defaultValue": true
+  },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.custom-palette-enabled",
+    "label": "Customise Preset Colours\nFolders assigned a preset follow its edits. Custom colours stay independent.",
+    "defaultValue": false
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-1",
+    "label": "Swatch 1",
+    "defaultValue": "#e76565",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-2",
+    "label": "Swatch 2",
+    "defaultValue": "#ef8f4b",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-3",
+    "label": "Swatch 3",
+    "defaultValue": "#e3bd41",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-4",
+    "label": "Swatch 4",
+    "defaultValue": "#51c67c",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-5",
+    "label": "Swatch 5",
+    "defaultValue": "#3ebcd2",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-6",
+    "label": "Swatch 6",
+    "defaultValue": "#5f95eb",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-7",
+    "label": "Swatch 7",
+    "defaultValue": "#9b79ea",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  {
+    "type": "string",
+    "property": "better-zen-folders.palette-8",
+    "label": "Swatch 8",
+    "defaultValue": "#e46da9",
+    "conditions": [{ "if": { "property": "better-zen-folders.custom-palette-enabled", "value": true } }]
+  },
+  { "type": "separator", "label": "Diagnostics" },
+  {
+    "type": "checkbox",
+    "property": "better-zen-folders.drag-diagnostics-enabled",
+    "label": "Record Drag Diagnostics\nRecord several drag attempts, then right-click a regular folder and choose Copy Drag Diagnostics. Does not record tab URLs or names.",
+    "defaultValue": false
+  }
+]

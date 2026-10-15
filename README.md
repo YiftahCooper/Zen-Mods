@@ -2,12 +2,13 @@
 
 A collection of mods for [Zen Browser](https://zen-browser.app/), installed through [Sine](https://github.com/CosmoCreeper/Sine).
 
-Each mod has its own settings, version, README, and license. Install only the mods you want, using the individual links below.
+Each mod has its own settings, version and README. Install only the mods you want, using the individual links below. Bundled third-party material retains its accompanying licenses and credits.
 
 ## Mods in this repository
 
 | Mod | What it does | Install source |
 | --- | --- | --- |
+| [Better Zen Folders](better-zen-folders/) | Sticky tabs, clearer folder controls, colours, grouped previews and precise drag destinations. | [Better Zen Folders folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/better-zen-folders) |
 | [Glance Controls](glance-controls/) | Choose the side, vertical position, size, order, and visibility of Glance buttons, with a Copy URL button. | [Glance Controls folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/glance-controls) |
 | [Define Word](define-word/) | Compact English and Hebrew definitions, configurable dictionaries and a keyboard shortcut. | [Define Word folder](https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word) |
 

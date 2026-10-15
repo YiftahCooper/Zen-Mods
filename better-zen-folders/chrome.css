@@ -1,0 +1,1001 @@
+/* A distinct action surface: neither the favicon nor the Sticky underline. */
+.better-zen-folders-url-pin {
+  appearance: none !important;
+  display: inline-grid !important;
+  place-items: center;
+  flex: 0 0 24px !important;
+  inline-size: 24px !important;
+  min-inline-size: 24px !important;
+  block-size: 24px !important;
+  padding: 3px !important;
+  margin: 0 3px !important;
+  border: 0 !important;
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.better-zen-folders-url-pin > svg { inline-size: 16px; block-size: 16px; fill: currentColor; pointer-events: none; }
+.better-zen-folders-url-pin:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.better-zen-folders-url-pin:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+.better-zen-folders-url-pin[data-bzf-url-unpin-pending] > svg { opacity: .5; }
+.better-zen-folders-url-pin:disabled { opacity: .5; cursor: default; }
+.better-zen-folders-url-pin-status {
+  position: fixed; inline-size: 1px; block-size: 1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.better-zen-folders-url-pin-status[data-bzf-error="true"] {
+  display: flex; align-items: center; gap: 12px;
+  inset-inline-end: 16px; inset-block-end: 16px; z-index: 2147483647;
+  inline-size: min(420px, calc(100vw - 32px)); block-size: auto;
+  padding: 12px; box-sizing: border-box; clip-path: none; white-space: normal;
+  background: Canvas; color: CanvasText; border: 1px solid currentColor;
+  border-radius: 8px; box-shadow: 0 2px 8px #0004;
+}
+.better-zen-folders-url-pin-status > button { min-block-size: 24px; flex-shrink: 0; }
+
+/* Workspace Sticky owns only the active Space's collapsed pinned projection.
+   Keep the native collapse flags, hidden attribute and scroll layout intact. */
+zen-workspace[active="true"][collapsedpinnedtabs] .zen-workspace-pinned-tabs-section[data-bzf-workspace-projection="visible"] {
+  display: flex !important;
+}
+zen-workspace[active="true"][collapsedpinnedtabs] .zen-workspace-pinned-tabs-section[data-bzf-workspace-projection="hidden"] {
+  display: none !important;
+}
+zen-workspace[active="true"] .zen-workspace-pinned-tabs-section:is([data-bzf-workspace-projection], [data-bzf-workspace-expanding])
+  > .space-fake-collapsible-start {
+  display: none !important;
+  margin-block: 0 !important;
+}
+zen-workspace[active="true"][collapsedpinnedtabs] .zen-workspace-pinned-tabs-section[data-bzf-workspace-projection]
+  > [data-bzf-visibility="visible"]:not([hidden]) {
+  display: flex !important;
+  opacity: 1 !important;
+  height: auto !important;
+  max-height: none !important;
+  visibility: visible !important;
+}
+
+/* Only projected collapsed branches bypass Zen's negative-offset animation.
+   Fully expanded trees keep native layout; hidden children have no hitboxes. */
+[data-bzf-visibility="hidden"] { display: none !important; }
+zen-folder[data-bzf-projection="true"] > .tab-group-container {
+  display: flex !important;
+  flex-direction: column;
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+zen-folder[data-bzf-projection="true"]:not([data-bzf-has-visible-children]) > .tab-group-container {
+  display: none !important;
+}
+zen-folder:is([data-bzf-projection="true"], [data-bzf-expanding="true"]) > .tab-group-container > .zen-tab-group-start {
+  display: none !important;
+  margin-block: 0 !important;
+}
+zen-folder > .tab-group-container > [data-bzf-visibility="visible"],
+zen-folder[data-bzf-visibility="visible"] > .tab-group-label-container,
+tab-split-view-wrapper[data-bzf-visibility="visible"] > tab {
+  display: flex !important;
+  opacity: 1 !important;
+  height: auto !important;
+  max-height: none !important;
+  visibility: visible !important;
+}
+zen-folder > .tab-group-container > [data-bzf-visibility="visible"] {
+  /* Undo native flattening only within the projected branch. */
+  --zen-folder-indent: var(--better-zen-folders-native-indent, 14px) !important;
+}
+zen-folder[data-bzf-visibility="visible"] > .tab-group-label-container {
+  min-height: var(--tab-min-height);
+}
+.better-zen-folders-sticky-toggle {
+  position: absolute;
+  appearance: none;
+  box-sizing: border-box;
+  /* Each row owns its upper leading corner. This advances naturally with
+     nesting, unlike an outside-row offset which aligned parent and child
+     markers in the same column. The row/content indentation is unchanged. */
+  width: calc(var(--better-zen-folders-native-indent, 14px) - 1px);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  inset-block-start: 0;
+  inset-block-end: auto;
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  height: 16px;
+  background: transparent;
+  color: var(--better-zen-folders-folder-color, inherit);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Stable geometry for branches using the Sticky accordion. Native active-tab
+   flattening must not outlive a parent collapse/expand cycle. */
+[data-bzf-stable-row="hidden"] { display: none !important; }
+[data-bzf-stable-row="visible"] {
+  display: flex !important;
+  height: auto !important;
+  max-height: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+zen-folder > .tab-group-container > [data-bzf-stable-row] {
+  --zen-folder-indent: var(--better-zen-folders-native-indent, 14px) !important;
+}
+zen-folder[data-bzf-stable-row] > .tab-group-label-container {
+  height: calc(var(--tab-min-height) + 2 * var(--tab-margin-block, 0px)) !important;
+  min-height: var(--tab-min-height) !important;
+  opacity: 1 !important;
+}
+zen-folder[data-bzf-stable-row] > .tab-group-container {
+  display: flex !important;
+  flex-direction: column;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+zen-folder[data-bzf-stable-row]:not([data-bzf-has-visible-children]) > .tab-group-container {
+  display: none !important;
+}
+zen-folder[data-bzf-stable-row] > .tab-group-container > .zen-tab-group-start {
+  display: none !important;
+  margin-block: 0 !important;
+}
+.zen-workspace-pinned-tabs-section[data-bzf-stable-pins] > .space-fake-collapsible-start {
+  display: none !important;
+  margin-block: 0 !important;
+}
+/* Animated rows alone temporarily occupy an interpolated height. Hidden rows
+   are noninteractive while folding away; no selected or Sticky row resets. */
+:root :is(zen-folder, tab, tab-split-view-wrapper)[data-bzf-motion] {
+  display: flex !important;
+  height: var(--bzf-motion-height) !important;
+  min-height: 0 !important;
+  max-height: var(--bzf-motion-height) !important;
+  overflow: clip !important;
+}
+[data-bzf-visibility="hidden"][data-bzf-motion] { pointer-events: none !important; }
+/* The last Sticky child still needs its container until its exit completes. */
+:root zen-folder:has(> .tab-group-container > [data-bzf-motion]) > .tab-group-container,
+:root zen-workspace[active="true"][collapsedpinnedtabs]
+  .zen-workspace-pinned-tabs-section[data-bzf-workspace-projection="hidden"]:has(> [data-bzf-motion]) {
+  display: flex !important;
+}
+.better-zen-folders-sticky-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+/* Root pinned items have no parent gutter. Use their upper leading corner,
+   inside the row bounds, rather than putting a marker beyond the sidebar. */
+.better-zen-folders-sticky-toggle[data-bzf-root-sticky-control="true"] {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  inset-block-start: 0;
+  inset-block-end: auto;
+  height: 16px;
+}
+.better-zen-folders-sticky-ear {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  /* Upper-left right angle, diagonal edge facing down/right towards the
+     icon and title. It is a page corner, not a lower-left pointer. */
+  width: calc(100% - 1px);
+  aspect-ratio: 1;
+  inset-block-start: 1px;
+  inset-inline-end: 1px;
+  background: currentColor;
+  /* Round the silhouette itself, including the upper-left bend. Flat colour
+     keeps the fold legible without simulated lighting or a gradient seam. */
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='white' d='M20 0H76Q100 0 83 17L17 83Q0 100 0 76V20Q0 0 20 0Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+:dir(rtl) .better-zen-folders-sticky-ear { transform: scaleX(-1); }
+/* Keep the expanded parent-gutter hitbox and original row-corner target.
+   Paint starts at the row corner, one native indent after its parent's corner.
+   Icons, titles and adjacent rows retain their layout and pointer area. */
+.better-zen-folders-sticky-toggle:not([data-bzf-root-sticky-control="true"]) {
+  inset-inline-start: calc(0px - var(--better-zen-folders-native-indent, 14px));
+  width: calc(2 * var(--better-zen-folders-native-indent, 14px) - 1px);
+}
+.better-zen-folders-sticky-toggle:not([data-bzf-root-sticky-control="true"])
+  > .better-zen-folders-sticky-ear {
+  /* Advance paint only: the parent guide ends at this row's leading edge.
+     Leave space before the next guide; preserve the rounded flat silhouette. */
+  width: min(12px, calc(var(--better-zen-folders-native-indent, 14px) - var(--tab-group-line-thickness, 1px) - 1px));
+  inset-inline-start: var(--better-zen-folders-native-indent, 14px);
+  inset-inline-end: auto;
+}
+/* Sticky menu artwork is separate from the native/CMI checkbox slot. It stays
+   the same shape when checked and precedes the label in either direction.
+   Off removes this owned, noninteractive child. */
+.better-zen-folders-sticky-menu-mark {
+  display: block;
+  flex: 0 0 auto;
+  align-self: center;
+  inline-size: 12px;
+  block-size: 12px;
+  margin-inline: 0 var(--space-small, 4px);
+  fill: currentColor;
+  pointer-events: none;
+}
+:dir(rtl) .better-zen-folders-sticky-menu-mark { transform: scaleX(-1); }
+
+#zen-folder-tabs-list[data-bzf-grouped-preview] > .folders-tabs-list-item {
+  margin-inline-start: calc(var(--bzf-preview-depth, 0) * 14px);
+  box-sizing: border-box;
+  inline-size: max(0px, calc(100% - var(--bzf-preview-depth, 0) * 14px));
+  min-inline-size: 0;
+}
+#zen-folder-tabs-list[data-bzf-grouped-preview] :is(.folders-tabs-list-item-label, .tab-list-item-secondary-label) {
+  width: 100%;
+}
+#zen-folder-tabs-list > .better-zen-folders-preview-folder {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 0;
+  border-inline-start: 3px solid var(--bzf-preview-colour, currentColor);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+#zen-folder-tabs-list[data-bzf-grouped-preview] > [hidden] { display: none !important; }
+.better-zen-folders-preview-folder .menu-iconic-left {
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 20px; width: 20px; height: 20px;
+}
+.better-zen-folders-preview-folder .menu-iconic-left > :is(svg,img) {
+  width: 20px; height: 20px; flex: 0 0 20px;
+}
+.better-zen-folders-preview-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folders-tabs-list-item-content:has(> .better-zen-folders-preview-status),
+.better-zen-folders-preview-folder .menu-iconic-left { position: relative; }
+.better-zen-folders-preview-status { pointer-events: none; flex-shrink: 0; }
+.better-zen-folders-preview-pin {
+  inline-size: 16px; block-size: 16px; margin-inline-start: 6px;
+  background-size: 16px 16px; background-position: center; background-repeat: no-repeat;
+  -moz-context-properties: fill; fill: currentColor;
+}
+.better-zen-folders-preview-sticky {
+  position: absolute; inline-size: 14px; block-size: 2px; border-radius: 999px;
+  inset-inline-start: 1px; inset-block-start: calc(50% + 10px);
+  background: var(--bzf-preview-colour,currentColor);
+}
+.better-zen-folders-preview-folder .better-zen-folders-preview-sticky { inset-inline-start: 3px; }
+.better-zen-folders-preview-chevron {
+  width: 6px; height: 6px; flex: 0 0 6px;
+  border-inline-end: 1.5px solid currentColor; border-block-end: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+}
+.better-zen-folders-preview-folder[aria-expanded="true"] .better-zen-folders-preview-chevron { transform: rotate(45deg); }
+:dir(rtl) .better-zen-folders-preview-folder[aria-expanded="false"] .better-zen-folders-preview-chevron { transform: rotate(135deg); }
+#zen-folder-tabs-list[data-bzf-grouped-preview] > :is([selected], :focus-visible) {
+  background: var(--toolbarbutton-hover-background, color-mix(in srgb, currentColor 10%, transparent));
+}
+#zen-folder-tabs-list[data-bzf-grouped-preview] > :focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+.better-zen-folders-sticky-toggle:is(:hover, :focus-visible) > .better-zen-folders-sticky-ear { opacity: 0.45; }
+.better-zen-folders-sticky-toggle[aria-pressed="true"] > .better-zen-folders-sticky-ear { opacity: 1; }
+/* Alternative Sticky paint: a flat, round-ended line under the existing icon.
+   Keep the folded-corner rules above intact for the reversible setting. The
+   only the current marker owns pointer access and keyboard focus. */
+.better-zen-folders-sticky-toggle[data-bzf-sticky-marker="underline"] { display: none; }
+.better-zen-folders-sticky-toggle[data-bzf-sticky-marker="underline"] > .better-zen-folders-sticky-ear { display: none; }
+.tab-icon-stack:has(> .better-zen-folders-sticky-underline) { position: relative; }
+.better-zen-folders-sticky-underline {
+  appearance: none;
+  background: transparent;
+  font: inherit;
+  min-width: 0;
+  min-height: 0;
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  inline-size: 14px;
+  block-size: 6px;
+  inset-inline-start: calc(var(--bzf-sticky-icon-centre, 50%) - 7px);
+  inset-block-start: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--better-zen-folders-folder-color, inherit);
+  opacity: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.better-zen-folders-sticky-underline::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 1px;
+  block-size: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  pointer-events: none;
+}
+/* Zen's expanded-sidebar icon stack includes start/end icon margins of
+   toolbar-padding/3 and toolbar-padding. Shift half their difference back
+   toward the leading edge; do not move or resize the native stack/favicon. */
+.tab-icon-stack > .better-zen-folders-sticky-underline {
+  inset-inline-start: calc(50% - 7px - var(--toolbarbutton-padding-inner, 0px) / 3);
+}
+.better-zen-folders-sticky-underline:not([data-bzf-sticky="true"]):is(:hover,:focus-visible) { opacity: 0.45; }
+.better-zen-folders-sticky-underline:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+.better-zen-folders-sticky-underline[data-bzf-sticky="true"] { opacity: 1; }
+.better-zen-folders-sticky-underline[data-bzf-sticky-pending] { opacity: 0.5; }
+.better-zen-folders-sticky-toggle[data-bzf-sticky-pending] > .better-zen-folders-sticky-ear { opacity: 0.5; }
+:root:not([zen-sidebar-expanded]) .better-zen-folders-sticky-underline { visibility: hidden; }
+zen-folder > .tab-group-label-container,
+:is(tab, tab-split-view-wrapper):has(> .better-zen-folders-sticky-toggle) {
+  position: relative;
+}
+/* Firefox clips individual tab rows. Permit our horizontal gutter control on
+   those rows only, retaining vertical clipping. No folder/scrollbox is changed. */
+:root[zen-sidebar-expanded] zen-folder > .tab-group-container
+  > :is(tab, tab-split-view-wrapper):has(> .better-zen-folders-sticky-toggle) {
+  overflow: visible clip;
+}
+/* The corner takes no flex space and never shifts a title or favicon. */
+:root:not([zen-sidebar-expanded]) .better-zen-folders-sticky-toggle { visibility: hidden; }
+.better-zen-folders-state-chevron {
+  flex: 0 0 0.5em;
+  width: 0.5em;
+  height: 0.5em;
+  margin-inline: 0.4em;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  pointer-events: none;
+  align-self: center;
+}
+.better-zen-folders-state-chevron[data-closed="true"] { transform: rotate(-45deg); }
+:dir(rtl) > .better-zen-folders-state-chevron[data-closed="true"] { transform: rotate(135deg); }
+zen-folder[data-bzf-chevron] > .tab-group-label-container > .tab-group-label {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+zen-folder[collapsed]
+  > .tab-group-container
+  > :is(tab[aria-hidden="true"], tab-split-view-wrapper[aria-hidden="true"]):not([data-bzf-visibility="visible"]):not([data-bzf-motion]) {
+  display: none !important;
+}
+
+:is(
+    zen-folder > .tab-group-container > tab.tabbrowser-tab,
+    zen-folder > .tab-group-container > tab-split-view-wrapper > tab.tabbrowser-tab
+  ):not([zen-essential]):not([zen-empty-tab])
+  .tab-reset-button {
+  display: none !important;
+}
+
+:root[zen-sidebar-expanded]
+  :is(
+    zen-folder > .tab-group-container > tab.tabbrowser-tab,
+    zen-folder > .tab-group-container > tab-split-view-wrapper > tab.tabbrowser-tab
+  ):not([zen-essential]):not([zen-empty-tab]):is(:hover, [visuallyselected])
+  .tab-close-button {
+  display: block !important;
+}
+
+:root[better-zen-folders-new-tab-visibility="hover"] .better-zen-folders-new-tab-button {
+  opacity: 0;
+}
+
+.better-zen-folders-new-tab-button {
+  color: inherit;
+  fill: currentColor;
+  list-style-image: url("chrome://global/skin/icons/plus.svg");
+}
+
+:root[better-zen-folders-new-tab-visibility="hover"]
+  zen-folder > .tab-group-label-container:is(:hover, :focus-within)
+  > .better-zen-folders-new-tab-button {
+  opacity: 1;
+}
+
+:root[better-zen-folders-new-tab-visibility="always"] .better-zen-folders-new-tab-button {
+  opacity: 1;
+}
+
+.better-zen-folders-new-tab-button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+:root:not([zen-sidebar-expanded]) .better-zen-folders-new-tab-button {
+  display: none !important;
+}
+
+:root, zen-workspace {
+  /* Capture each Space's theme outside coloured folders. Zen 1.23 now defines
+     its native paint on each folder rather than on the window root. */
+  --better-zen-folders-theme-stroke: var(--zen-folder-stroke, light-dark(color-mix(in srgb, var(--zen-primary-color) 50%, black), color-mix(in srgb, var(--zen-colors-primary) 15%, #ebebeb)));
+  --better-zen-folders-theme-front: var(--zen-folder-front-bgcolor, light-dark(color-mix(in srgb, var(--zen-primary-color), white 70%), color-mix(in srgb, var(--zen-primary-color), black 40%)));
+  --better-zen-folders-theme-back: var(--zen-folder-behind-bgcolor, light-dark(color-mix(in srgb, var(--zen-primary-color) 60%, gray), color-mix(in srgb, var(--zen-primary-color) 60%, #c1c1c1)));
+}
+
+:root[better-zen-folders-space-colour="false"],
+:root[better-zen-folders-space-colour="false"] zen-workspace {
+  /* Use the same neutral base as Zen Icons, with native light/dark contrast.
+     This changes folder defaults only, never the Space or focus treatment. */
+  --better-zen-folders-theme-stroke: light-dark(color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c) 50%, black), color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c) 15%, #ebebeb));
+  --better-zen-folders-theme-front: light-dark(color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c), white 70%), color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c), black 40%));
+  --better-zen-folders-theme-back: light-dark(color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c) 60%, gray), color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c) 60%, #c1c1c1));
+}
+
+zen-folder {
+  /* A child's Default/Reset is independent of its parent's custom colour. */
+  --zen-folder-stroke: var(--better-zen-folders-theme-stroke);
+  --zen-folder-front-bgcolor: var(--better-zen-folders-theme-front);
+  --zen-folder-behind-bgcolor: var(--better-zen-folders-theme-back);
+  --better-zen-folders-custom-color: initial;
+  --better-zen-folders-folder-color: var(
+    --better-zen-folders-custom-color,
+    var(--zen-folder-stroke)
+  );
+}
+
+/* Normal user-sheet declarations lose to native folder-local author paint.
+   Restrict priority to defaults, leaving explicit inline/custom colours owned
+   by the colour manager and Icons intact. */
+zen-folder:not([data-better-zen-folders-color]) {
+  --zen-folder-stroke: var(--better-zen-folders-theme-stroke) !important;
+  --zen-folder-front-bgcolor: var(--better-zen-folders-theme-front) !important;
+  --zen-folder-behind-bgcolor: var(--better-zen-folders-theme-back) !important;
+}
+
+zen-folder[data-better-zen-folders-color] {
+  --zen-folder-stroke: var(--better-zen-folders-custom-color);
+}
+
+/* Custom native art must match its swatch. The installed native SVG has two
+   back paths and two front rects: each second shape combines a gradient fill
+   with the outline stroke. Suppress only that fill, preserving the shapes and
+   companion-owned black strokes/glyph paint. Default retains native shading. */
+zen-folder[data-better-zen-folders-color]
+  > .tab-group-label-container > .tab-group-folder-icon
+  > svg[viewBox="0 0 27 27"]:has(> path.back + path.back):has(> rect.front + rect.front) {
+  filter: none !important;
+}
+
+zen-folder[data-better-zen-folders-color]
+  > .tab-group-label-container > .tab-group-folder-icon
+  > svg[viewBox="0 0 27 27"]:has(> path.back + path.back):has(> rect.front + rect.front)
+  > :is(path.back + path.back, rect.front + rect.front) {
+  fill-opacity: 0 !important;
+}
+
+[data-better-zen-folders-command-icon-mode="mod"] > .menu-icon,
+[data-better-zen-folders-command-icon-mode="mod"]
+  > .menu-iconic-left
+  > .menu-iconic-icon {
+  width: var(--fp-contextmenu-menuitem-icon-size, 16px);
+  height: var(--fp-contextmenu-menuitem-icon-size, 16px);
+  min-width: var(--fp-contextmenu-menuitem-icon-size, 16px);
+  min-height: var(--fp-contextmenu-menuitem-icon-size, 16px);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 1;
+}
+
+#better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"] > .menu-icon,
+#better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"]
+  > .menu-iconic-left
+  > .menu-iconic-icon {
+  -moz-context-properties: fill, fill-opacity;
+  list-style-image: url("chrome://browser/skin/zen-icons/selectable/palette.svg") !important;
+  background-image: radial-gradient(
+    circle at 37.5% 28%,
+    var(
+      --better-zen-folders-menu-paint-color,
+      color-mix(in srgb, currentColor 45%, transparent)
+    ) 0 7%,
+    transparent 8%
+  ) !important;
+  background-repeat: no-repeat !important;
+}
+
+#better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"][data-better-zen-folders-colour-marker="custom"] > .menu-icon,
+#better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"][data-better-zen-folders-colour-marker="custom"]
+  > .menu-iconic-left
+  > .menu-iconic-icon {
+  --better-zen-folders-menu-paint-color: var(--better-zen-folders-menu-folder-color);
+}
+
+/* CMI 2.7.4.4: FluentUI/Fluent-icons.css:97-140 and ZenUI/Zen-icons.css:94-137
+   paint --menu-image on non-iconic commands. Zero specificity lets CMI's
+   explicit per-command icons win in either load order. CMI owns all spacing. */
+:where([data-better-zen-folders-command-icon-mode="compatibility"]) {
+  --menu-image: var(--better-zen-folders-command-image);
+}
+
+/* CMI's sine-moved rules also match iconic commands: only the native slot
+   paints in Mod Icons mode. Off has no icon or spacing override. */
+[data-better-zen-folders-command-icon-mode="mod"] {
+  --menu-image: none;
+}
+
+[data-better-zen-folders-command-icon-mode="compatibility"]:not([image]) > .menu-icon,
+[data-better-zen-folders-command-icon-mode="compatibility"]:not([image]) > .menu-iconic-left {
+  display: none !important;
+}
+
+/* Sticky has a state check only. Leave native/CMI checked painting intact. */
+:is(#better-zen-folders-sticky-tab, #better-zen-folders-sticky-folder):not([checked]):not([image])
+  > .menu-icon {
+  display: none !important;
+}
+
+.better-zen-folders-colour-panel-content {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  width: max-content;
+  gap: 0.55em;
+  padding: 0.75em;
+  font: inherit;
+}
+
+.better-zen-folders-colour-panel-title {
+  font-weight: 600;
+  font-size: 1em;
+}
+
+.better-zen-folders-colour-swatches {
+  display: grid !important;
+  grid-template-columns: repeat(8, max(1.75em, 24px));
+  justify-content: start;
+  gap: 0.4em;
+  padding: 0.15em 0.1em 0.25em;
+}
+
+.better-zen-folders-colour-swatch {
+  appearance: none !important;
+  box-sizing: border-box;
+  width: 1.75em;
+  height: 1.75em;
+  min-width: 24px;
+  min-height: 24px;
+  max-width: max(1.75em, 24px);
+  max-height: max(1.75em, 24px);
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 50%;
+  background-color: var(--better-zen-folders-swatch-color) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: white;
+  font: inherit;
+  line-height: 1;
+  forced-color-adjust: none;
+}
+
+.better-zen-folders-colour-swatch[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 2px var(--arrowpanel-background, Canvas),
+    0 0 0 3px color-mix(in srgb, currentColor 55%, transparent) !important;
+}
+
+.better-zen-folders-colour-swatch[aria-pressed="true"]::after {
+  content: "✓";
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.9em;
+  text-shadow: 0 1px 1px color-mix(in srgb, black 55%, transparent);
+}
+
+.better-zen-folders-colour-swatch:is(:hover, :focus-visible) {
+  outline: var(--focus-outline, 2px solid currentColor);
+  outline-offset: var(--focus-outline-offset, 2px);
+}
+
+.better-zen-folders-colour-command {
+  appearance: none !important;
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  width: 100%;
+  min-height: 2.25em;
+  gap: 0.65em;
+  margin: 0;
+  padding: 0.45em 0.5em;
+  border: 0;
+  border-block-start: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: var(--border-radius-small, 0.35em);
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+}
+
+.better-zen-folders-colour-command-reset::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 1.15em;
+  height: 1.15em;
+  background-color: currentColor;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mask-image: url("chrome://browser/skin/zen-icons/arrow-rotate-anticlockwise.svg");
+}
+
+.better-zen-folders-colour-custom-preview {
+  order: -1;
+  display: inline-block;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 1.75em;
+  height: 1.75em;
+  min-width: 24px;
+  min-height: 24px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 50%;
+  background-color: var(--better-zen-folders-picker-color);
+  forced-color-adjust: none;
+}
+
+.better-zen-folders-colour-command:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+.better-zen-folders-colour-command:focus-visible {
+  outline: var(--focus-outline, 2px solid currentColor);
+  outline-offset: var(--focus-outline-offset, -2px);
+}
+
+.better-zen-folders-colour-command:disabled {
+  opacity: 0.5;
+}
+
+.better-zen-folders-colour-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.context-zen-move-to-folder-item.better-zen-folders-decorated-folder-item > .menu-icon,
+.context-zen-move-to-folder-item.better-zen-folders-decorated-folder-item
+  > .menu-iconic-left
+  > .menu-iconic-icon {
+  -moz-context-properties: fill, stroke;
+  color: var(--better-zen-folders-menu-folder-color, currentColor);
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.context-zen-move-to-folder-item.better-zen-folders-has-live-folder-icon > .menu-icon,
+.context-zen-move-to-folder-item.better-zen-folders-has-live-folder-icon
+  > .menu-iconic-left
+  > .menu-iconic-icon {
+  display: none !important;
+}
+
+.context-zen-move-to-folder-item.better-zen-folders-has-live-folder-icon
+  > svg.better-zen-folders-menu-live-folder-icon,
+.context-zen-move-to-folder-item.better-zen-folders-has-live-folder-icon
+  > .menu-iconic-left
+  > svg.better-zen-folders-menu-live-folder-icon {
+  width: 2em !important;
+  height: 2em !important;
+  min-width: 2em !important;
+  min-height: 2em !important;
+  overflow: visible;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.context-zen-move-to-folder-item > svg.better-zen-folders-menu-live-folder-icon {
+  align-self: center;
+  margin-inline-end: var(--space-small, 0.5em);
+}
+
+/* Native custom destinations retain [image] even when its source cannot paint.
+   Text-only mode must hide that slot, not just remove our coloured snapshot. */
+.context-zen-move-to-folder-item.better-zen-folders-plain-folder-item > .menu-icon,
+.context-zen-move-to-folder-item.better-zen-folders-plain-folder-item > .menu-iconic-left {
+  display: none !important;
+}
+
+.context-zen-move-to-folder-item.better-zen-folders-decorated-folder-item[data-better-zen-folders-menu-color] {
+  border-inline-start: 0.2em solid var(--better-zen-folders-menu-folder-color);
+}
+
+/* Destination art is decorative. Native radio checks and commands stay intact. */
+.better-zen-folders-space-destination { position: relative; }
+:is(.better-zen-folders-space-destination, .better-zen-folders-space-plain):not([type="radio"]):not([checked]) > .menu-icon,
+:is(.better-zen-folders-space-destination, .better-zen-folders-space-plain):not([type="radio"]):not([checked]) > .menu-iconic-left > .menu-iconic-icon {
+  display: none !important;
+}
+.better-zen-folders-space-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  flex: 0 0 2em;
+  margin-inline-end: var(--space-small, 0.5em);
+  pointer-events: none;
+}
+.better-zen-folders-space-icon > img {
+  width: 1.5em;
+  height: 1.5em;
+  object-fit: contain;
+  pointer-events: none;
+}
+.better-zen-folders-space-default-icon {
+  display: inline-block;
+  width: 0.65em;
+  height: 0.65em;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+.better-zen-folders-space-colour {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 0.2em;
+  pointer-events: none;
+}
+
+:root[better-zen-folders-folder-name-size]
+  zen-folder > .tab-group-label-container > .tab-group-label {
+  font-size: var(--better-zen-folders-folder-font-size, 14px);
+}
+
+/* Zen's inner image is placed low inside the drawn folder. Without the folder
+   outline it needs the centre of the icon slot instead. These are SVG viewBox
+   coordinates (27 - 11) / 2, not sidebar or row dimensions. Scope to the exact
+   native icon geometry and Zen Icons' outline-free mode; keep outlined icons,
+   image sources, colour persistence, and content positions unchanged. */
+/* Closed artwork paints about 19px high in its 28px viewport, versus a 16px
+   favicon. Reduce only that viewport. Open artwork is already about 16px high
+   due to its native perspective: shrinking it worsens vertical spacing.
+   Keep the native slot, title inset, row height, and outline-free glyph size. */
+:root[zen-sidebar-expanded] zen-folder:not([zen-icons-enlarge-inner-icon]),
+:root[zen-sidebar-expanded] zen-folder[zen-icons-custom-unavailable] {
+  & > .tab-group-label-container > .tab-group-folder-icon
+      > svg[viewBox="0 0 27 27"][width="28"][height="28"]:not([state="open"]):has(> path.back + path.back):has(> rect.front + rect.front) {
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+  }
+}
+:root[zen-sidebar-expanded] zen-folder[zen-icons-enlarge-inner-icon]:not([zen-icons-custom-unavailable])
+  > .tab-group-label-container > .tab-group-folder-icon > svg[viewBox="0 0 27 27"] {
+  transform: none !important;
+}
+:root[zen-sidebar-expanded] zen-folder[zen-icons-enlarge-inner-icon]:not([zen-icons-custom-unavailable])
+  > .tab-group-label-container > .tab-group-folder-icon > svg[viewBox="0 0 27 27"]
+  > .icon > image[width="11"][height="11"] {
+  transform: translate(8px, 8px) !important;
+}
+
+:root {
+  --better-zen-folders-guide-opacity: 0;
+}
+
+:root[better-zen-folders-show-guides="true"] {
+  --better-zen-folders-guide-opacity: 1;
+}
+
+/* Keep eligible guide geometry stable across preference changes. Only paint
+   changes, avoiding pseudo-element destruction/reconstruction through :has(). */
+:root[zen-sidebar-expanded]
+  zen-folder:is(
+    [data-bzf-has-visible-children],
+    :has(> .tab-group-label-container > .tab-group-label[aria-expanded="true"]),
+    :has(
+      > .tab-group-container
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    ),
+    :has(> .tab-group-container > tab-split-view-wrapper[hasactivetab]),
+    :has(
+      > .tab-group-container
+        > tab-split-view-wrapper
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    )
+  ) {
+  --better-zen-folders-guide-color: var(--better-zen-folders-folder-color);
+}
+
+:root[zen-sidebar-expanded]
+  zen-folder:is(
+    [data-bzf-has-visible-children],
+    :has(> .tab-group-label-container > .tab-group-label[aria-expanded="true"]),
+    :has(
+      > .tab-group-container
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    ),
+    :has(> .tab-group-container > tab-split-view-wrapper[hasactivetab]),
+    :has(
+      > .tab-group-container
+        > tab-split-view-wrapper
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    )
+  )
+  > .tab-group-container {
+  position: relative;
+}
+
+:root[zen-sidebar-expanded]
+  zen-folder:is(
+    [data-bzf-has-visible-children],
+    :has(> .tab-group-label-container > .tab-group-label[aria-expanded="true"]),
+    :has(
+      > .tab-group-container
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    ),
+    :has(> .tab-group-container > tab-split-view-wrapper[hasactivetab]),
+    :has(
+      > .tab-group-container
+        > tab-split-view-wrapper
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    )
+  )
+  > .tab-group-container::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  /* Keep the guide at the inner edge of Zen's existing child gutter. The
+     folded-corner control uses the row's leading corner without moving it. */
+  inset-inline-start: calc(var(--better-zen-folders-native-indent, 14px) - var(--tab-group-line-thickness, 1px));
+  border-inline-start: var(--tab-group-line-thickness) solid var(--better-zen-folders-guide-color);
+  opacity: var(--better-zen-folders-guide-opacity, 0);
+  pointer-events: none;
+}
+
+:root[zen-sidebar-expanded]
+  zen-folder
+  zen-folder:is(
+    [data-bzf-has-visible-children],
+    :has(> .tab-group-label-container > .tab-group-label[aria-expanded="true"]),
+    :has(
+      > .tab-group-container
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    ),
+    :has(> .tab-group-container > tab-split-view-wrapper[hasactivetab]),
+    :has(
+      > .tab-group-container
+        > tab-split-view-wrapper
+        > tab.tabbrowser-tab:is([selected="true"], [folder-active="true"])
+    )
+  ):not([data-bzf-guide-level])
+  > .tab-group-container::before {
+  border-inline-start-style: dashed;
+}
+
+/* The visibility manager supplies depth modulo four, starting at zero for
+   root folders. Mask the existing border rather than changing guide geometry
+   or painting a theme-dependent background over the gaps. Unannotated native
+   folders retain the solid-root / dashed-child fallback above. */
+:root[zen-sidebar-expanded] zen-folder[data-bzf-guide-level="1"]
+  > .tab-group-container::before {
+  mask: repeating-linear-gradient(to bottom, black 0 8px, transparent 8px 12px);
+}
+:root[zen-sidebar-expanded] zen-folder[data-bzf-guide-level="2"]
+  > .tab-group-container::before {
+  mask: repeating-linear-gradient(to bottom, black 0 3px, transparent 3px 6px);
+}
+:root[zen-sidebar-expanded] zen-folder[data-bzf-guide-level="3"]
+  > .tab-group-container::before {
+  mask: radial-gradient(circle closest-side, black 98%, transparent 100%)
+    center top / 100% 4px repeat-y;
+}
+
+/* Native single-tab drag only: separate, labeled hierarchy end destinations.
+   No folder heights or native scroll-edge hit targets are changed. */
+.zen-workspace-pinned-tabs-section > .better-zen-folders-drop-footer {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  gap: 2px;
+  margin-block: 4px;
+  min-inline-size: 0;
+}
+
+.better-zen-folders-drop-footer > .better-zen-folders-drop-row {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: 28px;
+  margin-inline-start: var(--bzf-drop-indent, 0px);
+  padding: 4px 8px;
+  border: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: var(--tab-border-radius, 6px);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+  -moz-user-select: none;
+  gap: 6px;
+  position: relative;
+}
+
+.better-zen-folders-drop-row > * { pointer-events: none; }
+.better-zen-folders-drop-row > .menu-iconic-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  inline-size: 16px;
+  block-size: 16px;
+}
+.better-zen-folders-drop-row > .menu-iconic-left > :is(img, svg) {
+  inline-size: 16px;
+  block-size: 16px;
+  object-fit: contain;
+}
+.better-zen-folders-drop-row > [data-bzf-drop-area-icon]::before {
+  content: "";
+  inline-size: 12px;
+  block-size: 10px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  box-shadow: 2px -2px 0 -1px Canvas, 2px -2px 0 0 currentColor;
+  opacity: 0.65;
+}
+.better-zen-folders-drop-footer[data-bzf-drop-colours="true"] > .better-zen-folders-drop-row::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 4px;
+  inline-size: 3px;
+  border-radius: 2px;
+  background: var(--bzf-drop-colour, transparent);
+  pointer-events: none;
+}
+.better-zen-folders-drop-footer[data-bzf-drop-colours="false"] .menu-iconic-left {
+  filter: grayscale(1);
+}
+.zen-workspace-pinned-tabs-section > .better-zen-folders-drop-footer[data-bzf-drop-floating] {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  margin-block: 0;
+  padding: 4px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--arrowpanel-background, light-dark(#f9f9fb, #29292e));
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: var(--tab-border-radius, 6px);
+  box-shadow: 0 3px 12px #0003;
+}
+
+.better-zen-folders-drop-footer > .better-zen-folders-drop-row[data-bzf-drop-active] {
+  border-color: var(--zen-primary-color, currentColor);
+  background: color-mix(in srgb, var(--zen-primary-color, currentColor) 18%, transparent);
+}
+
+.better-zen-folders-drop-footer[data-bzf-drop-stale] > .better-zen-folders-drop-row {
+  opacity: 0.5;
+}
+
+/* Optional native minus; the controller marks only ordinary folder headers.
+   Keep the node as the + insertion anchor and never hide live-provider actions. */
+zen-folder > .tab-group-label-container[better-zen-folders-hide-unload="true"]
+  > .tab-reset-button:not([live-folder-action]) {
+  display: none !important;
+}

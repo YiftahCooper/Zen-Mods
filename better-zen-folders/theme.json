@@ -1,0 +1,21 @@
+{
+  "id": "5b0aa51f-cea7-4de5-8344-3e86e77fb88d",
+  "name": "Better Zen Folders",
+  "version": "0.3.19",
+  "description": "Compact, restorable Zen folders with Sticky tabs, nested visibility, colours and configurable folder controls.",
+  "homepage": "https://github.com/YiftahCooper/Zen-Mods/tree/main/better-zen-folders",
+  "createdAt": "2026-10-15",
+  "updatedAt": "2026-10-15",
+  "author": "Yiftah Cooper",
+  "ai": "yes",
+  "fork": ["zen"],
+  "supportsUnload": true,
+  "style": { "chrome": "chrome.css" },
+  "preferences": "preferences.json",
+  "scripts": {
+    "scripts/better-zen-folders.uc.mjs": {
+      "name": "Better Zen Folders controller",
+      "include": ["chrome://browser/content/browser.xhtml", "about:preferences([?#].*)?", "about:settings([?#].*)?"]
+    }
+  }
+}
