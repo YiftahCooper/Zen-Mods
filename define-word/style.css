@@ -69,5 +69,7 @@
 [mod-id="define-word"] .dw-key-field { position: relative; width: 100%; }
 [mod-id="define-word"] .dw-key-field input { padding-inline-end: 40px; }
 [mod-id="define-word"] .dw-key-field > input { appearance: textfield; }
+/* Firefox also supplies a reveal button for nonempty password inputs. */
+[mod-id="define-word"] .dw-key-field > input::-moz-reveal { display: none !important; }
 [mod-id="define-word"] .dw-settings .dw-key-reveal { position: absolute; inset-inline-end: 3px; top: 50%; transform: translateY(-50%); width: 30px; height: 28px; padding: 4px; border: 0; background: transparent; cursor: pointer; }
 [mod-id="define-word"] .dw-key-reveal svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; }

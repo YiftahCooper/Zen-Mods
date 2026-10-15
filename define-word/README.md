@@ -50,7 +50,15 @@ Existing valid default dictionary preferences are preserved on update. Select th
 - **Settings:** open **Sine → Define Word → Configure**. There is no settings link in the popup. Configure is capped at 800 CSS pixels and fits narrower windows.
 - **Close:** Escape, Close, changing tabs or navigating cancels pending lookups. Colors follow the browser theme.
 
-Version **0.3.1** repairs repeated-opening size growth, the title-bar drag area, selectable definition text, duplicate key-reveal icons and English suggestions. Automated and isolated native tests are recorded locally; authenticated dictionary responses and everyday-profile behavior remain separate acceptance checks. Lexicala uses documentation-based synthetic response fixtures.
+Version **0.3.2** repairs selection clearance after window resizing or size reset, preserves a short popup's height during horizontal resizing, and leaves automatic sizing intact after a stationary resize click. Unrelated pointer releases cannot terminate an active drag. Firefox's own password reveal control is hidden in the key fields to prevent a second eye button.
+
+Academy requests remove niqqud from the search parameter while retaining the original pointed word when choosing a headword. Merriam-Webster keeps different returned headwords separate, prioritizes the requested capitalization, and retains divided senses, substitute senses, examples and cross-reference text. Unedited search text preserves its original spelling beneath title-cased display, so repeating `may` cannot change its meaning to the month `May`.
+
+Verification: **154 automated tests** pass, including request deadlines, provider parsing, credentials, controller cancellation, repeat-opening geometry, all eight resize boundaries and settings behavior. A disposable Chromium run passed **36 production-HTML/CSS input/layout checks**, including 30 stable reopens, real header dragging and eight resize directions, text selection, 10–32 px scaling, RTL/niqqud, keyboard suggestions and masked-key settings with synthetic credentials. Its native XUL panel and Firefox credential manager were simulated, so this does not establish native Zen acceptance.
+
+Live keyless checks resolved common words through Wiktionary, the Academy and Milog. Hebrew Wiktionary lacks some tested words; the Academy can return ambiguous unpointed homographs. Free Dictionary API timed out repeatedly from this test environment, while the mod terminated with a timeout error. Actual Merriam-Webster and Lexicala authentication were not tested with personal keys.
+
+Fresh vanilla Zen 1.23.2b/Gecko 157.0.1 still exited with Windows access violation 0xC0000005 before loading either mod. The everyday profile was not accessed. Native Zen popup geometry, actual credential-manager delivery and unrelated-mod interaction therefore remain separate acceptance checks.
 
 ## Privacy
 

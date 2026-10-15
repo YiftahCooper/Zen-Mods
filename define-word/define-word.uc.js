@@ -1,4 +1,4 @@
-// Define Word 0.3.1 - generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.2 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
@@ -180,36 +180,54 @@
 
   // project:src/providers/merriam-webster.mjs
   function tokens(value) {
-    return text(value).replace(/\{(?:d_link|a_link|i_link|sx)\|([^|}]+)[^}]*\}/g, "$1").replace(/\{bc\}/g, ": ").replace(/\{[^}]*\}/g, "").trim();
+    return text(value).replace(/\{(?:d_link|a_link|i_link|dxt|et_link|mat|sx)\|([^|}]+)[^}]*\}/g, "$1").replace(/\{bc\}/g, ": ").replace(/\{[^}]*\}/g, "").trim();
+  }
+  var headwordOf = (entry) => (text(entry?.hwi?.hw).replace(/\*/g, "") || text(entry?.meta?.id).replace(/:\d+$/, "")).normalize("NFC");
+  function senseOf(value, partOfSpeech) {
+    if (!value || typeof value !== "object") return null;
+    const dt = Array.isArray(value.dt) ? value.dt : [];
+    let definition = dt.filter((item) => Array.isArray(item) && item[0] === "text").map((item) => tokens(item[1])).filter(Boolean).join(" ");
+    let examples = dt.filter((item) => Array.isArray(item) && item[0] === "vis" && Array.isArray(item[1])).flatMap((item) => item[1].map((example) => tokens(example?.t))).filter(Boolean);
+    const divided = senseOf(value.sdsense, partOfSpeech);
+    if (divided) {
+      definition = [definition, [tokens(value.sdsense.sd), divided.text].filter(Boolean).join(" ")].filter(Boolean).join("; ");
+      examples.push(...divided.examples);
+    }
+    return definition ? { partOfSpeech, text: definition, examples: examples.slice(0, 3) } : null;
   }
   function parseMerriamWebster(data, query, providerId) {
     if (!Array.isArray(data)) return null;
-    const senses = [];
+    const entries = [];
     for (const entry of data) {
       let walk = function(value) {
         if (!Array.isArray(value)) return;
-        if (value[0] === "sense" && value[1]?.dt) {
-          const dt = value[1].dt;
-          const definition = dt.filter((x) => x[0] === "text").map((x) => tokens(x[1])).join(" ");
-          const examples = dt.filter((x) => x[0] === "vis").flatMap((x) => x[1].map((e) => tokens(e.t))).filter(Boolean).slice(0, 3);
-          if (definition) collected.push({ partOfSpeech: text(entry.fl), text: definition, examples });
+        if (value[0] === "sense" || value[0] === "bs") {
+          const sense = senseOf(value[0] === "bs" ? value[1]?.sense : value[1], text(entry.fl));
+          if (sense) collected.push(sense);
         } else value.forEach(walk);
       };
       if (!entry || typeof entry !== "object" || !Array.isArray(entry.shortdef)) continue;
+      const headword = headwordOf(entry);
+      if (!headword) continue;
       const collected = [];
       for (const def of entry.def || []) walk(def.sseq);
-      senses.push(...collected.length ? collected : entry.shortdef.filter((x) => text(x)).map((x) => ({ partOfSpeech: text(entry.fl), text: tokens(x), examples: [] })));
+      const senses2 = collected.length ? collected : entry.shortdef.filter((x) => tokens(x)).map((x) => ({ partOfSpeech: text(entry.fl), text: tokens(x), examples: [] }));
+      if (senses2.length) entries.push({ headword, senses: senses2 });
     }
-    if (!senses.length) return null;
-    const learners = providerId === "mw-learners", sourceUrl = `https://www.merriam-webster.com/${learners ? "learner/" : ""}dictionary/${encodeURIComponent(query)}`;
-    return { headword: text(data[0]?.hwi?.hw).replace(/\*/g, "") || query, language: "en", senses: senses.slice(0, 20), sourceUrl, attribution: { label: learners ? "Merriam-Webster's Learner's Dictionary" : "Merriam-Webster's Collegiate® Dictionary", url: sourceUrl, brand: "merriam-webster" } };
+    if (!entries.length) return null;
+    const wanted = text(query).normalize("NFC");
+    const selected = entries.find((entry) => entry.headword === wanted) || entries.find((entry) => entry.headword.toLowerCase() === wanted.toLowerCase()) || entries[0];
+    const senses = entries.filter((entry) => entry.headword === selected.headword).flatMap((entry) => entry.senses).slice(0, 20);
+    const matches = [...new Set(entries.map((entry) => entry.headword))].filter((word) => word !== selected.headword).slice(0, 8).map((word) => ({ word, language: "en" }));
+    const learners = providerId === "mw-learners", sourceUrl = `https://www.merriam-webster.com/${learners ? "learner/" : ""}dictionary/${encodeURIComponent(selected.headword)}`;
+    return { headword: selected.headword, language: "en", senses, matches, sourceUrl, attribution: { label: learners ? "Merriam-Webster's Learner's Dictionary" : "Merriam-Webster's Collegiate® Dictionary", url: sourceUrl, brand: "merriam-webster" } };
   }
   function merriamWebster(kind) {
     const id = `mw-${kind}`;
     return { id, label: kind === "learners" ? "Merriam-Webster Learner's" : "Merriam-Webster Collegiate", language: "en", keyRequired: true, suggestionsLabel: "Matching words", async suggest(options) {
       const data = await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options);
       if (!Array.isArray(data)) return [];
-      const words = data.map((item) => typeof item === "string" ? text(item) : text(item?.hwi?.hw).replace(/\*/g, "") || text(item?.meta?.id).replace(/:\d+$/, ""));
+      const words = data.map((item) => typeof item === "string" ? text(item) : headwordOf(item));
       return [...new Set(words.filter(Boolean))].slice(0, 8).map((word) => ({ word, language: "en" }));
     }, async lookup(options) {
       return parseMerriamWebster(await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options), options.query, id);
@@ -290,7 +308,7 @@
     return { headword, language: "he", senses: selected.senses, matches: candidates(entries, headword), sourceUrl, attribution: { label: "האקדמיה ללשון העברית · מילון ההווה", url: sourceUrl } };
   }
   async function search(options) {
-    return requestJson(`https://kalanit.hebrew-academy.org.il/api/Ac/?${new URLSearchParams({ SearchString: options.query })}`, options);
+    return requestJson(`https://kalanit.hebrew-academy.org.il/api/Ac/?${new URLSearchParams({ SearchString: unpointed2(options.query) })}`, options);
   }
   var academyHebrew = { id: "academy-he", label: "האקדמיה ללשון העברית", language: "he", keyRequired: false, supportsFallback: false, suggestionsLabel: "Dictionary entries", async suggest(options) {
     const data = await search(options);
@@ -404,7 +422,7 @@
 
   // project:src/resize.mjs
   function createPopupResizer(window2, { panel, shell, handle, handles = [handle], isOpen, readSize, onSizeChange, onPositionChange }) {
-    let drag = null, manual = null, disposed2 = false;
+    let drag = null, manual = null, disposed2 = false, anchor = null, automatic = true;
     function geometry() {
       const content = shell.getBoundingClientRect();
       let frameWidth = 0, frameHeight = 0;
@@ -415,18 +433,25 @@
       }
       return { content, frameWidth, frameHeight };
     }
+    function constrainHeight() {
+      const origin = window2.mozInnerScreenY || 0;
+      const available = anchor ? Math.max(anchor.y - origin - 20, origin + window2.innerHeight - anchor.y - anchor.height - 20) : window2.innerHeight - 32;
+      const limit = automatic ? Math.min(window2.innerHeight - 32, available - geometry().frameHeight) : window2.innerHeight - 32;
+      shell.style.maxHeight = `${Math.max(1, limit)}px`;
+    }
     function apply(width, height, preparing = false, at = null) {
       if (disposed2) return;
       const { content, frameWidth, frameHeight } = geometry();
       const left = at?.left ?? content.left, top = at?.top ?? content.top;
       const maxWidth = Math.max(1, Math.min(window2.innerWidth - 48, preparing ? Infinity : window2.innerWidth - Math.max(0, left) - frameWidth - 12));
       const maxHeight = Math.max(1, Math.min(window2.innerHeight - 32, parseFloat(shell.style.maxHeight) || Infinity, preparing ? Infinity : window2.innerHeight - Math.max(0, top) - frameHeight - 12));
-      manual = { width: Math.round(Math.min(maxWidth, Math.max(320, width))), height: Math.round(Math.min(maxHeight, Math.max(200, height))) };
+      manual = { width: Math.round(Math.min(maxWidth, Math.max(1, width))), height: Math.round(Math.min(maxHeight, Math.max(1, height))) };
       shell.dataset.resized = "";
       shell.style.width = `${manual.width}px`;
       shell.style.height = `${manual.height}px`;
     }
-    function stop() {
+    function stop(event) {
+      if (drag?.pointerId !== void 0 && event?.pointerId !== void 0 && event.pointerId !== drag.pointerId) return;
       const previous = drag;
       drag = null;
       for (const type of ["pointermove", "mousemove"]) window2.removeEventListener(type, move);
@@ -442,10 +467,19 @@
     function move(event) {
       if (!drag || disposed2 || drag.pointerId !== void 0 && event.pointerId !== drag.pointerId) return;
       event.preventDefault();
-      drag.changed = true;
       const dx = (drag.screen ? event.screenX : event.clientX) - drag.x, dy = (drag.screen ? event.screenY : event.clientY) - drag.y;
       const west = drag.edge.includes("w"), north = drag.edge.includes("n");
-      let width = drag.width + (west ? -dx : drag.edge.includes("e") ? dx : 0), height = drag.height + (north ? -dy : drag.edge.includes("s") ? dy : 0);
+      const horizontal = west || drag.edge.includes("e"), vertical = north || drag.edge.includes("s");
+      if (!drag.changed && (!horizontal || dx === 0) && (!vertical || dy === 0)) return;
+      if (!drag.changed) {
+        shell.style.width = `${drag.width}px`;
+        shell.style.height = `${drag.height}px`;
+        shell.dataset.resized = "";
+        automatic = false;
+        constrainHeight();
+      }
+      drag.changed = true;
+      let width = horizontal ? Math.max(320, drag.width + (west ? -dx : dx)) : drag.width, height = vertical ? Math.max(200, drag.height + (north ? -dy : dy)) : drag.height;
       if (west) width = Math.max(320, Math.min(width, drag.width + drag.left - 12));
       if (north) height = Math.max(200, Math.min(height, drag.height + drag.top - 12));
       const left = west ? drag.left + drag.width - width : drag.left, top = north ? drag.top + drag.height - height : drag.top;
@@ -456,10 +490,6 @@
       if (disposed2 || drag || !isOpen() || event.button !== 0 || event.isPrimary === false) return;
       event.preventDefault();
       const { content } = geometry(), outer = panel.getOuterScreenRect?.();
-      shell.style.width = `${content.width}px`;
-      shell.style.height = `${content.height}px`;
-      shell.dataset.resized = "";
-      shell.style.maxHeight = `${Math.max(1, window2.innerHeight - 32)}px`;
       const screen = !!outer, target = event.currentTarget;
       drag = {
         x: screen ? event.screenX : event.clientX,
@@ -500,17 +530,18 @@
     function reset() {
       stop();
       clear();
+      automatic = true;
+      constrainHeight();
       onSizeChange?.(null);
     }
-    function prepare(anchor) {
+    function prepare(value) {
       panel.removeAttribute("width");
       panel.removeAttribute("height");
       panel.style.removeProperty("width");
       panel.style.removeProperty("height");
-      const origin = window2.mozInnerScreenY || 0;
-      const valid = anchor && Number.isFinite(anchor.y) && Number.isFinite(anchor.height) && anchor.height > 0;
-      const available = valid ? Math.max(anchor.y - origin - 20, origin + window2.innerHeight - anchor.y - anchor.height - 20) : window2.innerHeight - 32;
-      shell.style.maxHeight = `${Math.max(1, Math.min(window2.innerHeight - 32, available - geometry().frameHeight))}px`;
+      anchor = value && Number.isFinite(value.y) && Number.isFinite(value.height) && value.height > 0 ? { y: value.y, height: value.height } : null;
+      automatic = true;
+      constrainHeight();
       const saved = readSize ? readSize() : manual;
       if (saved && Number.isFinite(saved.width) && Number.isFinite(saved.height) && saved.width >= 200 && saved.height >= 120 && saved.width <= 1e4 && saved.height <= 1e4) apply(saved.width, Math.min(saved.height, parseFloat(shell.style.maxHeight)), true);
       else clear();
@@ -533,8 +564,9 @@
       if (!delta) return;
       event.preventDefault();
       const { content } = geometry();
-      shell.style.maxHeight = `${Math.max(1, window2.innerHeight - 32)}px`;
-      apply(content.width + delta[0], content.height + delta[1]);
+      automatic = false;
+      constrainHeight();
+      apply(delta[0] ? Math.max(320, content.width + delta[0]) : content.width, delta[1] ? Math.max(200, content.height + delta[1]) : content.height);
       onSizeChange?.({ ...manual });
     }
     function fit() {
@@ -542,7 +574,7 @@
     }
     const windowResized = (event) => {
       if (event.target === window2) {
-        shell.style.maxHeight = `${Math.max(1, Math.min(parseFloat(shell.style.maxHeight) || Infinity, window2.innerHeight - 32))}px`;
+        constrainHeight();
         fit();
       }
     };
@@ -610,7 +642,8 @@
         panel.moveTo?.(next.x, next.y);
       }
     }
-    function stop() {
+    function stop(event) {
+      if (drag?.id !== void 0 && event?.pointerId !== void 0 && event.pointerId !== drag.id) return;
       const old = drag;
       drag = null;
       header.removeAttribute("data-dragging");
@@ -1134,7 +1167,7 @@
     shell.append(bar, box, ...handles);
     panel.append(shell);
     (document2.getElementById("mainPopupSet") || document2.documentElement).append(panel);
-    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates2 = [];
+    let active = false, origin, originBrowser, sourceUrl, selected = -1, candidates2 = [], queryText = "";
     const positioner = createPopupPositioner(window2, { panel, shell, header: bar, isOpen: () => active });
     const resizer = createPopupResizer(window2, { panel, shell, handle: resizeHandle, handles, isOpen: () => active, readSize: callbacks.readSize, onSizeChange: callbacks.onSizeChange, onPositionChange: positioner.setPosition });
     function clearMatches() {
@@ -1145,8 +1178,12 @@
       query.setAttribute("aria-expanded", "false");
       query.removeAttribute("aria-activedescendant");
     }
+    function setQuery(value, language) {
+      queryText = String(value || "");
+      query.value = displayWord2(queryText, language);
+    }
     function choose(word2) {
-      query.value = displayWord2(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
+      setQuery(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
       clearMatches();
       callbacks.onSearch?.(word2);
       query.focus();
@@ -1193,15 +1230,16 @@
     source.addEventListener("click", () => {
       if (sourceUrl) window2.openTrustedLinkIn(sourceUrl, "tab");
     });
-    provider.addEventListener("change", () => callbacks.onProviderChange?.(provider.value, query.value));
+    provider.addEventListener("change", () => callbacks.onProviderChange?.(provider.value, queryText));
     query.addEventListener("input", () => {
+      queryText = query.value;
       clearMatches();
-      callbacks.onQueryInput?.(query.value);
+      callbacks.onQueryInput?.(queryText);
     });
     search2.addEventListener("submit", (event) => {
       event.preventDefault();
       clearMatches();
-      callbacks.onSearch?.(query.value);
+      callbacks.onSearch?.(queryText);
     });
     query.addEventListener("keydown", (event) => {
       if ((event.key === "ArrowDown" || event.key === "ArrowUp") && candidates2.length) {
@@ -1286,8 +1324,9 @@
         }
       },
       render({ term, providerId, providers: providers2, outcome, textSize }) {
-        if (outcome.status === "loading" || wordKey(query.value) !== wordKey(term.original)) {
-          query.value = displayWord2(term.original, term.language);
+        const original = String(term.original || "");
+        if (outcome.status === "loading" || queryText !== original) {
+          setQuery(original, term.language);
           clearMatches();
         }
         setTextSize(textSize);
@@ -1542,7 +1581,7 @@
     let controls, container, dialog, disposed2 = false;
     const style = document2.createElementNS("http://www.w3.org/1999/xhtml", "link");
     style.rel = "stylesheet";
-    style.href = "chrome://sine/content/define-word/style.css?v=0.3.1";
+    style.href = "chrome://sine/content/define-word/style.css?v=0.3.2";
     document2.documentElement.append(style);
     const reset = () => controls?.reset();
     function openRequestedDialog() {
