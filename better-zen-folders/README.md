@@ -131,6 +131,9 @@ A URL pin saves an address to return to; Sticky keeps an item visible.
 
 ### Appearance
 
+- **Show … on Folders Without an Icon:** show the dots when a collapsed folder
+  without a chosen icon has visible tabs. Turn this off to keep its folder
+  artwork empty; it does not change which tabs are visible.
 - **Folder Name Font Size (px):** change folder-title text size; decimals work.
 - **Show Folder State Chevron:** show the small expand/collapse arrow on all
   folders, only folders with their outline disabled, or none.

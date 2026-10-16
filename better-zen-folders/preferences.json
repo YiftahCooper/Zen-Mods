@@ -217,6 +217,12 @@
   },
   { "type": "separator", "label": "Appearance" },
   {
+    "type": "checkbox",
+    "property": "better-zen-folders.show-empty-folder-active-indicator",
+    "label": "Show … on Folders Without an Icon\nMarks visible tabs in a collapsed folder. Does not change its tabs or Sticky behaviour.",
+    "defaultValue": true
+  },
+  {
     "type": "string",
     "property": "better-zen-folders.folder-name-size",
     "label": "Folder Name Font Size (px)\nCSS pixels; decimals such as 14.5 are supported.",

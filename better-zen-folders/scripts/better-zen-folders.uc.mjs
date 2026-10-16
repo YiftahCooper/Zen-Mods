@@ -2203,6 +2203,8 @@ export class StickyFolderVisibilityManager {
     this.records = new Map();
     this.decorations = new Set();
     this.projection = new Map();
+    this.activeIconFolders = new Set();
+    this.selectionChanged = false;
     this.nativeActiveAdditions = new Map();
     this.dragExposure = new Map();
     this.expansionHandoffs = new Map();
@@ -2252,8 +2254,8 @@ export class StickyFolderVisibilityManager {
     this.observer?.observe(this.host.gBrowser.tabContainer, {subtree:true, childList:true, attributes:true,
       attributeFilter:["collapsed", "collapsedpinnedtabs", "active", "pinned", "hidden", "selected",
         "multiselected", "visuallyselected", "zen-workspace-id", "id",
-        "zen-icons-enlarge-inner-icon", "zen-icons-custom-unavailable", "zen-essential"]});
-    const subscriptions = ['subfolderCollapsePolicy', 'folderStateChevron', 'stickyTabsEnabled', 'stickyFoldersEnabled', 'stickyMarker']
+        "zen-icons-enlarge-inner-icon", "zen-icons-custom-unavailable", "zen-essential", "href"]});
+    const subscriptions = ['subfolderCollapsePolicy', 'folderStateChevron', 'stickyTabsEnabled', 'stickyFoldersEnabled', 'stickyMarker', 'showEmptyFolderActiveIndicator']
       .map(name => this.preferences?.subscribe?.(name, () => this.schedule()));
     subscriptions.push(this.preferences?.subscribe?.('commandIconMode', mode => {
       for (const id of ['better-zen-folders-sticky-tab', 'better-zen-folders-sticky-folder']) {
@@ -2262,6 +2264,7 @@ export class StickyFolderVisibilityManager {
     }));
     this.unsubscribe = () => subscriptions.forEach(unsubscribe => unsubscribe?.());
     signal?.addEventListener?.("abort", () => this.destroy(), {once:true});
+    this.installIconProjection();
     this.refresh();
     this.motion.start();
     Promise.all([this.host.SessionStore.promiseAllWindowsRestored,
@@ -2405,6 +2408,31 @@ export class StickyFolderVisibilityManager {
     return tabs.some(tab => tab.selected || tab.multiselected || (!nativeWorkspace
       && (tab === this.host.gBrowser.selectedTab || tab.hasAttribute?.("visuallyselected"))));
   }
+  installIconProjection() {
+    const native = this.host.gZenFolders, original = native?.updateFolderIcon;
+    if (typeof original !== 'function') return;
+    const descriptor = Object.getOwnPropertyDescriptor(native,'updateFolderIcon'), manager = this;
+    const wrapper = function(group,...args) {
+      const result = Reflect.apply(original,this,[group,...args]);
+      if (manager.started) manager.projectFolderIcon(group,true);
+      return result;
+    };
+    native.updateFolderIcon = wrapper;this.iconHook = {native,original,descriptor,wrapper};
+  }
+  projectFolderIcon(folder,nativeUpdated = false) {
+    if (!isRegularFolder(folder) || !this.projection.has(folder)) return;
+    const svg = folder.querySelector?.(':scope > .tab-group-label-container > .tab-group-folder-icon > svg');
+    if (!svg) return;
+    // Advance the handback value when native selection updates the artwork.
+    // A startup projection may predate that selection without any row motion.
+    const record = this.records.get(svg)?.get('active');
+    if (nativeUpdated && record) record.before = svg.getAttribute('active');
+    const icon = folder.iconURL ?? svg.querySelector('.icon image')?.getAttribute('href') ?? '';
+    const show = this.preferences?.get('showEmptyFolderActiveIndicator') !== false || Boolean(icon);
+    // Native activeTabs can retain a previously selected tab. The artwork must
+    // describe the rows actually exposed by this projection, not that old list.
+    this.write(svg,'active',String(folder.collapsed && show && this.activeIconFolders.has(folder)));
+  }
   refresh() {
     if (!this.started) return;
     try {
@@ -2431,7 +2459,14 @@ export class StickyFolderVisibilityManager {
             && !this.rowSticky(item) && !this.exposure.has(item)};
         },
       }, this.preferences?.get("subfolderCollapsePolicy") ?? "hide");
+      const selectionMotion = this.selectionChanged ? this.motion.prepareSelection(projection) : [];
+      this.selectionChanged = false;
       this.projection = projection;
+      this.activeIconFolders.clear();
+      for (const [item,state] of projection) {
+        if (!state.visible || item.isZenFolder) continue;
+        for (let folder = item.group; folder?.isZenFolder; folder = folder.group) this.activeIconFolders.add(folder);
+      }
       if (pins) this.write(pins, 'data-bzf-workspace-projection', workspace.hasCollapsedPinnedTabs
         ? (roots.some(item => item.parentElement === pins && projection.get(item)?.visible) ? 'visible' : 'hidden') : null);
       if (pins) this.write(pins, 'data-bzf-stable-pins', this.motion.contains(pins) ? 'true' : null);
@@ -2464,6 +2499,7 @@ export class StickyFolderVisibilityManager {
           if (state.pathOnly) this.write(item.labelElement, "aria-expanded", "false");
           else this.write(item.labelElement, "aria-expanded", String(!item.collapsed));
           this.decorateChevron(item, state);
+          this.projectFolderIcon(item);
         } else {
           const nodes = this.host.gBrowser.isSplitViewWrapper?.(item) ? [item,...Array.from(item.tabs ?? [])] : [item];
           for (const tab of nodes) {
@@ -2511,6 +2547,7 @@ export class StickyFolderVisibilityManager {
       this.host.gBrowser.tabContainer._invalidateCachedVisibleTabs?.();
       this.projectNativeFocusableItems();
       this.motion.measure(projection);
+      for (const group of selectionMotion) void this.motion.animate(group).catch(error=>this.report(error));
     } catch (error) { this.report(error); }
   }
   stickyToggleTargets(item) {
@@ -2868,6 +2905,7 @@ export class StickyFolderVisibilityManager {
     if (this.handleStickyToggle(event)) return;
     if (['pointerdown','mousedown','mouseup','auxclick','dblclick','keyup'].includes(event.type)) return;
     if (event.type === 'TabSelect') {
+      this.selectionChanged = true;
       // Native animateSelect auto-expands a folder when all children are active.
       // Sticky contributes visibility, not selection intent: remove our loans
       // before that synchronous native guard, then re-project after dispatch.
@@ -2928,6 +2966,11 @@ export class StickyFolderVisibilityManager {
     for (const folder of this.dragExposure.keys()) this.cancelDragExpansion(folder);
     this.started = false;
     this.motion.destroy();
+    const hook = this.iconHook;this.iconHook = null;
+    if (hook && hook.native.updateFolderIcon === hook.wrapper) {
+      if (hook.descriptor) Object.defineProperty(hook.native,'updateFolderIcon',hook.descriptor);
+      else delete hook.native.updateFolderIcon;
+    }
     this.projectNativeActiveTabs(new Map());
     if (this.pending !== null) this.host.clearTimeout(this.pending);
     this.pending = null;this.observer?.disconnect();this.unsubscribe?.();
@@ -2940,7 +2983,7 @@ export class StickyFolderVisibilityManager {
     for (const [node, attributes] of [...this.records]) {
       for (const name of [...attributes.keys()]) this.restoreAttribute(node, name);
     }
-    this.projection.clear();this.exposure.clear();this.expansionHandoffs.clear();
+    this.projection.clear();this.activeIconFolders.clear();this.selectionChanged=false;this.exposure.clear();this.expansionHandoffs.clear();
     this.motion.restoreNativeLayout();
     this.host.gBrowser.tabContainer._invalidateCachedVisibleTabs?.();
   }
@@ -2995,6 +3038,21 @@ export class StickyProjectionMotion {
     // Projection hides ordinary children too. Delegating those branches to
     // native motion measures rows after they vanished and produces a snap.
     return [...this.manager.projection].some(([item]) => container?.contains?.(item));
+  }
+  prepareSelection(projection) {
+    const groups = new Set();
+    for (const [item,old] of this.manager.projection) {
+      const next = projection.get(item);
+      if (!next || old.visible === next.visible || (!old.projected && !next.projected)) continue;
+      let group = null;
+      for (let parent = item.group; parent?.isZenFolder; parent = parent.group) if (parent.collapsed) group = parent;
+      const workspace = this.manager.pinnedWorkspace(item);
+      if (workspace?.hasCollapsedPinnedTabs) group = workspace.collapsiblePins;
+      if (group && this.owns(group)) groups.add(group);
+    }
+    const roots = [...groups].filter(group=>![...groups].some(other=>other!==group && other.contains?.(group)));
+    for (const group of roots) this.prepare(group);
+    return roots;
   }
   prepare(group) {
     if (!this.owns(group) || this.before.has(group)) return;
@@ -3268,7 +3326,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.21", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.22", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -3777,6 +3835,7 @@ export function folderColorSwatches(preferences) {
 export const PREFERENCE_DEFINITIONS = Object.freeze({
   folderUrlPinsEnabled: preferenceDefinition("folder-url-pins-enabled", "boolean", true),
   showRootPinBadge: preferenceDefinition("show-root-pin-badge", "boolean", false),
+  showEmptyFolderActiveIndicator: preferenceDefinition("show-empty-folder-active-indicator", "boolean", true),
   pinNewFolderTabUrls: preferenceDefinition("pin-new-folder-tab-urls", "boolean", false),
   urlUnpinGraceSeconds: preferenceDefinition("url-unpin-grace-seconds", "string", "0"),
   stickyTabsEnabled: preferenceDefinition("sticky-tabs-enabled", "boolean", true),
@@ -9061,7 +9120,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.21 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.22 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),
