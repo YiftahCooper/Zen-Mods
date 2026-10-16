@@ -2428,7 +2428,7 @@ export class StickyFolderVisibilityManager {
     const record = this.records.get(svg)?.get('active');
     if (nativeUpdated && record) record.before = svg.getAttribute('active');
     const icon = folder.iconURL ?? svg.querySelector('.icon image')?.getAttribute('href') ?? '';
-    const show = this.preferences?.get('showEmptyFolderActiveIndicator') !== false || Boolean(icon);
+    const show = this.preferences?.get('showEmptyFolderActiveIndicator') === true || Boolean(icon);
     // Native activeTabs can retain a previously selected tab. The artwork must
     // describe the rows actually exposed by this projection, not that old list.
     this.write(svg,'active',String(folder.collapsed && show && this.activeIconFolders.has(folder)));
@@ -3326,7 +3326,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.22", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.23", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -3835,7 +3835,7 @@ export function folderColorSwatches(preferences) {
 export const PREFERENCE_DEFINITIONS = Object.freeze({
   folderUrlPinsEnabled: preferenceDefinition("folder-url-pins-enabled", "boolean", true),
   showRootPinBadge: preferenceDefinition("show-root-pin-badge", "boolean", false),
-  showEmptyFolderActiveIndicator: preferenceDefinition("show-empty-folder-active-indicator", "boolean", true),
+  showEmptyFolderActiveIndicator: preferenceDefinition("show-empty-folder-active-indicator", "boolean", false),
   pinNewFolderTabUrls: preferenceDefinition("pin-new-folder-tab-urls", "boolean", false),
   urlUnpinGraceSeconds: preferenceDefinition("url-unpin-grace-seconds", "string", "0"),
   stickyTabsEnabled: preferenceDefinition("sticky-tabs-enabled", "boolean", true),
@@ -9120,7 +9120,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.22 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.23 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),

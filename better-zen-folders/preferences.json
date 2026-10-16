@@ -220,7 +220,7 @@
     "type": "checkbox",
     "property": "better-zen-folders.show-empty-folder-active-indicator",
     "label": "Show … on Folders Without an Icon\nMarks visible tabs in a collapsed folder. Does not change its tabs or Sticky behaviour.",
-    "defaultValue": true
+    "defaultValue": false
   },
   {
     "type": "string",
