@@ -68,6 +68,104 @@ export class FolderNavigationManager {
   }
 }
 
+/** Related creations inherit a real opener's immediate folder. Supply native
+ * insertion options before TabOpen instead of relocating an arbitrary new tab.
+ * Glance stays transient until its native full-open move identifies both tabs. */
+export class RelatedFolderTabsManager {
+  constructor(host) {
+    this.host = host;this.active = false;this.owned = [];
+    this.openingGlance = 0;this.expandingGlance = 0;this.freshGlances = new WeakSet();
+    this.creatingRelated = null;
+    this.onAbort = () => this.destroy();
+  }
+  wrap(owner, name, route) {
+    const original = owner?.[name];
+    if (typeof original !== 'function') return;
+    const descriptor = Object.getOwnPropertyDescriptor(owner,name), manager = this;
+    const wrapper = function(...args) {
+      const native = replacement => Reflect.apply(original,this,replacement ?? args);
+      return manager.active && this === owner ? route(args,native) : native();
+    };
+    Object.defineProperty(owner,name,{value:wrapper,writable:true,configurable:true,enumerable:descriptor?.enumerable??true});
+    this.owned.push({owner,name,descriptor,wrapper});
+  }
+  sourceFolder(source) {
+    if (!source || source.localName !== 'tab' || source.isConnected !== true || source.closing
+        || (source.ownerGlobal ?? source.ownerDocument?.defaultView) !== this.host
+        || source.hasAttribute('zen-essential') || source.hasAttribute('zen-empty-tab') || source.splitview) return null;
+    const folder = source.group;
+    return isRegularFolder(folder) && folder.isConnected === true
+      && (folder.ownerGlobal ?? folder.ownerDocument?.defaultView) === this.host ? folder : null;
+  }
+  start(signal) {
+    if (this.active || signal?.aborted) return;
+    this.active = true;this.signal = signal;signal?.addEventListener('abort',this.onAbort,{once:true});
+    const browser = this.host.gBrowser, glance = this.host.gZenGlanceManager;
+    this.wrap(this.host.gZenWorkspaces,'fixTabInsertLocation',([tab],native)=>{
+      // Zen 1.23.2b otherwise takes a correctly inserted structural pin back
+      // out of its folder before TabOpen. Exempt only our synchronous creation.
+      if (this.creatingRelated && tab?.group === this.creatingRelated) return;
+      return native();
+    });
+    this.wrap(glance,'openGlance',(_args,native)=>{
+      this.openingGlance++;
+      try { return native(); } finally { this.openingGlance--; }
+    });
+    this.wrap(glance,'fullyOpenGlance',(_args,native)=>{
+      this.expandingGlance++;
+      try { return native(); } finally { this.expandingGlance--; }
+    });
+    this.wrap(glance,'getTabOrGlanceParent',([tab],native)=>this.pinningGlance === tab ? tab : native());
+    this.wrap(browser,'addTab',(args,native)=>{
+      const previous = this.creatingRelated;this.creatingRelated = null;
+      try { return this.openTab(args,native); }
+      finally { this.creatingRelated = previous; }
+    });
+    this.wrap(browser,'moveTabAfter',([tab,source],native)=>{
+      if (!this.expandingGlance || !tab?.hasAttribute?.('zen-glance-tab') || !this.sourceFolder(source)) return native();
+      const place = () => {
+        // Native pinTab normally redirects a preview to its parent. During
+        // this one promotion, pin the preview itself, without mutating IDs.
+        const previous = this.pinningGlance;this.pinningGlance = tab;
+        try { browser.pinTab(tab); } finally { this.pinningGlance = previous; }
+        return native();
+      };
+      const hooks = this.host.__betterZenFoldersFolderPins?.origins;
+      const origin = this.freshGlances.has(tab) ? 'new' : 'move';
+      const result = hooks?.active ? hooks.placeCreatedTab(tab,origin,place) : place();
+      this.freshGlances.delete(tab);return result;
+    });
+  }
+  openTab([url,options = {}],native) {
+      const browser = this.host.gBrowser, glance = this.host.gZenGlanceManager;
+      if (this.openingGlance) {
+        const tab = native();if (tab) this.freshGlances.add(tab);return tab;
+      }
+      if (options.fromExternal || options.skipLoad || options.createLazyBrowser || options.insertTab === false
+          || options._forZenEmptyTab || options.essential) return native();
+      let source = options.openerBrowser ? browser.getTabForBrowser(options.openerBrowser) : null;
+      if (!options.openerBrowser) {
+        const related = options.relatedToCurrent ?? Boolean(options.referrerInfo?.originalReferrer);
+        source = related ? browser.selectedTab : null;
+      }
+      if (source?.hasAttribute?.('zen-glance-tab')) source = glance?.getTabOrGlanceParent?.(source);
+      const folder = this.sourceFolder(source);
+      if (!folder || (options.tabGroup != null && options.tabGroup !== folder)) return native();
+      // "pinned" is native section membership here, not a saved URL choice.
+      // Existing FolderPinOriginHooks apply the new-folder-tab URL-pin default.
+      this.creatingRelated = folder;
+      return native([url,{...options,pinned:true,tabGroup:folder}]);
+  }
+  destroy() {
+    this.active = false;this.signal?.removeEventListener('abort',this.onAbort);this.signal = null;
+    for (const {owner,name,descriptor,wrapper} of this.owned.reverse()) {
+      if (Object.getOwnPropertyDescriptor(owner,name)?.value !== wrapper) continue;
+      if (descriptor) Object.defineProperty(owner,name,descriptor);else delete owner[name];
+    }
+    this.owned = [];this.freshGlances = new WeakSet();
+  }
+}
+
 /** Keep Zen's searchable preview beside its direct header. Zen 1.22.2b's
  * count-based negative Y offset can become a positive gap at the screen edge.
  * popupshowing runs after the native anchor is set; moveToAnchor accepts that
@@ -3170,7 +3268,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.20", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.21", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -8963,7 +9061,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.20 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.21 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),
@@ -11843,6 +11941,7 @@ export function bootstrapBrowserWindow(host) {
   );
   const pins = new FolderPinRuntime(host,preferences);
   const managers = [preferences, colorManager, iconIntegrityManager, pins];
+  managers.push(new RelatedFolderTabsManager(host));
   const visibility = new StickyFolderVisibilityManager(host, preferences);
   managers.push(visibility);
   managers.push(new FolderNavigationManager(host));

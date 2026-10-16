@@ -25,6 +25,9 @@ used separately or together.
   older folded-corner marker.
 - **Folder controls:** hover a folder to add a tab. Use its right-click menu to
   rename it, change its colour, add a subfolder or move it into another folder.
+- **Links and Glance:** links opened in a new tab from a folder stay in that same
+  folder, beside their source tab. Expanding a Glance preview does the same.
+  Background tabs stay in the background, including inside subfolders.
 - **Preview:** hover a collapsed folder to search its hidden tabs. Child-folder
   headings keep the hierarchy clear and can expand or collapse inside the popup.
 - **Dragging:** pause near the end of a folder's contents to choose between the
