@@ -3,9 +3,9 @@
   "name": "Context Menu Editor",
   "description": "Arrange right-click menus, create submenus and choose icons.",
   "author": "YiftahCooper",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "createdAt": "2026-10-13",
-  "updatedAt": "2026-10-15T18:30:01.000Z",
+  "updatedAt": "2026-10-17T13:17:22.000Z",
   "supportsUnload": true,
   "preferences": "preferences.json",
   "style": {

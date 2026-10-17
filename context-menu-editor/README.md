@@ -1,7 +1,11 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.1.4.**
+an interactive Sine settings editor. **Version 0.1.5.**
+
+Version 0.1.5 tightens the menu's side spacing and removes duplicate empty icon
+slots on mod-added commands. Icon size, alignment and gap controls still apply;
+native checkmarks and radio buttons keep their own status slots.
 
 Version 0.1.4 adds the native Share submenu to the editor and gives it an icon.
 Move to Folder and Better Zen Folders' Move to Space now use clearer icons.
@@ -24,6 +28,9 @@ anonymous service actions; those actions no longer trigger a parent rebuild.
 After updating from an older editor or disabling the two replaced mods, fully
 exit and reopen Zen once. The older Context-Menu-Icons script does not support
 live unloading, so a browser restart clears any code left from that session.
+If Sine automatic updates are off, use its **Check for Updates** control first
+and verify that Context Menu Editor shows version **0.1.5**. Restarting by itself
+does not download an update.
 
 **Disable Zen Context Menu and Context-Menu-Icons before enabling this editor.**
 It replaces their menu ordering, visibility and icon customization. Their CSS

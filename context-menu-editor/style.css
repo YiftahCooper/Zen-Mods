@@ -131,8 +131,8 @@ input.cme-name { background: Canvas; padding: 3px 6px !important; }
 }
 
 /* Decoration is separate from native checkbox/radio status and submenu arrows. */
-[data-cme-root] [data-cme-item] { padding-block: var(--cme-row-spacing, 2px); }
-[data-cme-root] .cme-decoration { width: 24px; min-width: 24px; height: var(--cme-icon-size, 16px); font-size: var(--cme-icon-size, 16px); line-height: 1; overflow: hidden; margin-inline-end: var(--cme-icon-gap, 8px); display: inline-flex; align-items: center; justify-content: var(--cme-icon-align, center); pointer-events: none; }
+[data-cme-root] [data-cme-item] { padding-block: var(--cme-row-spacing, 2px); padding-inline: 8px !important; margin-inline: 0 !important; }
+[data-cme-root] .cme-decoration { width: max(20px, var(--cme-icon-size, 16px)); min-width: max(20px, var(--cme-icon-size, 16px)); height: var(--cme-icon-size, 16px); font-size: var(--cme-icon-size, 16px); line-height: 1; overflow: hidden; margin-inline-end: var(--cme-icon-gap, 8px); display: inline-flex; align-items: center; justify-content: var(--cme-icon-align, center); pointer-events: none; }
 [data-cme-root] .cme-decoration img { width: var(--cme-icon-size, 16px); height: var(--cme-icon-size, 16px); max-width: 100%; max-height: 100%; object-fit: contain; }
 [data-cme-root] .cme-decoration.cme-monochrome { filter: grayscale(1); }
 [data-cme-root] .cme-decoration img[data-cme-monochrome] { filter: grayscale(1); }
@@ -141,6 +141,9 @@ input.cme-name { background: Canvas; padding: 3px 6px !important; }
 [data-cme-root] [data-cme-item][data-cme-icons="on"] .menu-iconic-icon,
 [data-cme-root] [data-cme-item][data-cme-icons="off"] > .menu-icon,
 [data-cme-root] [data-cme-item][data-cme-icons="on"] > .menu-icon { visibility: hidden; }
+/* The editor already supplies the decorative column. Keep native status slots
+   for checks and radio buttons, but avoid reserving a second empty icon slot. */
+[data-cme-root] [data-cme-item]:is([data-cme-icons="on"], [data-cme-icons="off"]):not([type="checkbox"], [type="radio"], [checked]) > :is(.menu-iconic-left, .menu-icon) { display: none !important; }
 [data-cme-root] [data-cme-item][type="checkbox"] .menu-iconic-icon,
 [data-cme-root] [data-cme-item][type="radio"] .menu-iconic-icon,
 [data-cme-root] [data-cme-item][type="checkbox"] > .menu-icon,

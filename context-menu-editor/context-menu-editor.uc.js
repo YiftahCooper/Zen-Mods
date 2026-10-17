@@ -1,4 +1,4 @@
-// Context Menu Editor 0.1.4 — generated from src/entry.mjs.
+// Context Menu Editor 0.1.5 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -6499,7 +6499,7 @@
     const icons = createIconService(window2, { baseURL: BASE, fetch: (...args) => browserWindow().fetch(...args) });
     const stylesheet = window2.document.createElementNS("http://www.w3.org/1999/xhtml", "link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = BASE + "style.css?v=0.1.4";
+    stylesheet.href = BASE + "style.css?v=0.1.5";
     stylesheet.setAttribute("data-cme-stylesheet", "true");
     window2.document.documentElement.append(stylesheet);
     const owner = {
