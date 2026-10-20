@@ -68,6 +68,14 @@ export class FolderNavigationManager {
   }
 }
 
+// BrowserDOMWindow initially creates window.open tabs with skipLoad=true; the
+// navigation is handed off after addTab returns. That is a live creation, not
+// SessionStore restoration, only when native window info identifies this opener.
+function hasLiveWindowOpener(options) {
+  const context = options.openerBrowser?.browsingContext;
+  return Boolean(context && options.openWindowInfo?.parent?.top === context);
+}
+
 /** Related creations inherit a real opener's immediate folder. Supply native
  * insertion options before TabOpen instead of relocating an arbitrary new tab.
  * Glance stays transient until its native full-open move identifies both tabs. */
@@ -141,7 +149,8 @@ export class RelatedFolderTabsManager {
       if (this.openingGlance) {
         const tab = native();if (tab) this.freshGlances.add(tab);return tab;
       }
-      if (options.fromExternal || options.skipLoad || options.createLazyBrowser || options.insertTab === false
+      if (options.fromExternal || (options.skipLoad && !hasLiveWindowOpener(options))
+          || options.createLazyBrowser || options.insertTab === false
           || options._forZenEmptyTab || options.essential) return native();
       let source = options.openerBrowser ? browser.getTabForBrowser(options.openerBrowser) : null;
       if (!options.openerBrowser) {
@@ -976,7 +985,8 @@ export class FolderPinOriginHooks {
     this.wrap(folders, "on_TabOpen", ([event], native) => this.transaction([event.target], this.creationOrigin ?? "restore", native));
     this.wrap(browser, "addTab", ([url, options = {}], native) => {
       const previous = this.creationOrigin;
-      this.creationOrigin ??= options.skipLoad || options.insertTab === false ? "restore" : "new";
+      this.creationOrigin ??= (options.skipLoad && !hasLiveWindowOpener(options))
+        || options.insertTab === false ? "restore" : "new";
       try {
         const tab = native();
         // TabOpen precedes Zen's identity assignment and initial load. The
@@ -3326,7 +3336,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.24", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.25", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -9120,7 +9130,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.24 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.25 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),

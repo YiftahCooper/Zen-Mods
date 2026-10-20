@@ -1,11 +1,11 @@
 {
   "id": "5b0aa51f-cea7-4de5-8344-3e86e77fb88d",
   "name": "Better Zen Folders",
-  "version": "0.3.24",
+  "version": "0.3.25",
   "description": "Compact, restorable Zen folders with Sticky tabs, nested visibility, colours and configurable folder controls.",
   "homepage": "https://github.com/YiftahCooper/Zen-Mods/tree/main/better-zen-folders",
   "createdAt": "2026-10-15",
-  "updatedAt": "2026-10-20T05:01:13.953Z",
+  "updatedAt": "2026-10-20T05:57:10.170Z",
   "author": "Yiftah Cooper",
   "ai": "yes",
   "fork": [
