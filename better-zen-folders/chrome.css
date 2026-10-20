@@ -402,6 +402,24 @@ zen-folder[collapsed]
   list-style-image: url("chrome://global/skin/icons/plus.svg");
 }
 
+/* External monochrome SVGs cannot see currentColor across Gecko's image
+   boundary unless the painting element exports context paint. Scope this to
+   our own image surfaces; chosen SVG/raster artwork retains its own colours.
+   Inherit the local foreground, including native hover/selected theme colours,
+   rather than guessing light/dark from an accent or recolouring every icon. */
+.better-zen-folders-new-tab-button,
+.better-zen-folders-new-tab-button > .toolbarbutton-icon,
+.better-zen-folders-space-icon > img,
+.better-zen-folders-preview-folder .menu-iconic-left > img,
+.better-zen-folders-drop-row > .menu-iconic-left > img,
+:where([data-better-zen-folders-command-icon-mode="compatibility"]) {
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity;
+  fill: currentColor;
+  stroke: currentColor;
+  fill-opacity: 1;
+  stroke-opacity: 1;
+}
+
 :root[better-zen-folders-new-tab-visibility="hover"]
   zen-folder > .tab-group-label-container:is(:hover, :focus-within)
   > .better-zen-folders-new-tab-button {
@@ -488,16 +506,18 @@ zen-folder[data-better-zen-folders-color]
   height: var(--fp-contextmenu-menuitem-icon-size, 16px);
   min-width: var(--fp-contextmenu-menuitem-icon-size, 16px);
   min-height: var(--fp-contextmenu-menuitem-icon-size, 16px);
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity;
   fill: currentColor;
+  stroke: currentColor;
   fill-opacity: 1;
+  stroke-opacity: 1;
 }
 
 #better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"] > .menu-icon,
 #better-zen-folders-folder-colour[data-better-zen-folders-command-icon-mode="mod"]
   > .menu-iconic-left
   > .menu-iconic-icon {
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity;
   list-style-image: url("chrome://browser/skin/zen-icons/selectable/palette.svg") !important;
   background-image: radial-gradient(
     circle at 37.5% 28%,
@@ -979,6 +999,7 @@ zen-folder[data-better-zen-folders-color]
   overflow: auto;
   overscroll-behavior: contain;
   background: var(--arrowpanel-background, light-dark(#f9f9fb, #29292e));
+  color: var(--arrowpanel-color, CanvasText);
   border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   border-radius: var(--tab-border-radius, 6px);
   box-shadow: 0 3px 12px #0003;

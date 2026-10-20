@@ -33,6 +33,9 @@ used separately or together.
 - **Dragging:** pause near the end of a folder's contents to choose between the
   available parent folders and the top level. Adjust the delay and colour coding
   in settings.
+- **Theme colours:** buttons and monochrome command icons follow Zen's local
+  light/dark foreground automatically. Chosen folder colours and multicolour
+  icons keep their own colours; no extra setting is needed.
 - **Pinned URLs:** a tab's **Pinned URL** menu saves an address you can return to.
   A URL pin is separate from Sticky. New folder tabs are not URL-pinned by
   default; moving a tab into a folder preserves its previous URL-pin choice.
