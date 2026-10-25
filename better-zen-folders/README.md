@@ -25,6 +25,8 @@ used separately or together.
   older folded-corner marker.
 - **Folder controls:** hover a folder to add a tab. Use its right-click menu to
   rename it, change its colour, add a subfolder or move it into another folder.
+  Tabs created with the folder `+` or **New Tab in Folder** open directly inside
+  that folder, at the Top or Bottom chosen in settings.
 - **Links and Glance:** links opened in a new tab from a folder stay in that same
   folder, beside their source tab. Expanding a Glance preview does the same.
   This also covers mod-homepage buttons in Sine Settings when Settings is in a

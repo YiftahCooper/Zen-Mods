@@ -84,6 +84,7 @@ export class RelatedFolderTabsManager {
     this.host = host;this.active = false;this.owned = [];
     this.openingGlance = 0;this.expandingGlance = 0;this.freshGlances = new WeakSet();
     this.creatingRelated = null;
+    this.folderCreationRequest = null;this.creatingFolderTab = null;
     this.onAbort = () => this.destroy();
   }
   wrap(owner, name, route) {
@@ -105,10 +106,33 @@ export class RelatedFolderTabsManager {
     return isRegularFolder(folder) && folder.isConnected === true
       && (folder.ownerGlobal ?? folder.ownerDocument?.defaultView) === this.host ? folder : null;
   }
+  armFolderCreation(request) {
+    if (!this.active) return () => {};
+    this.folderCreationRequest = request;
+    return () => { if (this.folderCreationRequest === request) this.folderCreationRequest = null; };
+  }
   start(signal) {
     if (this.active || signal?.aborted) return;
     this.active = true;this.signal = signal;signal?.addEventListener('abort',this.onAbort,{once:true});
     const browser = this.host.gBrowser, glance = this.host.gZenGlanceManager;
+    this.wrap(this.host,'openTrustedLinkIn',(args,native)=>{
+      const request = this.folderCreationRequest;
+      if (!request?.isCurrent() || !['tab','tabshifted'].includes(args[1])
+          || args[2]?.initiatedByURLBar !== true) return native();
+      // Scope the destination to the confirmed URL-bar load, never to every
+      // TabOpen while its dialogue is waiting. Clear it across native addTab
+      // callbacks so reentrant work cannot borrow this one-use capability.
+      const previous = this.creatingFolderTab;
+      const scope = {request,url:args[0],claimed:false,created:null};
+      this.creatingFolderTab = scope;
+      try {
+        const value = native();
+        if (scope.created && this.active && this.folderCreationRequest === request) {
+          request.onCreated(scope.created);
+        }
+        return value;
+      } finally { this.creatingFolderTab = previous; }
+    });
     this.wrap(this.host.gZenWorkspaces,'fixTabInsertLocation',([tab],native)=>{
       // Zen 1.23.2b otherwise takes a correctly inserted structural pin back
       // out of its folder before TabOpen. Exempt only our synchronous creation.
@@ -125,9 +149,10 @@ export class RelatedFolderTabsManager {
     });
     this.wrap(glance,'getTabOrGlanceParent',([tab],native)=>this.pinningGlance === tab ? tab : native());
     this.wrap(browser,'addTab',(args,native)=>{
-      const previous = this.creatingRelated;this.creatingRelated = null;
-      try { return this.openTab(args,native); }
-      finally { this.creatingRelated = previous; }
+      const previous = this.creatingRelated, scope = this.creatingFolderTab;
+      this.creatingRelated = null;this.creatingFolderTab = null;
+      try { return this.openTab(args,native,scope); }
+      finally { this.creatingRelated = previous;this.creatingFolderTab = scope; }
     });
     this.wrap(browser,'moveTabAfter',([tab,source],native)=>{
       if (!this.expandingGlance || !tab?.hasAttribute?.('zen-glance-tab') || !this.sourceFolder(source)) return native();
@@ -144,7 +169,7 @@ export class RelatedFolderTabsManager {
       this.freshGlances.delete(tab);return result;
     });
   }
-  openTab([url,options = {}],native) {
+  openTab([url,options = {}],native,scope = null) {
       const browser = this.host.gBrowser, glance = this.host.gZenGlanceManager;
       if (this.openingGlance) {
         const tab = native();if (tab) this.freshGlances.add(tab);return tab;
@@ -158,12 +183,16 @@ export class RelatedFolderTabsManager {
         source = related ? browser.selectedTab : null;
       }
       if (source?.hasAttribute?.('zen-glance-tab')) source = glance?.getTabOrGlanceParent?.(source);
-      const folder = this.sourceFolder(source);
+      const explicit = scope && !scope.claimed && url === scope.url && scope.request.isCurrent();
+      const folder = explicit ? scope.request.folder : this.sourceFolder(source);
       if (!folder || (options.tabGroup != null && options.tabGroup !== folder)) return native();
       // "pinned" is native section membership here, not a saved URL choice.
       // Existing FolderPinOriginHooks apply the new-folder-tab URL-pin default.
       this.creatingRelated = folder;
-      return native([url,{...options,pinned:true,tabGroup:folder}]);
+      if (explicit) scope.claimed = true;
+      const tab = native([url,{...options,pinned:true,tabGroup:folder}]);
+      if (explicit && tab?.group === folder) scope.created = tab;
+      return tab;
   }
   destroy() {
     this.active = false;this.signal?.removeEventListener('abort',this.onAbort);this.signal = null;
@@ -172,6 +201,7 @@ export class RelatedFolderTabsManager {
       if (descriptor) Object.defineProperty(owner,name,descriptor);else delete owner[name];
     }
     this.owned = [];this.freshGlances = new WeakSet();
+    this.folderCreationRequest = null;this.creatingFolderTab = null;
   }
 }
 
@@ -3336,7 +3366,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.25", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.26", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -7465,23 +7495,31 @@ export class NewTabInFolderTransaction {
     let tab = null;
     try {
       collapseSnapshot = snapshotCollapsedPath(folder, this.adapters.getFolderAncestors(folder));
-      this.handoff = this.adapters.armNextTabOpen();
+      this.handoff = this.adapters.armNextTabOpen(folder, tab => {
+        if (this.destroyed || !this.canActivate(folder)) return;
+        if (newTabPosition === "top") {
+          const items = (this.adapters.getDirectItems?.(folder, tab) ?? []).filter(item => item !== tab);
+          this.adapters.insertDirectItem(folder, tab, visibleDirectItems(items, this.adapters)[0] ?? null);
+        } else this.adapters.insertDirectItem?.(folder, tab, null);
+        restoreCollapsedPath(collapseSnapshot);
+      });
       if (!this.adapters.handleNewTab(false, false, "tab", true, this.handoff.closeToken)) return false;
       this.handoff.afterOpen?.();
 
       tab = await this.handoff.promise;
       if (!tab) return false;
       if (this.destroyed) return false;
+      if (this.handoff.preparationError) throw this.handoff.preparationError;
       if (!this.canActivate(folder)) throw new Error("folder context changed before tab grouping");
 
-      const place = () => { this.adapters.pinTab(tab); folder.addTabs([tab]); };
-      if (this.adapters.placeCreatedTab) this.adapters.placeCreatedTab(tab, this.handoff.origin ?? "move", place);
-      else place();
-      if (newTabPosition === "top") {
-        const directItems = (this.adapters.getDirectItems?.(folder, tab) ?? [])
-          .filter(item => item !== tab);
-        const target = visibleDirectItems(directItems, this.adapters)[0] ?? null;
-        this.adapters.insertDirectItem(folder, tab, target);
+      if (!this.handoff.isPreplaced?.(tab)) {
+        const place = () => { this.adapters.pinTab(tab); folder.addTabs([tab]); };
+        if (this.adapters.placeCreatedTab) this.adapters.placeCreatedTab(tab, this.handoff.origin ?? "move", place);
+        else place();
+        if (newTabPosition === "top") {
+          const directItems = (this.adapters.getDirectItems?.(folder, tab) ?? []).filter(item => item !== tab);
+          this.adapters.insertDirectItem(folder, tab, visibleDirectItems(directItems, this.adapters)[0] ?? null);
+        }
       }
       this.adapters.selectTab(tab);
       return true;
@@ -9130,7 +9168,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.25 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.26 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),
@@ -11317,7 +11355,7 @@ export function createBrowserNewTabTransactionAdapters(
 ) {
   let activeHandoff = null;
 
-  return {
+  const adapters = {
     populationRegistry,
     preferences,
     isFolderInCurrentWindow: folder =>
@@ -11332,12 +11370,13 @@ export function createBrowserNewTabTransactionAdapters(
     getFolderAncestors: browserFolderAncestors,
     getDirectItems: (folder, directItem) => browserDirectItems(host, folder, directItem),
     isEmptyTab: tab => isEmptyDirectItem(tab),
-    armNextTabOpen: () => {
+    armNextTabOpen: (folder, prepareCreatedTab) => {
       activeHandoff?.cancel();
       const initialTab = host.gBrowser.selectedTab;
       const initialTabWasEmpty = initialTab?.isEmpty === true;
       const initialTabURI = initialTab?.linkedBrowser?.currentURI?.spec ?? initialTab?.url ?? null;
       const openedTabs = new Set();
+      const preplacedTabs = new WeakSet();let releaseCreation = () => {};
       const closeToken = {};
       let settled = false;
       let sessionObserver = null;
@@ -11349,6 +11388,7 @@ export function createBrowserNewTabTransactionAdapters(
       const finish = (tab, origin = "move") => {
         if (settled) return;
         settled = true;
+        releaseCreation();
         handoff.origin = origin;
         tabContainer.removeEventListener("TabOpen", onTabOpen);
         host.removeEventListener("ZenURLBarClosed", onZenURLBarClosed);
@@ -11398,8 +11438,25 @@ export function createBrowserNewTabTransactionAdapters(
           && (selectedTab?.isEmpty !== true || selectedTabURI !== initialTabURI);
         finish(reusedInitialTab ? initialTab : null);
       };
-      const handoff = { promise, closeToken, afterOpen: checkSession, cancel: () => finish(null) };
+      const handoff = { promise, closeToken, afterOpen: checkSession, cancel: () => finish(null),
+        isPreplaced: tab => preplacedTabs.has(tab) && tab.group === folder };
       activeHandoff = handoff;
+      const validFolder = () => isRegularFolder(folder) && folder.isConnected
+        && adapters.isFolderInCurrentWindow(folder) && adapters.isFolderInActiveWorkspace(folder);
+      const placement = host.__betterZenFoldersController?.adapters?.managers
+        ?.find(manager => manager instanceof RelatedFolderTabsManager);
+      releaseCreation = placement?.armFolderCreation({folder,
+        isCurrent: () => activeHandoff === handoff && !settled && isCurrentSession()
+          && host.gURLBar?.hasAttribute('zen-newtab') === true && validFolder(),
+        onCreated: tab => {
+          if (activeHandoff !== handoff || settled || !isCurrentSession()
+              || !validFolder() || tab.group !== folder) return;
+          // Native addTab callbacks can retire this request. A preparation
+          // failure belongs to the transaction, not its successful native load.
+          try { prepareCreatedTab?.(tab);preplacedTabs.add(tab); }
+          catch (error) { handoff.preparationError = error; }
+        },
+      }) ?? (() => {});
       tabContainer.addEventListener("TabOpen", onTabOpen);
       host.addEventListener("ZenURLBarClosed", onZenURLBarClosed);
       sessionObserver = new host.MutationObserver(checkSession);
@@ -11421,6 +11478,7 @@ export function createBrowserNewTabTransactionAdapters(
     removeTab: tab => host.gBrowser.removeTab(tab),
     reportError: error => host.console.error("Better Zen Folders: unable to place new tab in folder", error),
   };
+  return adapters;
 }
 
 export function createBrowserCollapsedFolderDragGuardAdapters(host, preferences = null, visibility = null) {
