@@ -1,0 +1,13 @@
+{
+  "version": "Zen 1.23.3b",
+  "gecko": "158.0",
+  "buildID": "20261016101044",
+  "sourceStamp": "cba27b90fef1c80096c8531541efe5d7b133baae",
+  "sources": {
+    "receiver": "c51901378ac788eb78d757b7f35f19c8b1dcd93be9d6b691d3894961ef3ae54e",
+    "tab": "354ab4ba79e4cffd822c0749f0268590f214ed79c6075f548fc177a2c05b8453"
+  },
+  "receiverCommentsChanged": true,
+  "retainedReplay": "Zen 1.22.2b",
+  "basis": "Read-only installed-archive review on 2026-10-20: moveTabTo remains byte-identical to the retained replay; the before/after receiver executable bytes remain identical after removing block comments; the native tab index getter is unchanged. The guard still rejects every unreviewed whole-entry hash pair. This qualifies only that replay, not all Zen 1.23.3b behavior. No installed files or profiles were changed."
+}

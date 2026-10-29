@@ -1,0 +1,12 @@
+{
+  "name": "better-zen-folders-development",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24"},
+  "scripts": {
+    "test": "node tools/run-tests.mjs",
+    "test:python": "node tools/run-tests.mjs --python",
+    "test:prepare": "node tools/run-tests.mjs --prepare"
+  },
+  "devDependencies": {"playwright": "1.62.1", "pngjs": "7.0.0"}
+}

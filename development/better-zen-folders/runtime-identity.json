@@ -1,0 +1,36 @@
+{
+  "version": "0.3.26",
+  "files": [
+    {
+      "path": "better-zen-folders/README.md",
+      "bytes": 8836,
+      "sha256": "087bd236da13bc237ee0cc764c713d2b66412c1293b6fb8e0f33a1e44e39f39f",
+      "gitBlob": "777ae079f5a3ae5abe0ca909dc373af26f828f27"
+    },
+    {
+      "path": "better-zen-folders/chrome.css",
+      "bytes": 40002,
+      "sha256": "1621ee8bbc589aa782ec3bf145685796bd2e7f6992697eaf912fe1ad7f5bbe82",
+      "gitBlob": "d232c154b64b6dc734626f998f1d2378390766e8"
+    },
+    {
+      "path": "better-zen-folders/preferences.json",
+      "bytes": 13530,
+      "sha256": "313902bd606aa3c19a47328df9371c3b3ae2b4b9bc344cdaf718e09a05167129",
+      "gitBlob": "027770ccff1ba8ef70ac4ef04aa92217415655be"
+    },
+    {
+      "path": "better-zen-folders/scripts/better-zen-folders.uc.mjs",
+      "bytes": 559746,
+      "sha256": "8a3de0aacfcd466fa0b75e305b45e44165c682d73129286704bc09f19b0b6281",
+      "gitBlob": "2a74a505bd9643499e555891537f509775cd0010"
+    },
+    {
+      "path": "better-zen-folders/theme.json",
+      "bytes": 840,
+      "sha256": "4563e02c403283dc553f9097fe7a73d6093f078e5f9e8d082ab81e418d7430af",
+      "gitBlob": "cde6a61e5325c67bab78beca64799a640e364a52"
+    }
+  ],
+  "runtimeCommit": "56789780f376021d276634967961252954f5eee6"
+}

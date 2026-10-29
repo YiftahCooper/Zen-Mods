@@ -1,0 +1,11 @@
+/* MPL-2.0. Unmodified paint-variable block from installed Zen 1.23.2b,
+ * Gecko 157.0.1, build 20261009073723, SourceStamp
+ * 185e856f68a451dc71988e988bc080c56452ea66.
+ * browser/omni.ja / chrome/browser/content/browser/zen-styles/zen-folders.css
+ * Native lines 12-18. In this version the variables moved from :root to folders.
+ */
+zen-folder {
+  --zen-folder-behind-bgcolor: light-dark(color-mix(in srgb, var(--zen-primary-color) 60%, gray), color-mix(in srgb, var(--zen-primary-color) 60%, #c1c1c1));
+  --zen-folder-front-bgcolor: light-dark(color-mix(in srgb, var(--zen-primary-color), white 70%), color-mix(in srgb, var(--zen-primary-color), black 40%));
+  --zen-folder-stroke: light-dark(color-mix(in srgb, var(--zen-primary-color) 50%, black), color-mix(in srgb, var(--zen-colors-primary) 15%, #ebebeb));
+}

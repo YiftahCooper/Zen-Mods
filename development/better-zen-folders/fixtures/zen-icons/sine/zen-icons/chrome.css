@@ -1,0 +1,604 @@
+/* Zen Icons Sine mod. Runtime picker styles are scoped below this marker. */
+
+#PanelUI-zen-emojis-picker[zen-icons-enhanced="true"] {
+  --zen-icons-grid-size: 30px;
+  --panel-width: var(--zen-icons-picker-width, 340px) !important;
+  box-sizing: border-box;
+  width: var(--zen-icons-picker-width, 100%) !important;
+  min-width: var(--zen-icons-picker-width, 0) !important;
+  max-width: var(--zen-icons-picker-width, 100%) !important;
+}
+
+#PanelUI-zen-emojis-picker[zen-icons-enhanced="true"]
+  > #PanelUI-zen-picker-header,
+#PanelUI-zen-emojis-picker[zen-icons-enhanced="true"]
+  > #PanelUI-zen-emojis-picker-pages {
+  display: none !important;
+}
+
+#zen-icons-sine-root {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(620px, 78vh);
+  padding: 8px;
+  gap: 0;
+  overflow-x: hidden;
+}
+
+#zen-icons-sine-root .zen-icons-toolbar {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  overflow: visible;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 8px;
+  padding: 2px;
+  background: transparent;
+}
+
+#zen-icons-sine-root .zen-icons-search {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px 0 0 6px;
+  padding-inline: 9px;
+  color: inherit;
+  outline: 0;
+  background: transparent;
+}
+
+#zen-icons-sine-root button {
+  appearance: none !important;
+  box-sizing: border-box;
+  border: 0;
+  color: inherit;
+  font: inherit;
+}
+
+#zen-icons-sine-root .zen-icons-search:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+#zen-icons-sine-root .zen-icons-filter-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  margin: 0;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 6px !important;
+  background: transparent !important;
+}
+
+#zen-icons-sine-root .zen-icons-category-link,
+#zen-icons-sine-root .zen-icons-group-header {
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  padding: 6px 9px;
+}
+
+#zen-icons-sine-root .zen-icons-filter-icon {
+  -moz-context-properties: fill, stroke !important;
+  width: 18px;
+  height: 18px;
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+#zen-icons-sine-root .zen-icons-default-container {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--zen-icons-grid-size), 1fr)
+  );
+  padding: 6px 2px 4px;
+}
+
+#zen-icons-sine-root .zen-icons-default-choice {
+  grid-column: 1;
+}
+
+#zen-icons-sine-root .zen-icons-default-section {
+  margin-block: 5px 3px;
+}
+
+#zen-icons-sine-root .zen-icons-reset-tab-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  margin: 6px 0;
+  padding: 6px 9px;
+  text-align: start;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+#zen-icons-sine-root .zen-icons-reset-symbol {
+  -moz-context-properties: fill, stroke;
+  fill: none;
+  stroke: currentColor;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+
+#zen-icons-sine-root .zen-icons-reset-tab-icon:hover,
+#zen-icons-sine-root .zen-icons-reset-tab-icon:focus-visible {
+  border-color: currentColor;
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+#zen-icons-sine-root .zen-icons-default-heading {
+  box-sizing: border-box;
+  width: 100%;
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+#zen-icons-sine-root .zen-icons-default-folder-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+#zen-icons-sine-root .zen-icons-category-icon {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-inline-end: 5px;
+  text-align: center;
+  font-size: 19px;
+  line-height: 1;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-category-option {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+#zen-icons-sine-filter-panel .zen-icons-category-option button {
+  flex: 1;
+  min-width: 0;
+}
+#zen-icons-sine-filter-panel .zen-icons-defaults-note {
+  font-size: 12px;
+  opacity: 0.8;
+  margin: 10px 0 5px;
+}
+#zen-icons-sine-filter-panel .zen-icons-save-defaults {
+  width: 100%;
+}
+
+#zen-icons-sine-root .zen-icons-filter-menu {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--arrowpanel-background);
+  box-shadow: var(--panel-shadow-margin);
+}
+
+#zen-icons-sine-root .zen-icons-filter-menu[hidden],
+#zen-icons-sine-root .zen-icons-grid[hidden] {
+  display: none;
+}
+
+#zen-icons-sine-root .zen-icons-filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-block: 3px 8px;
+}
+
+#zen-icons-sine-root .zen-icons-filter-section > strong {
+  flex-basis: 100%;
+}
+
+#zen-icons-sine-root .zen-icons-provider-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#zen-icons-sine-root .zen-icons-folder-shape {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block: 8px;
+}
+
+#zen-icons-sine-root .zen-icons-open-custom-folder {
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+#zen-icons-sine-root .zen-icons-groups {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#zen-icons-sine-root .zen-icons-group {
+  margin-block: 3px;
+}
+
+#zen-icons-sine-root .zen-icons-group-header {
+  display: block;
+  width: 100%;
+  text-align: start;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+#zen-icons-sine-root .zen-icons-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--zen-icons-grid-size), 1fr)
+  );
+  gap: 4px;
+  padding: 6px 2px 10px;
+}
+
+#zen-icons-sine-root .zen-icons-result {
+  -moz-context-properties:
+    fill, fill-opacity, stroke, stroke-opacity !important;
+  fill: currentColor !important;
+  fill-opacity: 1 !important;
+  stroke: currentColor !important;
+  stroke-opacity: 1 !important;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: var(--zen-icons-grid-size);
+  min-height: var(--zen-icons-grid-size);
+  appearance: none !important;
+  border: 0 !important;
+  border-radius: 6px;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 5px;
+}
+
+#zen-icons-sine-root .zen-icons-result:hover,
+#zen-icons-sine-root .zen-icons-result:focus-visible,
+#zen-icons-sine-root .zen-icons-group-header:hover,
+#zen-icons-sine-root .zen-icons-filter-button:hover,
+#zen-icons-sine-root .zen-icons-filter-button:focus-visible,
+#zen-icons-sine-root .zen-icons-category-link:hover {
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+#zen-icons-sine-root .zen-icons-filter-button:hover,
+#zen-icons-sine-root .zen-icons-filter-button:focus-visible {
+  border-color: currentColor !important;
+}
+
+#zen-icons-sine-root .zen-icons-result:hover,
+#zen-icons-sine-root .zen-icons-result:focus-visible {
+  background: color-mix(in srgb, currentColor 13%, transparent) !important;
+}
+
+#zen-icons-sine-root .zen-icons-result-image {
+  -moz-context-properties:
+    fill, fill-opacity, stroke, stroke-opacity !important;
+  fill: currentColor !important;
+  fill-opacity: 1 !important;
+  stroke: currentColor !important;
+  stroke-opacity: 1 !important;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+}
+
+#zen-icons-sine-root .zen-icons-default-placeholder {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  opacity: 0.55;
+  border-radius: 50%;
+  corner-shape: round !important;
+}
+
+#zen-icons-sine-root .zen-icons-default-placeholder[data-default-shape="circle"] {
+  width: 8px;
+  height: 8px;
+  background: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4));
+  opacity: 1;
+  border-radius: 50% !important;
+}
+
+/* Zen 1.23 vertical-tabs.css paints its no-src favicon with its native blank
+ * asset and toolbar-element background. Reuse that exact presentation for
+ * both new choices and previously persisted blank-tab.svg selections. Leave
+ * live tab dimensions to Zen (including its smaller Glance icons). */
+.tab-icon-image[src="chrome://sine/content/zen-icons-local/blank-tab.svg"],
+#zen-icons-sine-root .zen-icons-native-tab-placeholder {
+  border-radius: 4px;
+  background: var(--zen-toolbar-element-bg, color-mix(in srgb, var(--zen-primary-color) 80%, light-dark(rgb(0, 0, 0), rgb(255, 255, 255))));
+  opacity: 1;
+}
+
+:root[zen-icons-neutral-tab-default] :is(
+  .tab-icon-image:not([src]),
+  .tab-icon-image[src="chrome://sine/content/zen-icons-local/blank-tab.svg"],
+  #zen-icons-sine-root .zen-icons-native-tab-placeholder
+) {
+  background: color-mix(in srgb, var(--zen-mods-neutral-icon-color, #8c8c8c) 80%, light-dark(rgb(0, 0, 0), rgb(255, 255, 255))) !important;
+}
+
+.tab-icon-image[src="chrome://sine/content/zen-icons-local/blank-tab.svg"] {
+  content: url("chrome://browser/skin/zen-icons/blank.svg") !important;
+}
+
+#zen-icons-sine-root .zen-icons-native-tab-placeholder {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.zen-icons-category-artwork {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+}
+
+/* Native consumers do not all constrain arbitrary raster aspect ratios.
+ * Scope this to our custom images; retain Zen's tab/Glance icon dimensions. */
+.tab-icon-image:is([src^="chrome://sine/content/zen-icons-local/custom/"],[src^="chrome://zen-icons-custom/content/"]) {
+  object-fit: contain;
+}
+
+.zen-current-workspace-indicator-icon img:is([src^="chrome://sine/content/zen-icons-local/custom/"],[src^="chrome://zen-icons-custom/content/"]) {
+  width: 16px;
+  height: 16px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+img.zen-workspace-icon:is([src^="chrome://sine/content/zen-icons-local/custom/"],[src^="chrome://zen-icons-custom/content/"]) {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* Previously saved Lucide choices keep their original URI. Supply the missing
+ * stroke paint to native tab/space consumers without rewriting saved state. */
+:is(img, image)[src^="chrome://sine/content/zen-icons-local/lucide/"],
+.tabbrowser-tab[image^="chrome://sine/content/zen-icons-local/lucide/"] .tab-icon-image,
+toolbarbutton[image^="chrome://sine/content/zen-icons-local/lucide/"] .toolbarbutton-icon {
+  -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity !important;
+  stroke: currentColor !important;
+  stroke-opacity: 1 !important;
+  fill: currentColor !important;
+  fill-opacity: 1 !important;
+}
+
+#zen-icons-sine-root .zen-icons-result-emoji {
+  font-size: 23px !important;
+  line-height: 1;
+  padding: 0 !important;
+}
+
+#zen-icons-sine-filter-panel {
+  --panel-padding: 0;
+  --panel-width: min(360px, calc(100vw - 24px));
+}
+
+#zen-icons-sine-filter-panel .zen-icons-filter-menu {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(480px, 70vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+#zen-icons-sine-filter-panel button {
+  appearance: none !important;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-filter-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 7px;
+  margin-block: 3px 12px;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-filter-section > strong {
+  grid-column: 1 / -1;
+  margin-block-end: 2px;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-provider-option {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-category-link {
+  width: 100%;
+  padding: 7px 9px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  text-align: start;
+  font-size: 17px;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-category-icon {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-inline-end: 5px;
+  font-size: 19px;
+  line-height: 1;
+  text-align: center;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-category-link:hover,
+#zen-icons-sine-filter-panel .zen-icons-category-link:focus-visible {
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+#zen-icons-sine-filter-panel .zen-icons-folder-shape {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block: 10px;
+}
+
+#zen-icons-sine-filter-panel .zen-icons-open-custom-folder {
+  appearance: none !important;
+  width: 100%;
+  padding: 8px 10px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/*
+ * Zen releases before the folder stylesheet added stroke context expose only
+ * fill to the nested image. Lucide folder icons use context-stroke, so they
+ * otherwise load and persist correctly while painting transparent.
+ */
+:root[zen-sidebar-expanded]
+  :is(zen-folder, tab-group)
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  > svg {
+  transform: translate(-1px, 0) !important;
+}
+
+:is(zen-folder, tab-group)
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  .icon
+  image {
+  -moz-context-properties:
+    fill, fill-opacity, stroke, stroke-opacity !important;
+  stroke: color-mix(
+    in srgb,
+    var(--zen-folder-stroke) 50%,
+    currentColor
+  ) !important;
+  stroke-opacity: 0.9 !important;
+}
+
+/*
+ * Native Zen hides the inner image and restores the three-dot glyph whenever
+ * a collapsed folder contains the active tab. A selected Zen Icons image is
+ * the folder's identity, so it must remain visible in that native state.
+ */
+:is(zen-folder, tab-group)[zen-icons-has-inner-icon]:not(
+    [zen-icons-custom-unavailable]
+  )
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  .icon {
+  opacity: 1 !important;
+}
+
+:is(zen-folder, tab-group)[zen-icons-has-inner-icon]:not(
+    [zen-icons-custom-unavailable]
+  )
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  .dots {
+  opacity: 0 !important;
+}
+
+:is(zen-folder, tab-group)[zen-icons-hide-folder-shape]:not(
+    [zen-icons-custom-unavailable]
+  )
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  :is(.back, .front, .dots) {
+  opacity: 0 !important;
+}
+
+:is(zen-folder, tab-group)[zen-icons-enlarge-inner-icon]:not(
+    [zen-icons-custom-unavailable]
+  )
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  .icon {
+  opacity: 1 !important;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.36) !important;
+}
+
+:is(zen-folder, tab-group)[zen-icons-recolor-inner-icon]:not(
+    [zen-icons-custom-unavailable]
+  )
+  > .tab-group-label-container
+  > .tab-group-folder-icon
+  svg
+  .icon
+  image {
+  -moz-context-properties:
+    fill, fill-opacity, stroke, stroke-opacity !important;
+  fill: var(--zen-icons-inner-icon-color) !important;
+  fill-opacity: 1 !important;
+  stroke: var(--zen-icons-inner-icon-color) !important;
+  stroke-opacity: 1 !important;
+}

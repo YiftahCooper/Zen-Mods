@@ -1,0 +1,13 @@
+{
+  "version": "Zen 1.23.2b",
+  "gecko": "157.0.1",
+  "buildID": "20261009073723",
+  "sourceStamp": "185e856f68a451dc71988e988bc080c56452ea66",
+  "sources": {
+    "receiver": "5a301f1e2b84ac0a7f30381ac163b9872829c9db8d9c8cfa9c0da09a260ad840",
+    "tab": "f66f37a0f529117ab1f8b15fc75674e6fe9fa46a0bf374c1d3be26ad5ec93f76"
+  },
+  "receiverCommentsChanged": true,
+  "retainedReplay": "Zen 1.22.2b",
+  "basis": "moveTabTo remains byte-identical. The before/after receiver block differs only in JSDoc type annotations; after removing block comments its executable bytes remain identical. The tab index getter remains compatible. Other native behaviour is qualified separately by Round 6 disposable-profile probes."
+}

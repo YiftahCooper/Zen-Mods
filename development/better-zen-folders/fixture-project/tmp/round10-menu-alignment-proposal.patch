@@ -1,0 +1,17 @@
+diff --git a/scripts/better-zen-folders.uc.mjs b/scripts/better-zen-folders.uc.mjs
+--- a/scripts/better-zen-folders.uc.mjs
++++ b/scripts/better-zen-folders.uc.mjs
+@@ -7040,6 +7040,13 @@ function snapshotLiveFolderMenuIcon(host, item, folder, sizePercent = "120") {
+   // The opened folder is skewed within its native viewBox. Keep the individual
+   // shapes and requested glyph size, and move only their combined menu artwork.
++  // BZF already centres the available outline-free 11-unit image at (8, 8)
++  // inside this 27-unit viewBox. Zen Icons and menu scale both preserve that
++  // centre. Do not remeasure that known-centred case in a different viewport.
++  // This is a bounded proposal: native screenshot acceptance is still required.
+   if (sourceSvg.getAttribute?.("viewBox") === "0 0 27 27"
++    && !(folder.hasAttribute?.("zen-icons-enlarge-inner-icon")
++      && !folder.hasAttribute?.("zen-icons-custom-unavailable")
++      && clone.querySelector?.('.icon > image[width="11"][height="11"]'))
+     && clone.querySelector?.(":scope > .front") && typeof clone.getBBox === "function") {
+     const hidden = [];
+     const parent = clone.parentNode, next = clone.nextSibling;

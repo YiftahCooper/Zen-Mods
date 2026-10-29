@@ -1,0 +1,13 @@
+{
+  "version": "Zen 1.22.3b",
+  "gecko": "156.0.1",
+  "buildID": "20260922050124",
+  "sourceStamp": "ca522d448d3df8a0d264ea0ceafc9c684c36ea6a",
+  "sources": {
+    "receiver": "52df5eb071a4474eae9fb46ee4c150d2865db4b16e376016e2338936ce2bad03",
+    "tab": "0d2115030f11390303f84c962f82746f1ddbbb6332fc6ba3a0313a3d88fd22bf"
+  },
+  "retainedReplay": "Zen 1.22.2b",
+  "review": "artifacts/alpha-native-review/review.md",
+  "basis": "Byte-identical moveTabTo and retained before/after receiver block; whole tab.js is byte-identical. This is a bounded replay identity, not a whole-browser compatibility claim."
+}

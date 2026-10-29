@@ -1,0 +1,585 @@
+{
+  "scope": "Checked-in regression inputs; no browser profile or installed-mod source duplication. Runtime baseline is identified separately.",
+  "files": [
+    {
+      "path": "tests/animation-review.test.mjs",
+      "bytes": 33301,
+      "sha256": "cfa3429b65b7d638de91e6d2be144c5f24efbfe65d50fbb3bb558c4f21461bc4"
+    },
+    {
+      "path": "tests/colour-cancel-regression.test.mjs",
+      "bytes": 22040,
+      "sha256": "b9afc4c75854ef800db4290a604af48682322c3499b983a5dad087db04754ed5"
+    },
+    {
+      "path": "tests/command-icon-modes.test.mjs",
+      "bytes": 7188,
+      "sha256": "942558fbb3c125f0807111556acfe90bdfc966a51d7dbadb2958aca974cfd765"
+    },
+    {
+      "path": "tests/command-icon-rendering.test.mjs",
+      "bytes": 5582,
+      "sha256": "96e481a7f575a8bc7bd96029eb85617b399b4299218a03659fab3e1b1cc446e6"
+    },
+    {
+      "path": "tests/controller.test.mjs",
+      "bytes": 26090,
+      "sha256": "305d8a514527647e46a9ace0520f6ae39c4393759cdb7f3a1c15090c11e547bc"
+    },
+    {
+      "path": "tests/css-rendering.test.mjs",
+      "bytes": 26775,
+      "sha256": "9ab4178ed79eaa8036440c6c84104d53e0fc2b2d4496dffc39b8e94020770cf9"
+    },
+    {
+      "path": "tests/destination-delay-settings.test.mjs",
+      "bytes": 3779,
+      "sha256": "c8497baa42a726c5d936d35859cd3c1e530373ff34e78eb21c4500063beaa659"
+    },
+    {
+      "path": "tests/drag-destination-colours.test.mjs",
+      "bytes": 1614,
+      "sha256": "766e3e558b50fea85867cc2bbb2b42e85f1bda21b940bf68e9362347a38ea92d"
+    },
+    {
+      "path": "tests/drag-diagnostics.test.mjs",
+      "bytes": 15653,
+      "sha256": "9eccb92c66c53185a635f0b57bd642126a8f818b4f8af8485a762e29eaea3a3b"
+    },
+    {
+      "path": "tests/drag-guard.test.mjs",
+      "bytes": 22772,
+      "sha256": "a388279cc79ddc78c08c21493611c6cd28375e221d57a5dda7bcf549613b62a5"
+    },
+    {
+      "path": "tests/empty-folder.test.mjs",
+      "bytes": 10225,
+      "sha256": "99326b3a692b32985a2e1a9ce9a4bd2e2c398c6bfd8eb73fe123613b50a3e7af"
+    },
+    {
+      "path": "tests/fakes.mjs",
+      "bytes": 99772,
+      "sha256": "4711f43a5c2b413e474207d5839452552d3a1ea6282a5210dad166e4c0f625e1"
+    },
+    {
+      "path": "tests/fixtures/cmi-command-icon-contract.json",
+      "bytes": 5656,
+      "sha256": "bcc232073f1fda2f0ee917a87f2d4f32737c2580b5dfff77476cf770432bcc25"
+    },
+    {
+      "path": "tests/fixtures/zen-1.22.2b-folder-animation.mjs",
+      "bytes": 13251,
+      "sha256": "47546b2d85ebd748310f06aece414db930f07cded083366b58bb0ccff250c1f7"
+    },
+    {
+      "path": "tests/fixtures/zen-1.22.2b-folder-drop.json",
+      "bytes": 35711,
+      "sha256": "6a3c31a1d372eb9164d863918ba72ba7df33295be380708cd732bd2069fbc9b6"
+    },
+    {
+      "path": "tests/fixtures/zen-1.22.2b-folder-preview.mjs",
+      "bytes": 7216,
+      "sha256": "cebed5f4ac701602a0cbffed5268cd57b5dc6bb512ea32c716e5d4efa92da77e"
+    },
+    {
+      "path": "tests/fixtures/zen-1.22.2b-new-tab.mjs",
+      "bytes": 7643,
+      "sha256": "0294298e7800615a13d9bc16085a6432c95f3d93b84786583a9fce132d9961cb"
+    },
+    {
+      "path": "tests/fixtures/zen-1.22.3b-moved-tabs-identity.json",
+      "bytes": 606,
+      "sha256": "7f91096b4a9ce20d42aa5723f780dd7a577abed33155f3e4d128f9f20695ff8c"
+    },
+    {
+      "path": "tests/fixtures/zen-1.23.2b-folder-paint.css",
+      "bytes": 815,
+      "sha256": "952b60355f4349d40525b18d95ffed6115ef1984321dfa2dcafc39d640111f1d"
+    },
+    {
+      "path": "tests/fixtures/zen-1.23.2b-moved-tabs-identity.json",
+      "bytes": 712,
+      "sha256": "3cbb10a6d200459afe1a37e23d36769463f1605c2cb695351e5206926c3fe71c"
+    },
+    {
+      "path": "tests/fixtures/zen-1.23.3b-moved-tabs-identity.json",
+      "bytes": 821,
+      "sha256": "78316d00b8f40240d76a48cb6d89ceef94740104cd6f0cd1939939db10c27b4e"
+    },
+    {
+      "path": "tests/fixtures/zen-1.23.4b-moved-tabs-identity.json",
+      "bytes": 823,
+      "sha256": "7bbf58baa3991472b7ac73f9d5e4317689ef7e63138cb72bc4eb342fb7b85d35"
+    },
+    {
+      "path": "tests/folder-colour.test.mjs",
+      "bytes": 37133,
+      "sha256": "a42e1731bbf22fc07a65c16acbbb11050cdc9c9e6d021c9616ee5c71a3845ada"
+    },
+    {
+      "path": "tests/folder-end-drop-internal.browser.test.mjs",
+      "bytes": 9945,
+      "sha256": "9b067c006e83091d96649549ff319594ab50064538496e1eb8fd40f4a8cf17c1"
+    },
+    {
+      "path": "tests/folder-end-drop-internal.test.mjs",
+      "bytes": 4408,
+      "sha256": "c64e119fde831b3c139e6105b7b0ee222d29575df132c9b039419ff931cee176"
+    },
+    {
+      "path": "tests/folder-end-drop-round4.test.mjs",
+      "bytes": 8218,
+      "sha256": "2cef4c446b7d204c917dbaae33bee7cb7f4b51d3ab60cc49dbb131f4a637605f"
+    },
+    {
+      "path": "tests/folder-end-drop-round5.test.mjs",
+      "bytes": 3695,
+      "sha256": "160ddd54625a65ddbd9ccfc6eb3c7146269a88760657547f810c9e06239674b3"
+    },
+    {
+      "path": "tests/folder-end-drop-round6.test.mjs",
+      "bytes": 16523,
+      "sha256": "be1b014d8012db4dbc7cffa3da595d4564d6d8eb79a5a621e10f18f3d353c367"
+    },
+    {
+      "path": "tests/folder-end-drop-round8.test.mjs",
+      "bytes": 5816,
+      "sha256": "5121fc3aeb47af0db0fed03da28007f630f52806e03f1688f787e6484f5b6faa"
+    },
+    {
+      "path": "tests/folder-end-drop.browser.test.mjs",
+      "bytes": 13484,
+      "sha256": "950b5879bb45d7baecf78a7ca966f38a83dbd3894b9605f33babc140d4b77db5"
+    },
+    {
+      "path": "tests/folder-end-drop.fixture.mjs",
+      "bytes": 13726,
+      "sha256": "f3409cb03160fc0b385ee9191c68b80c10ffb7c2565f024659203458ff69cdb1"
+    },
+    {
+      "path": "tests/folder-end-drop.native.fixture.mjs",
+      "bytes": 4243,
+      "sha256": "96f9d737be554de896291dd2547cb9730647feee5e2dcc65082caf2253bdbf6b"
+    },
+    {
+      "path": "tests/folder-end-drop.test.mjs",
+      "bytes": 20210,
+      "sha256": "9cdebf4c6dfa5bbc5b2ebd5a4c1cc492a83a07ffc7904e3ba05e9eecc2e5164f"
+    },
+    {
+      "path": "tests/folder-menu-decoration.test.mjs",
+      "bytes": 17922,
+      "sha256": "37a1f5494f4534665e5b3b67363dde7a086476015c5d3b07d99ff49cf9d0b839"
+    },
+    {
+      "path": "tests/folder-move-menu.browser.test.mjs",
+      "bytes": 5901,
+      "sha256": "1b3226b35b794c0c6cdfdf662f2d6246b33589cff5de61ba84f0c7963cb26423"
+    },
+    {
+      "path": "tests/folder-move.test.mjs",
+      "bytes": 10673,
+      "sha256": "2d4ef15769021183a4b9bf67a9120af1a40cb76958207f33f3b5a46440dbc903"
+    },
+    {
+      "path": "tests/folder-navigation.test.mjs",
+      "bytes": 25162,
+      "sha256": "6ef745c198234edb4ac5db5b5752514f5ec5bae3e8f9f561afa410ee76d184c0"
+    },
+    {
+      "path": "tests/folder-new-tab-menu.test.mjs",
+      "bytes": 4160,
+      "sha256": "ca4f5c521feec8845b9cd97a087743e593b16f9c833b6a72892bb1166c2d52ed"
+    },
+    {
+      "path": "tests/folder-pin-activation.test.mjs",
+      "bytes": 6285,
+      "sha256": "80ceba2e596c490a76be76e332ff797bad4c7fdac9d9365f71d2c09f112cdd04"
+    },
+    {
+      "path": "tests/folder-pin-adapters.test.mjs",
+      "bytes": 24373,
+      "sha256": "7ec2d4f6681d329f36f6332d2f63ae6e651215a30a7a009226eabfe56a8c4426"
+    },
+    {
+      "path": "tests/folder-pin-grace.test.mjs",
+      "bytes": 2885,
+      "sha256": "a443cc76f8b5dc55fefbe05dabb1b21e4d022936e2300dc80663205a3a078b4c"
+    },
+    {
+      "path": "tests/folder-pin-hooks.test.mjs",
+      "bytes": 8653,
+      "sha256": "e015f944472000f901e9ff328d0abf07414d88bc4526c8a11b7ab42036f4bdf9"
+    },
+    {
+      "path": "tests/folder-pin-intent.test.mjs",
+      "bytes": 8178,
+      "sha256": "22493dc5e6b92653f9411aebe6135d32c0bf662c0e1767f61ce4b4c1c94720f6"
+    },
+    {
+      "path": "tests/folder-pin-lifecycle.test.mjs",
+      "bytes": 6658,
+      "sha256": "258ff802cea0aa277a5118bc321cb7cec479f095e187df4e7807613c75cbfe2f"
+    },
+    {
+      "path": "tests/folder-pin-menu.test.mjs",
+      "bytes": 6536,
+      "sha256": "8031145f72134e9498e05f2d948ce317b47be6be83b2bec78c3e88d3bfaab6cd"
+    },
+    {
+      "path": "tests/folder-pin-origins.test.mjs",
+      "bytes": 11067,
+      "sha256": "3347f24cb29b351385df253deff4af2fc6ce13aba455e89caa002d620fb6de20"
+    },
+    {
+      "path": "tests/folder-pin-policy.test.mjs",
+      "bytes": 10859,
+      "sha256": "7320e54183babfa9a76273cf9e34668ba7ee06d13ccd5af2ee13f0a5882b36e4"
+    },
+    {
+      "path": "tests/folder-pin-presentation.test.mjs",
+      "bytes": 6758,
+      "sha256": "6b8ee0dfd838894b31a08ee508c7afafdfea8701b8eab70338f3481b7339eee5"
+    },
+    {
+      "path": "tests/folder-pin-recovery.test.mjs",
+      "bytes": 2854,
+      "sha256": "b5caed90bb7a0758f678d1a37b84da6e41853f767b59e47996541d32eab4d858"
+    },
+    {
+      "path": "tests/folder-pure-unload.test.mjs",
+      "bytes": 6969,
+      "sha256": "ac148575b56994817206edf57b68e6137292111feb410abfed7cec3847c085a9"
+    },
+    {
+      "path": "tests/folder-rename.test.mjs",
+      "bytes": 16101,
+      "sha256": "b07865908be2db910894057656687c68c5ad3cceaa2e135678691b1c78e8d66f"
+    },
+    {
+      "path": "tests/folder-space-colour.test.mjs",
+      "bytes": 3453,
+      "sha256": "3e6f642ca2a48843c71a239955c3fb6b17af00b9d792b6ff9c661eb0f8fd49be"
+    },
+    {
+      "path": "tests/grouped-preview.test.mjs",
+      "bytes": 20942,
+      "sha256": "5f8d59ef686303a104cc5337fa36eb5138f543c0a20765ea6dc15f8a56e55462"
+    },
+    {
+      "path": "tests/guide-patterns-round11.test.mjs",
+      "bytes": 18427,
+      "sha256": "dc5b37dae2fd723234eb48567ac685307d629bcfc6952373fcaa0b5f3af459bf"
+    },
+    {
+      "path": "tests/header-drop-round12.test.mjs",
+      "bytes": 6948,
+      "sha256": "af2c27bcd8dff14fad36ac6715592dd7772abbc060250f145d12b4db5c3463e0"
+    },
+    {
+      "path": "tests/initial-folder-tab.test.mjs",
+      "bytes": 9495,
+      "sha256": "d59a65ecf3d117a6e07c5aee54cbfea3f142b0e445765f9d2ac565033728c882"
+    },
+    {
+      "path": "tests/menu-icon-alignment-round10.test.mjs",
+      "bytes": 13837,
+      "sha256": "ae1f3ae59f72611ff56839b1406db035d9b999e185c6be8e4a97a52d51f22f71"
+    },
+    {
+      "path": "tests/menu-icon-alignment-round9.test.mjs",
+      "bytes": 18724,
+      "sha256": "d92360547f9f212f3d594b553df98b65458ddccf004df5dfd5d699e8a2950db7"
+    },
+    {
+      "path": "tests/metadata-sync.test.mjs",
+      "bytes": 16319,
+      "sha256": "642dce116a2e83fd6664205235e9ecdefbdfae728121e38dac598c5364436fb1"
+    },
+    {
+      "path": "tests/moved-tabs-round11.test.mjs",
+      "bytes": 28282,
+      "sha256": "bfe6915dc6e77428ecee81d93d5ae79ef5b07c4dec76f1a8ad97e8f3e64fb8a4"
+    },
+    {
+      "path": "tests/native-folder-menu-icons.test.mjs",
+      "bytes": 4500,
+      "sha256": "019d9dee1a6e8fe34ff7057d5dad6db9348fd9df83659f5e2bf8316fd38729ce"
+    },
+    {
+      "path": "tests/new-tab-session.test.mjs",
+      "bytes": 10088,
+      "sha256": "fbcd6fcc7eabf32285d1d7f79252f99c4bb109f4606fe445ad8c2ce2165ecc8a"
+    },
+    {
+      "path": "tests/outline-free-alignment.test.mjs",
+      "bytes": 5642,
+      "sha256": "ec8f30eaca9436fadfff1c4f24d15c3df9ab23e73f560309102931894b608ab1"
+    },
+    {
+      "path": "tests/palette-round11.test.mjs",
+      "bytes": 7108,
+      "sha256": "63d0790928c18cdd94f96eaa5127a05e04734a982217f74c917fde6b3fb19f6d"
+    },
+    {
+      "path": "tests/palette-settings.test.mjs",
+      "bytes": 9368,
+      "sha256": "f260c958ae5040161dd25545aa4c634661b1175526a6ccd6dbf627f69986621a"
+    },
+    {
+      "path": "tests/preferences.test.mjs",
+      "bytes": 18376,
+      "sha256": "4447682c89c73d8f3947a5694779db8af514d3449a7ca5d38a5ba6d57a5a3cad"
+    },
+    {
+      "path": "tests/preset-binding.fixture.mjs",
+      "bytes": 2090,
+      "sha256": "f21bd6ba91ca573693d95ecb9950d5b186f3d182519dd81bb6b6763993502011"
+    },
+    {
+      "path": "tests/preset-binding.test.mjs",
+      "bytes": 12567,
+      "sha256": "5b07eb8de3f5076f9bf205cd820725ab5328d0df18be6cfaf253142207d7bd3c"
+    },
+    {
+      "path": "tests/preview-anchor.test.mjs",
+      "bytes": 10158,
+      "sha256": "29786bc67ccf8b856116fda58c3d32f5d3fa041438af98fb9438a9df26f4baf4"
+    },
+    {
+      "path": "tests/related-folder-tabs.test.mjs",
+      "bytes": 12826,
+      "sha256": "1d448abc2a73514a635eb88f99192ff6cde950c1e1b04438f78daa7b3a39dde7"
+    },
+    {
+      "path": "tests/rename-exit.test.mjs",
+      "bytes": 18920,
+      "sha256": "bca3aaf2bdc99183feba70120e0c0ac20d976c609b0b71e8650b8ccde9fd733e"
+    },
+    {
+      "path": "tests/restore-ledger.test.mjs",
+      "bytes": 136180,
+      "sha256": "e55a703a4ac17f893a93ff9edf7ab61e767ab350de9b911a44db648327e87b81"
+    },
+    {
+      "path": "tests/round4-colour-diagnostics.test.mjs",
+      "bytes": 15871,
+      "sha256": "d007659c85acd1e84350828eafb09bc7f942a1318a8dcb22bee6599b66e95c24"
+    },
+    {
+      "path": "tests/round5-colour-menu-resources.test.mjs",
+      "bytes": 13356,
+      "sha256": "c6b70f65dca8ecf3f884d7647f72b610ef1d68d15449eb9e570a2126b6e2159c"
+    },
+    {
+      "path": "tests/round5-menu.test.mjs",
+      "bytes": 11320,
+      "sha256": "1e5ae2500f26383d8fd0f9123be70f710e097512fb471ae85d5f94b56498d048"
+    },
+    {
+      "path": "tests/round6-paint.test.mjs",
+      "bytes": 4304,
+      "sha256": "db85fdd64bf6ae68ac6a9a2a915cba6c28cb11be65023c9855c0d4a47145ac87"
+    },
+    {
+      "path": "tests/round6-settings.test.mjs",
+      "bytes": 6903,
+      "sha256": "808258f81da7e459207301d1f2eaeab2a87fa216196d0de10318fd68fcf35336"
+    },
+    {
+      "path": "tests/round7-custom-colour.test.mjs",
+      "bytes": 15697,
+      "sha256": "1da8855828cb2da81e778d1d7c72d5f0cc51325da08735008e4f0d912174cc8e"
+    },
+    {
+      "path": "tests/round7-unload-button.test.mjs",
+      "bytes": 5034,
+      "sha256": "421072dfb6b28014cd488e91612d2ea1cf08c8610036b75b0d2e0ddfb957d503"
+    },
+    {
+      "path": "tests/sidebar-optical-spacing.test.mjs",
+      "bytes": 21567,
+      "sha256": "89dbeae5928757d5434ef9a3d6d3c033e4d4533a11f7ee384130f111d86c539f"
+    },
+    {
+      "path": "tests/space-move-menu.test.mjs",
+      "bytes": 11828,
+      "sha256": "f81a840e86d7deef1854fe48d019f0bd91800e2d9e8f24081bb8004c1fe0015d"
+    },
+    {
+      "path": "tests/space-native-layout.test.mjs",
+      "bytes": 11003,
+      "sha256": "a8ffaa3b942ca0c0f9e4c885faf7c8d6e319a8d797c44237e6fca33e4c5d4a66"
+    },
+    {
+      "path": "tests/sports-layout.test.mjs",
+      "bytes": 17205,
+      "sha256": "6caf96eff65f099ed7a6283504f1fe9f1144d499fef3887fbf1154a1cde89040"
+    },
+    {
+      "path": "tests/staging.test.mjs",
+      "bytes": 4308,
+      "sha256": "530fed6204b001f2d8157d43eb560c65a0c4540c1214f5d7df58de4b567d9658"
+    },
+    {
+      "path": "tests/sticky-browser.test.mjs",
+      "bytes": 72009,
+      "sha256": "d4181851795534f4311a5e937f7c058b094bcdf786496170d7f754c25771fe80"
+    },
+    {
+      "path": "tests/sticky-corner-round4.test.mjs",
+      "bytes": 3410,
+      "sha256": "5c5ee649cb6fc6531e126a02c5d43d658e04d01b796d12f33f881ea0c2545c39"
+    },
+    {
+      "path": "tests/sticky-guide-level.test.mjs",
+      "bytes": 3916,
+      "sha256": "1fb5a77aa2aa6f410f900940d7bbfdeaaa34b60231fdc5ef8238a28fa6c741ea"
+    },
+    {
+      "path": "tests/sticky-menu-marker.test.mjs",
+      "bytes": 2894,
+      "sha256": "c9f7a21e2fcc01555c7eb6937cda212ce9d028052719e0704fb0afb0b960f481"
+    },
+    {
+      "path": "tests/sticky-menu-regression.test.mjs",
+      "bytes": 9448,
+      "sha256": "2386d12db8baf5f5fffd7f3143b14391e8ae146ff5e4001a5f7ed317d1aa4ddd"
+    },
+    {
+      "path": "tests/sticky-menu-rendering.test.mjs",
+      "bytes": 17118,
+      "sha256": "4028f991c04c2fbf2c33edcd5a5da39354d804bb9bc886a3cb87f7561e566e45"
+    },
+    {
+      "path": "tests/sticky-recovery-round6.test.mjs",
+      "bytes": 3447,
+      "sha256": "99a7f69e37d7b5d5e66d7253def92d463bf2ac53e178d200475f1bf0828dbde0"
+    },
+    {
+      "path": "tests/sticky-state.test.mjs",
+      "bytes": 3308,
+      "sha256": "59ad4c5338a9ba8f43db544492f8eba66d7d32d82d172f9fdf7c1be012a49d02"
+    },
+    {
+      "path": "tests/sticky-underline.test.mjs",
+      "bytes": 9072,
+      "sha256": "a21f3c34ac7c00256c9e3f549124c4ed334ac296dc21b2eeec4dfe6a6b6d61c1"
+    },
+    {
+      "path": "tests/sticky-visibility.test.mjs",
+      "bytes": 4216,
+      "sha256": "5850c21017d8ffd5667d6e26366523b96ab317e4e8f579e31f71819b9990c8c0"
+    },
+    {
+      "path": "tests/subfolder-creation.test.mjs",
+      "bytes": 11378,
+      "sha256": "422fb67a6113e72e936386887aae89b0a6fd57f0f933d2dac82aa4968e2072cc"
+    },
+    {
+      "path": "tests/test_package.py",
+      "bytes": 28469,
+      "sha256": "af4741cee789b2390edda92984f233d55db1ba5c208b9635d34ccb3ba5838218"
+    },
+    {
+      "path": "tests/theme-colours.test.mjs",
+      "bytes": 3249,
+      "sha256": "52c4aa2c6e2d2bd579eb454b4085c9156df2abc5c2902afe6e59dceb6cb2923a"
+    },
+    {
+      "path": "tests/unloaded-drag-placement.test.mjs",
+      "bytes": 1909,
+      "sha256": "0af54a512e2c3ac3d11414209e3cb737ac033bbf3279db4c36eb1aae029ca6fb"
+    },
+    {
+      "path": "tests/workspace-sticky.test.mjs",
+      "bytes": 26423,
+      "sha256": "b9e0e04e81232fcaca435787c1b890f8d1185b80c67a1a34665b716826bb9fbe"
+    },
+    {
+      "path": "fixtures/sine/preferences.sys.mjs",
+      "bytes": 11083,
+      "sha256": "390d5a67d4b113daf102099c85f9c781cd4452832c12d1a4cbd0a9221ce3ecd3"
+    },
+    {
+      "path": "fixtures/sine/settings.css",
+      "bytes": 11421,
+      "sha256": "718b695c2de3e274eb4791915b2b226394cf5747bb6ac6efc8b1f4dbf716904a"
+    },
+    {
+      "path": "fixtures/zen-icons/folder-presentation.mjs",
+      "bytes": 3980,
+      "sha256": "947bfcf4a9d106af02d76d0a44bb40b04cfd4f6ddf7905185c0c6c8516ca4022"
+    },
+    {
+      "path": "fixtures/zen-icons/LICENSE-LUCIDE-ISC.md",
+      "bytes": 3208,
+      "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+    },
+    {
+      "path": "fixtures/zen-icons/sine/zen-icons/chrome.css",
+      "bytes": 15395,
+      "sha256": "7de1a6fb10718d19918ec57d985ec6dd9cce176a6848f461d81501a129f604c6"
+    },
+    {
+      "path": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/lucide/eclipse.svg",
+      "bytes": 581,
+      "sha256": "7d3f3a8a1c8ef893d2220da47a07be0e8f743a6d3a0be545394049a844440b18"
+    },
+    {
+      "path": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/selectable/square.svg",
+      "bytes": 562,
+      "sha256": "024af828681ab2d5266e0dd50e360f371ce5e2ffc27d1fe82c299b36bd7d36bd"
+    },
+    {
+      "path": "fixture-project/artifacts/native-20260915/tab.js",
+      "bytes": 37819,
+      "sha256": "0d2115030f11390303f84c962f82746f1ddbbb6332fc6ba3a0313a3d88fd22bf"
+    },
+    {
+      "path": "fixture-project/artifacts/native-20260915/zen-folders.css",
+      "bytes": 8572,
+      "sha256": "8324e161406ed419ce8e49a3548839a370bb1b9422f818934acb34b5aad8f966"
+    },
+    {
+      "path": "fixture-project/artifacts/native-20260915/ZenFolder.mjs",
+      "bytes": 10380,
+      "sha256": "5fb5b63382cadeac0ebf8266e16cfa3b78856989458817b4b095c9cde55ff32e"
+    },
+    {
+      "path": "fixture-project/artifacts/native-20260915/ZenFolders.mjs",
+      "bytes": 68399,
+      "sha256": "82c447785ee802eccee25791d43c6f1074aa97e4fcf0a3e7e1c21c7056260a46"
+    },
+    {
+      "path": "fixture-project/artifacts/releases/20260921T152454Z-v0.3.6-round2-890c0fbf/package/scripts/better-zen-folders.uc.mjs",
+      "bytes": 323269,
+      "sha256": "775e63ee26e0551d783df3a2bb24667202441691e53ad745e398b00244101e20"
+    },
+    {
+      "path": "fixture-project/artifacts/releases/20260922T055656Z-v0.3.11-round2-6b597aa8/package/chrome.css",
+      "bytes": 24877,
+      "sha256": "85572605102c68c577dfa46eaf1a40486a68d967adf2a60e72752733e5c033f0"
+    },
+    {
+      "path": "fixture-project/artifacts/round3-review/native/drag-and-drop.js",
+      "bytes": 112175,
+      "sha256": "7b673832efc9674215cf14c087242fcebf6f74a1e7d1c6e132b6485b1e7bafc1"
+    },
+    {
+      "path": "fixture-project/artifacts/round3-review/native/ZenDragAndDrop.js",
+      "bytes": 74408,
+      "sha256": "77bf730cff5826b41034a82771ca79d01425168ce1bc18d35adf804d2cf46aa1"
+    },
+    {
+      "path": "fixture-project/artifacts/task-8-root-cause/omni/chrome/browser/content/browser/zen-styles/zen-tabs/vertical-tabs.css",
+      "bytes": 34284,
+      "sha256": "768d84fd7fe13ba6433f88d251411c1cd1dc1f46f62fc3bc1e499e1441db4855"
+    },
+    {
+      "path": "fixture-project/tmp/round10-menu-alignment-proposal.patch",
+      "bytes": 1188,
+      "sha256": "0c731c1299db74793d860611512b803748d51baa8bfa669d1de7544870137d14"
+    }
+  ]
+}

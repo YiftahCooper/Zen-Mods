@@ -1,0 +1,37 @@
+const done=arguments[arguments.length-1];
+(async()=>{
+ const w=Services.wm.getMostRecentWindow('navigator:browser'),pause=ms=>new Promise(r=>w.setTimeout(r,ms));
+ const wait=async(fn,label)=>{for(let i=0;i<350;i++){if(fn())return;await pause(25);}throw Error('Timeout '+label);};
+ const assert=(ok,why)=>{if(!ok)throw Error(why);};
+ await wait(()=>w.__betterZenFoldersController?.started,'BZF controller');
+ let pins=w.__betterZenFoldersFolderPins;
+ if(Services.prefs.getBoolPref('better-zen-folders.folder-url-pins-enabled',false))await wait(()=>pins?.origins?.active,'pin policy');
+ const base=Services.prefs.getStringPref('bzf.proof.base-url'),url=base+'/new-folder-tab';
+ const original=w.gBrowser.addTrustedTab(base+'/outside');w.gBrowser.selectedTab=original;
+ await wait(()=>original.linkedBrowser.currentURI.spec===base+'/outside'&&!original.linkedBrowser.webProgress.isLoadingDocument,'outside origin loaded');
+ const a=w.gBrowser.addTrustedTab('about:blank'),b=w.gBrowser.addTrustedTab('about:blank');
+ const folder=await w.gZenFolders.createFolder([a,b],{renameFolder:false,label:'Synthetic direct creation',insertBefore:a});
+ w.gBrowser.selectedTab=original;await pause(250);
+ const before=new Set(w.gBrowser.tabs),events=[],frames=[];
+ const witness=e=>{if(!before.has(e.target))events.push({id:e.target.id,group:e.target.group?.id??null,pinned:e.target.pinned});};
+ w.gBrowser.tabContainer.addEventListener('TabOpen',witness,true);
+ const button=folder.querySelector('.better-zen-folders-new-tab-button');assert(button,'actual folder plus missing');
+ button.doCommand();await wait(()=>w.gURLBar.hasAttribute('zen-newtab'),'owned new-tab dialogue');
+ const manager=w.__betterZenFoldersController.adapters.managers.find(m=>m.constructor.name==='RelatedFolderTabsManager');
+ const method={handleCommand:typeof w.gURLBar.handleCommand,load:typeof w.gURLBar._loadURL,parent:typeof w.gURLBar.parentController?.loadURL};
+ // Follow the native URL-bar result-activation path, not direct addTab.
+ await w.gURLBar.search(url);await pause(500);
+ const watch=()=>{for(const t of w.gBrowser.tabs)if(!before.has(t))frames.push({group:t.group?.id??null,normal:!!t.closest('.zen-workspace-normal-tabs-section'),selected:t.selected});};
+ let sampling=true;const sample=()=>{watch();if(sampling)w.requestAnimationFrame(sample);};w.requestAnimationFrame(sample);
+ w.gURLBar.handleCommand();
+ await wait(()=>Array.from(w.gBrowser.tabs).some(t=>!before.has(t)),'new tab creation');
+ const opened=Array.from(w.gBrowser.tabs).find(t=>!before.has(t));
+ await wait(()=>!w.gURLBar.hasAttribute('zen-newtab'),'new-tab confirmation');
+ await pause(300);sampling=false;w.gBrowser.tabContainer.removeEventListener('TabOpen',witness,true);
+ assert(events.length===1,'unexpected created tabs '+JSON.stringify(events));
+ assert(events[0].group===folder.id,'TabOpen exposed regular-area placement: '+JSON.stringify({events,method,frames:frames.slice(0,8)}));
+ assert(frames.every(f=>f.group===folder.id&&!f.normal),'a rendered frame escaped the folder: '+JSON.stringify(frames));
+ assert(opened.group===folder&&w.gBrowser.selectedTab===opened,'final placement/selection wrong');
+ await pins?.origins?.flush();
+ return {method,events,frameCount:frames.length,allFramesInFolder:frames.every(f=>f.group===folder.id&&!f.normal),finalGroup:opened.group?.id,folder:folder.id};
+})().then(done,error=>done({error:String(error),stack:error.stack}));
