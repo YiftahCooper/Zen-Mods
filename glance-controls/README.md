@@ -46,3 +46,5 @@ Without JavaScript, Copy URL and ordering are unavailable. The native buttons st
 If settings don't take effect after installation, restart Zen. Very large buttons may not fit a small Glance panel; reduce their size or hide some buttons.
 
 Inspired by [psu's Left Side Glance Buttons](https://github.com/psu/zen-mods). [MIT license](LICENSE). [All mods](../README.md).
+
+For source layout, native tests and screenshot capture, see [Developing Glance Controls](development/README.md).
