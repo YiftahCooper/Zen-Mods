@@ -1,0 +1,5 @@
+# The repository's runtime-only ignores must not hide new development inputs.
+!better-zen-folders/tests/
+!better-zen-folders/tests/**
+!better-zen-folders/fixture-project/artifacts/
+!better-zen-folders/fixture-project/artifacts/**
