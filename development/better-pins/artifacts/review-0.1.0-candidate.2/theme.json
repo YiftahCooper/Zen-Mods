@@ -1,0 +1,13 @@
+{
+  "id":"8b9899ae-f2a9-47da-8d85-14c1d2be5361",
+  "name":"Better Pins",
+  "version":"0.1.0-candidate.2",
+  "description":"Experimental independent URL pins and upper/lower tab zones. Disposable test profiles only.",
+  "author":"Yiftah Cooper",
+  "ai":"yes",
+  "fork":["zen"],
+  "supportsUnload":true,
+  "style":{"chrome":"chrome.css"},
+  "preferences":"preferences.json",
+  "scripts":{"scripts/better-pins.uc.mjs":{"name":"Better Pins controller","include":["chrome://browser/content/browser.xhtml","about:preferences([?#].*)?","about:settings([?#].*)?"]}}
+}

@@ -1,0 +1,10 @@
+export function installSettingsLabels(host){
+ const style=host.document.createElementNS('http://www.w3.org/1999/xhtml','style');style.textContent="/* Keep these layout rules inside this mod's own Sine dialog. */\ndialog.sineItemPreferenceDialog:has(#better-pins-menu-icons) {\n  width: min(760px, calc(100vw - 48px)) !important; min-width: 0 !important;\n  max-height: calc(100vh - 48px) !important; box-sizing: border-box;\n  background: Canvas !important; color: CanvasText !important;\n  animation: none !important; transform: none !important;\n}\ndialog.sineItemPreferenceDialog[open]:has(#better-pins-menu-icons) { visibility: visible !important; opacity: 1 !important; }\ndialog:has(#better-pins-menu-icons) .sineItemPreferenceDialogContent {\n  width: auto !important; min-width: 0 !important; max-width: none !important;\n  max-height: calc(100vh - 150px); overflow-y: auto; overflow-x: hidden; padding-inline-end: 10px;\n}\ndialog:has(#better-pins-menu-icons) .sineItemPreferenceDialogContent > hbox { align-items: center; gap: 16px; padding-block: 9px; }\ndialog:has(#better-pins-menu-icons) .sineItemPreferenceLabel { flex: 1; min-width: 0; white-space: normal; line-height: 1.4; }\ndialog:has(#better-pins-menu-icons) .separator-label { position: static; transform: none; display: block; margin: 14px 0 2px; padding: 0; font-size: 1.05em; font-weight: 600; color: inherit; background: transparent; }\ndialog:has(#better-pins-menu-icons) .sineItemPreferenceDialogContent vbox > hr { display: none; }\ndialog:has(#better-pins-menu-icons) menulist { max-width: 270px; min-width: 190px; }\n";host.document.documentElement.appendChild(style);
+ const refresh=()=>{for(const row of host.document.querySelectorAll('[id^="better-pins-"]')){
+  const label=row.querySelector('.sineItemPreferenceLabel'),input=row.querySelector('checkbox,menulist');
+  if(!label||!input)continue;
+  if(!label.id)label.id=row.id+'-label';input.setAttribute('aria-labelledby',label.id);
+ }};
+ const observer=new host.MutationObserver(refresh);observer.observe(host.document.documentElement,{childList:true,subtree:true});refresh();
+ return ()=>{observer.disconnect();style.remove();};
+}

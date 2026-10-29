@@ -1,0 +1,6 @@
+[
+  {"type":"separator","label":"Better Pins — Experimental Candidate"},
+  {"type":"checkbox","property":"better-pins.pin-new-upper-tabs","label":"Pin URLs for New Upper-Zone Tabs","defaultValue":true},
+  {"type":"checkbox","property":"better-pins.pin-new-upper-folder-tabs","label":"Pin URLs for New Upper-Zone Folder Tabs","defaultValue":false},
+  {"type":"checkbox","property":"better-pins.show-folder-unload-button","label":"Show Unload Button on Folder Rows","defaultValue":false}
+]

@@ -1,0 +1,20 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';
+import {join,resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {prepareReviewProfile} from '../scripts/prepare-review-profile.mjs';
+test('fresh review profiles verify inputs and never reuse an existing profile',()=>{
+ mkdirSync('.backup-scratch/tests',{recursive:true});const root=mkdtempSync(resolve('.backup-scratch/tests/profile-test-'));const pkg=join(root,'package'),runtime=join(root,'runtime');mkdirSync(pkg);mkdirSync(runtime);
+ const write=(dir,file,value)=>{mkdirSync(join(dir,file,'..'),{recursive:true});writeFileSync(join(dir,file),value);return createHash('sha256').update(value).digest('hex');};
+ const theme=JSON.stringify({id:'test',scripts:{}});const files={'theme.json':write(pkg,'theme.json',theme)};
+ writeFileSync(join(pkg,'identity.json'),JSON.stringify({files}));
+ writeFileSync(join(runtime,'identity.json'),JSON.stringify({files:{'JS/test.js':write(runtime,'JS/test.js','// fixture')}}));
+ const one=prepareReviewProfile({base:root,packageDir:pkg,runtimeDir:runtime});const two=prepareReviewProfile({base:root,packageDir:pkg,runtimeDir:runtime});
+ assert.notEqual(one.profile,two.profile);assert.equal(one.stage,'prepared');assert.equal(JSON.parse(readFileSync(join(one.profile,'review-profile.json'),'utf8')).stage,'prepared');
+ assert.match(readFileSync(join(one.profile,'user.js'),'utf8'),/user_pref\("sine\.engine\.auto-update",false\);/);
+ const online=prepareReviewProfile({base:root,packageDir:pkg,runtimeDir:runtime,allowInternet:true});
+ assert.match(readFileSync(join(online.profile,'user.js'),'utf8'),/user_pref\("network\.proxy\.type",0\);/);
+ assert.doesNotMatch(readFileSync(join(online.profile,'user.js'),'utf8'),/network\.proxy\.http/);
+ writeFileSync(join(pkg,'theme.json'),'tampered');assert.throws(()=>prepareReviewProfile({base:root,packageDir:pkg,runtimeDir:runtime}),/hash/);
+});

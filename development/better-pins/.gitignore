@@ -1,0 +1,5 @@
+.backup-scratch/
+private-local/
+node_modules/
+__pycache__/
+*.pyc

@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-29",
+  "purpose": "Public development preservation; not an everyday-profile release or new complete native qualification.",
+  "version": "0.1.0-candidate.4",
+  "productIdentity": {
+    "version": "0.1.0-candidate.4",
+    "files": {
+      "theme.json": "c09205cabdc0c70119a269fba753eef386b36577bdfeb3a0b30fb1423f24704f",
+      "preferences.json": "3dc72f7ddad049b8babbf3cfa9aa3851d5221edc871d6cb7ba316520f8e08980",
+      "chrome.css": "eacb6ed166439c84389e7c736781c06d4df559c2fd3fd5a30353547f2db41e25",
+      "scripts/better-pins.uc.mjs": "0d849c8da24bf2f448e2dcbdfcb2731f4517da7e5cfa69ad378a11b7782da8b4"
+    }
+  },
+  "productUnchangedFromFrozenCandidate4": true,
+  "checks": {
+    "modelTests": {
+      "passed": 107,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newPortabilityRegressions": {
+      "failedBeforeFix": 2,
+      "passedAfterFix": 2
+    },
+    "nativeHarnessFilesSyntaxChecked": 24,
+    "freshSyntheticReviewPreparationWithoutBrowserLaunch": "passed",
+    "sineLoaderFilesVerified": 47,
+    "companionFixtureZipSHA256": "ae4fff1cf69af871ceecca0f8f98948c4aac8931a353dee1a40a06f94d51552c"
+  },
+  "historicalNativeEvidence": "candidate-4.json, qualified 2026-10-15 on Zen 1.23.2b; adapted native paths have not undergone a new full Gecko qualification.",
+  "publicReview": {
+    "machineSpecificPathAndCredentialPatternScan": "passed, including archived ZIP contents; generic documented example accounts excluded",
+    "settingsScreenshots": "reviewed synthetic settings views",
+    "excluded": [
+      "browser profiles and sessions",
+      "credentials",
+      "private workspace records",
+      "personal filesystem prefixes",
+      "routine raw diagnostics"
+    ]
+  },
+  "preserved": [
+    "source and build scripts",
+    "model and native tests",
+    "design contract and open choices",
+    "all original candidate ZIPs and frozen packages",
+    "exact Sine loader source with MPL notice",
+    "exact mod-only companion inputs and their existing licenses",
+    "compact historical verification results and known limitations"
+  ]
+}

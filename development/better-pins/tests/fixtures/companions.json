@@ -1,0 +1,35 @@
+{
+  "purpose": "Exact mod-only inputs for the recorded candidate-4 native compatibility checks; contains no browser profiles.",
+  "sha256": "ae4fff1cf69af871ceecca0f8f98948c4aac8931a353dee1a40a06f94d51552c",
+  "packages": [
+    {
+      "directory": "better-zen-folders",
+      "version": "0.3.19",
+      "files": 4,
+      "bytes": 599523
+    },
+    {
+      "directory": "zen-icons-local",
+      "version": "0.3.0-rc.4",
+      "files": 3402,
+      "bytes": 4618177
+    },
+    {
+      "directory": "even-better-new-tab",
+      "version": "1.0.4",
+      "files": 4,
+      "bytes": 15311
+    }
+  ],
+  "verifiedEntryPoints": {
+    "bzf": "6ea5e8677e358cc16463f84c2dfc67f562d37bf4716fe54778114cc09ba364f0",
+    "icons": "0c869ac572e9a41a3098f6555eeb904f7c6bf3ed913e314373399422ff30f06f",
+    "newTab": {
+      "theme.json": "59698bd2605745593a73eca8312a4d82560e5d398db333d6c0a3d31710cdfd1f",
+      "preferences.json": "eb5d8745ef1e05cc8e6162b901b9ef65d0e19fdf3ff54f7031826be0c416d48b",
+      "userChrome.css": "b68a4fe5238bd93a41b06388a5c6a0159e168ad76cb41bf1b555619b05c9909a",
+      "newtab-layout.uc.mjs": "55e5477e9b3ab6b62e02f2a2b7504d746e24f694cb45f9592be8c6983f35dd00"
+    }
+  },
+  "extractTo": ".backup-scratch/companions"
+}

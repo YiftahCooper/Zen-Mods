@@ -1,0 +1,37 @@
+:root[better-pins-active] zen-workspace[active] > arrowscrollbox.workspace-arrowscrollbox {
+  flex: 1 1 auto !important; min-height: 0 !important; overflow: hidden !important;
+}
+:root[better-pins-active] zen-workspace[active] > arrowscrollbox.workspace-arrowscrollbox::part(scrollbox) {
+  overflow: hidden !important; min-height: 0 !important; padding-block-end: 0 !important;
+}
+:root[better-pins-active] .zen-workspace-pinned-tabs-section {
+  min-height: 0 !important; max-height: none !important;
+  height: var(--better-pins-upper-height, 240px) !important;
+  flex: 0 0 var(--better-pins-upper-height, 240px) !important;
+  overflow-y: auto !important; overscroll-behavior: contain !important;
+}
+:root[better-pins-active] .zen-workspace-normal-tabs-section {
+  min-height: 0 !important; max-height: none !important;
+  height: var(--better-pins-lower-height, 240px) !important;
+  flex: 0 0 var(--better-pins-lower-height, 240px) !important;
+  overflow-y: auto !important; overscroll-behavior: contain !important;
+}
+.better-pins-divider {
+  height: 10px; min-height: 10px; flex: 0 0 10px; cursor: row-resize;
+  touch-action: none; position: relative; margin-inline: 6px;
+}
+.better-pins-divider::before {
+  content: ''; position: absolute; inset-inline: 30%; inset-block-start: 4px;
+  height: 2px; border-radius: 3px; background: color-mix(in srgb,currentColor 35%,transparent);
+}
+.better-pins-divider:hover::before { background: currentColor; }
+.better-pins-divider:focus-visible,.better-pins-url-pin:focus-visible { outline: 2px solid AccentColor; outline-offset: 1px; }
+.better-pins-url-pin { appearance: none; border: 0; background: transparent; color: inherit; padding: 2px; margin-inline: 2px; min-width: 24px; min-height: 24px; display: flex; align-items: center; cursor: pointer; }
+.better-pins-url-pin svg { width: 14px; height: 14px; fill: currentColor; }
+.better-pins-url-pin:disabled { opacity: .45; }
+.better-pins-status { position: fixed; z-index: 2147483647; inset-block-end: 12px; inset-inline-start: 12px; max-width: 460px; padding: 12px 16px; background: Canvas; color: CanvasText; border: 1px solid currentColor; border-radius: 8px; box-shadow: 0 3px 16px #0004; font: menu; }
+.better-pins-status[hidden] { display: none; }
+/* Only this native folder control is optional; menus remain available. */
+@media not (-moz-bool-pref: "better-pins.show-folder-unload-button") {
+  :root[better-pins-active] zen-folder > .tab-group-label-container > .tab-reset-button:not([live-folder-action]) { display: none !important; }
+}

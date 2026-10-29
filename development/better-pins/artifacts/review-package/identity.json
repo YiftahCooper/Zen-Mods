@@ -1,0 +1,9 @@
+{
+  "version": "0.1.0-candidate.1",
+  "files": {
+    "theme.json": "8ebff9c9a23e597821f9a2c9202ace663d89197cd5cd95d1863e764607190876",
+    "preferences.json": "68a344ff705f59fad559b832a163a43c59d5f69a43a9d23541449c6d409da197",
+    "chrome.css": "9f190242e7904533ee1918d4349527bda9783bfc92ab6d7261b69f07b910249b",
+    "scripts/better-pins.uc.mjs": "725bc3a10dd78676a666f6fcc4b7b66db2d529c06ee9e87b54c5eb571971c68f"
+  }
+}

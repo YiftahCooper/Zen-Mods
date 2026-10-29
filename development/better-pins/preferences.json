@@ -1,0 +1,18 @@
+[
+  {"type":"separator","label":"Saved URLs"},
+  {"type":"checkbox","property":"better-pins.pin-new-upper-tabs","label":"Save a URL for new upper-zone tabs\nA saved URL is a page you can return to with Reset. You can still browse normally. Applies to tabs outside folders.","defaultValue":false},
+  {"type":"checkbox","property":"better-pins.pin-new-lower-tabs","label":"Save a URL for new lower-zone tabs\nApplies to tabs outside folders. Moving a tab never changes its saved-URL choice.","defaultValue":false},
+  {"type":"checkbox","property":"better-pins.pin-new-upper-folder-tabs","label":"Save a URL for new tabs inside upper-zone folders","defaultValue":false},
+  {"type":"checkbox","property":"better-pins.pin-new-lower-folder-tabs","label":"Save a URL for new tabs inside lower-zone folders\nThese four settings affect new tabs only. Existing tabs keep their choices.","defaultValue":false},
+  {"type":"separator","label":"New Tab buttons"},
+  {"type":"checkbox","property":"better-pins.show-upper-new-tab","label":"Show a second New Tab button for the upper zone\nThe usual New Tab button creates tabs in the lower zone.","defaultValue":true},
+  {"type":"dropdown","property":"better-pins.upper-button-position","label":"Place the upper-zone button","defaultValue":"bottom","placeholder":false,"options":[{"value":"top","label":"Below the Space banner"},{"value":"bottom","label":"Just above the divider"}],"conditions":[{"if":{"property":"better-pins.show-upper-new-tab","value":true}}]},
+  {"type":"dropdown","property":"better-pins.new-upper-position","label":"Place new upper-zone tabs\nApplies to the New Tab button and the zone menu action.","defaultValue":"bottom","placeholder":false,"options":[{"value":"top","label":"At the beginning of the list"},{"value":"bottom","label":"At the end of the list"}]},
+  {"type":"dropdown","property":"better-pins.new-lower-position","label":"Place new lower-zone tabs","defaultValue":"bottom","placeholder":false,"options":[{"value":"top","label":"At the beginning of the list"},{"value":"bottom","label":"At the end of the list"}]},
+  {"type":"checkbox","property":"better-pins.inherit-new-tab-style","label":"Use my Even Better New Tab Button appearance\nReuse its saved plus-animation and button-roundness choices. No extra mod is needed for the second button; it stays visible outside the scrolling lists.","defaultValue":true},
+  {"type":"separator","label":"Layout and controls"},
+  {"type":"checkbox","property":"better-pins.banner-collapse","label":"Click the Space banner to collapse the upper zone\nTurning this off also expands a currently collapsed upper zone.","defaultValue":true},
+  {"type":"checkbox","property":"better-pins.show-folder-unload-button","label":"Show an Unload button on folder rows\nUnloading releases pages from memory, keeping their tabs, current pages and folder layout. Unload remains available in the right-click menu.","defaultValue":false},
+  {"type":"separator","label":"Right-click menus"},
+  {"type":"checkbox","property":"better-pins.menu-icons","label":"Show icons beside Better Pins menu actions","defaultValue":true}
+]

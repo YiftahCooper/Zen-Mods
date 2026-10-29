@@ -1,0 +1,41 @@
+import {spawnSync} from 'node:child_process';
+import {readFileSync,writeFileSync,readdirSync,mkdirSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {createHash} from 'node:crypto';
+const root=resolve('.backup-scratch');mkdirSync(root,{recursive:true});
+const identity=JSON.parse(readFileSync('artifacts/package-identity.json','utf8'));
+const outcomes=[];
+const unchanged=()=>Object.entries(identity.files).every(([f,h])=>createHash('sha256').update(readFileSync(f)).digest('hex')===h);
+const check=value=>{
+ if(Array.isArray(value))return value.every(check);
+ if(value&&typeof value==='object')return !value.error&&value.pass!==false&&Object.values(value).every(check);
+ return true;
+};
+function run(name,args,extra={}){
+ console.log('Checking '+name);const start=new Date().toISOString();
+ const result=spawnSync(process.execPath,args,{windowsHide:true,encoding:'utf8',timeout:120000,env:{...process.env,BP_TEST_PROFILE:'',BP_TEST_DRAG:'',BP_TEST_HEADED:'',BP_TEST_SETTINGS:'',BP_TEST_COMBINED:'',BP_TEST_NEWTAB:'',BP_TEST_INTERNET:'',...extra}});
+ writeFileSync(join(root,'qualification-'+name+'.log'),(result.stdout??'')+(result.stderr??''));
+ const receipts=readdirSync(join(root,'native')).filter(n=>/^receipt-.*\.json$/.test(n)).map(n=>({file:n,value:JSON.parse(readFileSync(join(root,'native',n),'utf8'))})).filter(r=>r.value.started>=start).sort((a,b)=>a.value.started.localeCompare(b.value.started));
+ const outcome={name,passed:result.status===0&&!result.error&&unchanged()&&receipts.length>0&&receipts.every(r=>check(r.value.steps)&&check(r.value.settings)),receipts:receipts.map(r=>join('native',r.file)),profile:receipts.at(-1)?.value.profile};
+ outcomes.push(outcome);writeFileSync(join(root,'qualification.json'),JSON.stringify({identity,outcomes,passed:outcomes.every(r=>r.passed)},null,2));
+ console.log(name+': '+(outcome.passed?'PASS':'FAIL'));
+ if(!outcome.passed)throw Error(name+' failed; see .backup-scratch/qualification-'+name+'.log');
+ return outcome;
+}
+run('base-matrix',['tests/native/final-matrix.mjs']);
+run('revision',['tests/native/driver.mjs','tests/native/revision.js']);
+run('native-drag-session',['tests/native/driver.mjs','tests/native/drag-native.js']);
+run('drag-boundaries',['tests/native/driver.mjs','tests/native/drag-boundaries.js']);
+run('private-window',['tests/native/driver.mjs','tests/native/private-window.js']);
+run('compact',['tests/native/driver.mjs','tests/native/compact.js']);
+const recovery=run('layout-recovery',['tests/native/driver.mjs','tests/native/layout-recovery.js']);
+run('empty-restart',['tests/native/driver.mjs','tests/native/empty-restart.js'],{BP_TEST_PROFILE:recovery.profile});
+run('activation',['tests/native/driver.mjs','tests/native/activation.js']);
+run('spaces-splits',['tests/native/driver.mjs','tests/native/spaces-splits.js']);
+run('extended',['tests/native/driver.mjs','tests/native/extended.js']);
+run('internet',['tests/native/driver.mjs','tests/native/internet.js'],{BP_TEST_INTERNET:'1'});
+run('combined-settings',['tests/native/run-sine.mjs'],{BP_TEST_COMBINED:'1',BP_TEST_NEWTAB:'1',BP_TEST_SETTINGS:'1'});
+const compatibility=run('compatibility-prepare',['tests/native/driver.mjs','tests/native/missing-downgrade.js'],{BP_TEST_MODE:'prepare'});
+for(const mode of ['absent','downgrade','restore'])run('compatibility-'+mode,['tests/native/driver.mjs','tests/native/missing-downgrade.js'],{BP_TEST_PROFILE:compatibility.profile,BP_TEST_MODE:mode});
+run('adoption',['tests/native/driver.mjs','tests/native/adoption.js']);
+console.log('All qualification groups passed for '+identity.version);

@@ -46,3 +46,7 @@ The root `theme.json`, `catalogue.css`, and `catalogue-preferences.json` are int
 ## Licenses and credits
 
 See each mod's README and license. Linked forks retain their own licenses and upstream attribution.
+
+## Development archives
+
+[Better Pins candidate 4](development/better-pins/) preserves experimental source, build and test tools, design decisions, known limitations and the inputs needed to resume development. It is a development archive, not an everyday-profile release or an entry in the installable catalogue.

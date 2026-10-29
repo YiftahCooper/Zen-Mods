@@ -1,0 +1,40 @@
+const done=arguments[arguments.length-1];
+(async()=>{
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ for(let i=0;i<200&&!window.__betterPinsController?.result?.ok;i++)await wait(30);
+ const c=window.__betterPinsController;if(!c?.result?.ok)throw Error('Normal Sine did not activate candidate');
+ const assert=(x,m)=>{if(!x)throw Error(m);};
+ if(Services.prefs.getBoolPref('bp.test.combined',false)){
+   for(let i=0;i<160&&!document.querySelector('[zen-icons-enhanced="true"]');i++)await wait(25);
+   assert(window.__betterZenFoldersController?.started,'Folders normal Sine bootstrap missing');
+   assert(document.querySelector('[zen-icons-enhanced="true"]'),'Icons normal Sine bootstrap missing');
+   assert(!window.__betterZenFoldersController.adapters.managers.find(m=>m.constructor.name==='FolderPinRuntime')?.policy?.active,'competing BZF URL owner');
+ }
+ const tab=await c.newTab('upper');tab.label='Saved project';
+ tab.linkedBrowser.loadURI(Services.io.newURI('data:text/html,<title>Saved project</title><p>Synthetic saved page</p>'),{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});
+ for(let i=0;i<100&&!tab.linkedBrowser.currentURI.spec.startsWith('data:');i++)await wait(20);
+ await gBrowser.TabStateFlusher.flush(tab.linkedBrowser);
+ assert(tab.localName==='tab','new upper failed '+String(tab.reason??tab.localName));
+ const pinResult=await c.policy.pin(tab);assert(pinResult.ok,'explicit pin failed '+JSON.stringify({pinResult,notice:c.presentation.notice.textContent,state:SessionStore.getTabState(tab)}));c.presentation.refresh();
+ const lower=await c.newTab('lower');lower.label='Research tab';
+ const f=gZenFolders.createFolder([lower],{label:'Research',id:'bp-sine-research'});await c.origins.flush();await c.zones.move(f,'lower');
+ const spacer=gBrowser.addTab('data:text/html,<title>Better Pins candidate</title><h1>Better Pins</h1><p>Disposable test profile</p>',{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()});gBrowser.selectedTab=spacer;await c.origins.flush();
+ await wait(300);c.zones.layout();await wait(150);
+ const space=c.zones.space(tab),u=space.pinnedTabsContainer,l=space.tabsContainer;
+ assert(getComputedStyle(u).overflowY==='auto'&&getComputedStyle(l).overflowY==='auto','Sine CSS not loaded');
+ assert(u.clientHeight>50&&l.clientHeight>50,'zone viewport missing');
+ assert(c.presentation.buttons.has(tab),'pin badge missing');
+ const button=c.presentation.buttons.get(tab),selected=gBrowser.selectedTab;
+ button.click();await wait(70);assert(!c.store.read(tab).explicit&&gBrowser.selectedTab===selected,'unpin selected or failed');
+ await c.policy.pin(tab);await wait(70);
+ const parent=lower.parentNode;gBrowser.selectedTab=lower;
+ document.getElementById('cmd_zenTogglePinTab').dispatchEvent(new Event('command',{bubbles:true}));await wait(100);
+ assert(c.store.read(lower).explicit&&lower.parentNode===parent,'native keyboard command changed placement');
+ document.getElementById('cmd_zenTogglePinTab').dispatchEvent(new Event('command',{bubbles:true}));await wait(100);
+ assert(!c.store.read(lower).explicit&&lower.parentNode===parent,'native keyboard unpin changed placement');gBrowser.selectedTab=spacer;
+ const divider=c.zones.dividers.get(space);divider.focus();divider.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+ assert(divider.getAttribute('role')==='separator'&&divider.getAttribute('aria-valuenow'),'divider semantics');
+ window.__bpPointerBefore=Services.prefs.getIntPref('better-pins.upper-percent',50);
+ window.__bpPointerPosition={x:Math.round(divider.getBoundingClientRect().x+divider.getBoundingClientRect().width/2),y:Math.round(divider.getBoundingClientRect().y+5)};
+ return {results:[{name:'exact-package-normal-sine-bootstrap-css-controls',pass:true}],geometry:{upper:u.clientHeight,lower:l.clientHeight,divider:divider.getBoundingClientRect().toJSON()},candidate:c.result};
+})().then(done,e=>done({error:String(e),stack:e.stack}));

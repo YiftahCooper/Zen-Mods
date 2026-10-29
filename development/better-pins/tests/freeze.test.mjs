@@ -1,0 +1,26 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync} from 'node:fs';
+import {resolve,join,dirname} from 'node:path';
+import {createHash} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+const script=resolve('scripts/freeze-candidate.mjs');
+const hash=value=>createHash('sha256').update(value).digest('hex');
+test('freeze consumes matrix-relative scratch receipts and refuses conflicting replacement bytes',()=>{
+ mkdirSync('.backup-scratch/tests',{recursive:true});const root=mkdtempSync(resolve('.backup-scratch/tests/freeze-'));
+ const put=(name,value)=>{const path=join(root,name);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,value);};
+ const json=(name,value)=>put(name,JSON.stringify(value));
+ const identity={version:'0.1.0-candidate.3',files:{'theme.json':hash('candidate')}};
+ put('theme.json','candidate');json('artifacts/package-identity.json',identity);
+ put('.backup-scratch/native/profile-one/chrome/JS/runtime.mjs','loader');
+ json('.backup-scratch/native/receipt-one.json',{profile:join(root,'.backup-scratch/native/profile-one')});
+ json('.backup-scratch/native/sine-one.json',{profile:join(root,'.backup-scratch/native/profile-one'),engineIntact:true,exitCode:0,engineHashes:{'JS/runtime.mjs':hash('loader')}});
+ const results=Array.from({length:9},(_,i)=>({name:i===8?'normal-sine-pointer':'stage-'+i,exitCode:0,unchanged:true,error:null,receipts:['../native/receipt-one.json']}));
+ json('.backup-scratch/final-one/result.json',{passed:true,identity,results});
+ const run=()=>spawnSync(process.execPath,[script,'.backup-scratch/final-one/result.json'],{cwd:root,encoding:'utf8'});
+ let r=run();assert.equal(r.status,0,r.stderr);assert.equal(readFileSync(join(root,'artifacts/review-0.1.0-candidate.3/theme.json'),'utf8'),'candidate');
+ r=run();assert.equal(r.status,0,r.stderr);
+ put('artifacts/review-0.1.0-candidate.3/theme.json','other');r=run();assert.notEqual(r.status,0);assert.match(r.stderr,/conflict/i);
+ assert.equal(readFileSync(join(root,'artifacts/review-0.1.0-candidate.3/theme.json'),'utf8'),'other');
+ assert.equal(existsSync(join(root,'artifacts/review-runtime/JS/runtime.mjs')),true);
+});

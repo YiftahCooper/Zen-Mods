@@ -1,0 +1,22 @@
+const done=arguments[arguments.length-1];
+(async()=>{
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ const assert=(x,m)=>{if(!x)throw Error(m);};
+ for(let i=0;i<200&&!document.getElementById('better-pins-menu-icons');i++)await wait(40);
+ const first=document.getElementById('better-pins-pin-new-upper-tabs');assert(first,'Better Pins Sine controls did not render');
+ const dialog=first.closest('dialog');assert(dialog,'No native settings dialog');let navigationWarning=null;try{await window.gotoPref('paneSineMods');}catch(e){navigationWarning=String(e);}await wait(350);dialog.parentElement.querySelector('.sineItemConfigureButton').click();
+ await wait(200);
+ const headings=[...dialog.querySelectorAll('.separator-label')].map(n=>n.textContent);
+ assert(headings.join('|')==='Saved URLs|New Tab buttons|Layout and controls|Right-click menus','wrong sections '+headings);
+ const upper=document.getElementById('better-pins-show-upper-new-tab'),position=document.getElementById('better-pins-upper-button-position');
+ upper.click();await wait(100);assert(getComputedStyle(position).display==='none','dependent position remains visible');
+ upper.click();await wait(100);assert(getComputedStyle(position).display!=='none','dependent position did not return');
+ const labels=[...dialog.querySelectorAll('.sineItemPreferenceLabel')];
+ assert(labels.length===12,'missing controls '+labels.length);
+ assert(dialog.getBoundingClientRect().width>300,'dialog not visible '+JSON.stringify({url:location.href,goto:typeof window.gotoPref,wrapped:typeof window.wrappedJSObject?.gotoPref,nav:document.getElementById('category-sine-mods').outerHTML,ancestors:[...function*(n){while(n){yield n.tagName+':'+getComputedStyle(n).display+':'+n.getAttribute('hidden');n=n.parentElement;}}(dialog)]}));
+ assert(dialog.scrollWidth<=dialog.clientWidth+2,'horizontal overflow');
+ assert(dialog.getBoundingClientRect().width<=800,'scoped dialog sizing did not load');
+ assert([...dialog.querySelectorAll('checkbox,menulist')].every(n=>n.getAttribute('aria-labelledby')),'control missing accessible label');
+ window.__bpSettingsDialog=dialog;
+ return {results:[{name:'normal-sine-settings-sections-conditional-controls-width',pass:true}],navigationWarning,headings,labels:labels.map(n=>n.textContent),rect:dialog.getBoundingClientRect().toJSON()};
+})().then(done,e=>done({error:String(e),stack:e.stack}));

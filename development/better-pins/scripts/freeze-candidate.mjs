@@ -1,0 +1,24 @@
+import {readFileSync,writeFileSync,mkdirSync,copyFileSync,existsSync} from 'node:fs';
+import {join,dirname,resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+const matrix=process.argv[2];
+if(!matrix)throw Error('Provide the current final native matrix result.json');
+const final=JSON.parse(readFileSync(matrix,'utf8'));
+if(!final.passed||final.results.length!==9||final.results.some(r=>r.exitCode!==0||!r.unchanged||r.error))throw Error('Final native matrix incomplete');
+const identity=JSON.parse(readFileSync('artifacts/package-identity.json','utf8'));
+if(!/^\d+\.\d+\.\d+-candidate\.\d+$/.test(identity.version))throw Error('Invalid candidate version');
+const destination=join('artifacts','review-'+identity.version);
+if(JSON.stringify(identity)!==JSON.stringify(final.identity))throw Error('Final native identity no longer matches source');
+const hash=f=>createHash('sha256').update(readFileSync(f)).digest('hex');
+const copyVerified=(src,dest,digest)=>{if(hash(src)!==digest)throw Error('Source hash mismatch '+src);mkdirSync(dirname(dest),{recursive:true});if(existsSync(dest)){if(hash(dest)!==digest)throw Error('Frozen destination conflict '+dest);}else copyFileSync(src,dest);if(hash(dest)!==digest)throw Error('Frozen copy verification failed');};
+for(const [file,digest]of Object.entries(identity.files))copyVerified(file,join(destination,file),digest);
+writeFileSync(join(destination,'identity.json'),JSON.stringify(identity,null,2));
+const sineReceipt=resolve(dirname(matrix),final.results.find(r=>r.name==='normal-sine-pointer').receipts[0]);
+const sine=JSON.parse(readFileSync(sineReceipt,'utf8'));
+// The loader proof has a separate engine inventory; select by this exact profile.
+const {readdirSync}=await import('node:fs');
+const engine=readdirSync(dirname(sineReceipt)).filter(n=>/^sine-.*\.json$/.test(n)).map(n=>JSON.parse(readFileSync(join(dirname(sineReceipt),n),'utf8'))).find(r=>r.profile===sine.profile&&r.engineIntact&&r.exitCode===0);
+if(!engine)throw Error('Verified Sine engine receipt missing');
+for(const [file,digest]of Object.entries(engine.engineHashes))copyVerified(join(engine.profile,'chrome',file),join('artifacts/review-runtime',file),digest);
+writeFileSync('artifacts/review-runtime/identity.json',JSON.stringify({sourceReceipt:sineReceipt,files:engine.engineHashes},null,2));
+console.log('Frozen candidate and verified local review runtime prepared. No profile launched.');

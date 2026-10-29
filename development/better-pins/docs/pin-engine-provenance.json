@@ -1,0 +1,20 @@
+{
+  "source": "Better Zen Folders/scripts/better-zen-folders.uc.mjs",
+  "sha256": "48aeceea5c2b725ad6024ccc2ff8f63cae2dca1e061f6443bb4399d6584f1de1",
+  "extracted": [
+    "intent store",
+    "unpin grace",
+    "lifecycle/origin/recovery",
+    "policy",
+    "browser adapters",
+    "native hooks",
+    "validation helpers"
+  ],
+  "adaptations": [
+    "ordinary root scope broadened",
+    "adoption discovers Better Pins owner",
+    "creation defaults use destination",
+    "diagnostic name"
+  ],
+  "sourceEdited": false
+}
