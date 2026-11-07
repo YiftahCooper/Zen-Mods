@@ -17,7 +17,7 @@ import {connectIconGestures} from './modules/src/zen-icons-sine/icon-gestures.mj
 import { folderSelectionValueForRecord } from "./modules/src/zen-icons-sine/folder-icon-source.mjs";
 import { findFolderForAnchor } from "./modules/src/zen-icons-sine/folder-anchor.mjs";
 import { writeFolderIcon } from "./modules/src/zen-icons-sine/folder-icon-writer.mjs";
-import {customStoragePaths,ensureCustomStorage,CUSTOM_CONTENT_PREFIX,canonicalCustomSource,customSourceParts} from './modules/src/zen-icons-sine/custom-storage.mjs';
+import {customStoragePaths,ensureCustomStorage,CUSTOM_CONTENT_PREFIX,LEGACY_CUSTOM_CONTENT_PREFIX,canonicalCustomSource,customSourceParts} from './modules/src/zen-icons-sine/custom-storage.mjs';
 import {
   BZF_FOLDER_COLOR_ATTRIBUTE,
   applyFolderIconPresentation,
@@ -37,6 +37,10 @@ const FILTER_PANEL_ID = "zen-icons-sine-filter-panel";
 const XHTML = "http://www.w3.org/1999/xhtml";
 const FOLDER_SHAPE_PREF = "zen.icons.folder-shapes";
 const INITIAL_RECORD_BATCH = 30;
+const SEARCH_DEBOUNCE_MS = 100;
+const PICKER_SELECTOR = `#${ROOT_ID}, #${FILTER_PANEL_ID}`;
+const FOLDER_ICON_IMAGE_SELECTOR =
+  ":scope > .tab-group-label-container > .tab-group-folder-icon svg .icon image";
 
 const PROVIDER_LABELS = Object.freeze({
   emoji: "Emojis",
@@ -65,6 +69,29 @@ function loadEmojiRecords() {
       kind: "emoji",
       order: emoji.order,
     }),
+  );
+}
+
+// runtime.sys.mjs is evaluated once per process, so every window shares one
+// immutable base catalogue instead of re-reading and re-indexing the emoji data.
+let sharedBaseRecords = null;
+function baseCatalogRecords() {
+  sharedBaseRecords ??= Object.freeze([
+    ...loadEmojiRecords(),
+    ...ZEN_BUILT_IN_ICONS,
+    ...LUCIDE_ICONS,
+  ]);
+  return sharedBaseRecords;
+}
+
+// Cheap superset of customSourceParts(): rejects favicon data:/http(s) values
+// without scanning them. customSourceParts() still decides.
+function mayBeCustomSource(value) {
+  return (
+    typeof value === "string" &&
+    (value.startsWith(CUSTOM_CONTENT_PREFIX) ||
+      value.startsWith(LEGACY_CUSTOM_CONTENT_PREFIX) ||
+      value.startsWith("file:"))
   );
 }
 
@@ -658,6 +685,7 @@ function createPickerView({
       const categoryIcon = categoryArtwork(document, presentation.icon, presentation.imageSources);
       categoryButton.append(categoryIcon, document.createTextNode(categoryDisplayName(category,state.availableCategories)));
       categoryButton.addEventListener("click", () => {
+        cancelPendingSearch();
         model.navigateCategory(category);
         search.value = "";
         collapsed.delete(category);
@@ -740,9 +768,29 @@ function createPickerView({
     }
   }
 
-  search.addEventListener("input", () => {
+  // Leading-edge search: the first keystroke renders at once; further input
+  // inside the window is coalesced into one trailing render of the latest value.
+  let searchTimer = null;
+  let lastSearchRender = -Infinity;
+  const cancelPendingSearch = () => {
+    if (searchTimer !== null) {
+      document.defaultView.clearTimeout(searchTimer);
+      searchTimer = null;
+    }
+  };
+  const applySearch = () => {
+    searchTimer = null;
+    if (destroyed) return;
+    lastSearchRender = Date.now();
     model.setQuery(search.value);
     render();
+  };
+  search.addEventListener("input", () => {
+    if (destroyed || searchTimer !== null) return;
+    const wait = lastSearchRender + SEARCH_DEBOUNCE_MS - Date.now();
+    if (wait <= 0) applySearch();
+    // Clamped so a backwards clock change cannot postpone the render.
+    else searchTimer = document.defaultView.setTimeout(applySearch, Math.min(wait, SEARCH_DEBOUNCE_MS));
   });
   filterButton.addEventListener("click", () => {
     if (filterPanel.state === "open" || filterPanel.state === "showing") {
@@ -785,6 +833,7 @@ function createPickerView({
     },
     destroy() {
       destroyed = true;
+      cancelPendingSearch();
       cancelDeferredRendering();
       filterPanel.hidePopup();
       filterPanel.remove();
@@ -838,16 +887,24 @@ export function initializeZenIcons(browserWindow) {
   const canonicalSource = source => canonicalCustomSource(source,{
     profileDir:PathUtils.profileDir,joinPath:PathUtils.join,toFileURL:fileURLForPath,
   });
-  const migrateNativeCustomChoices = () => {
-    if(!customStoragePrepared || stopped)return;
-    for(const tab of browserWindow.gBrowser?.tabs || []){
-      const previous=tab.zenStaticIcon,next=canonicalSource(previous);
-      if(!next || next===previous)continue;
-      tab.zenStaticIcon=next;
-      browserWindow.gBrowser.setIcon(tab,next);
-      const {TabStateCache}=ChromeUtils.importESModule('resource:///modules/sessionstore/TabStateCache.sys.mjs');
-      TabStateCache.update(tab.permanentKey,{image:next});
-    }
+  // Legacy custom-artwork values are rewritten to the persistent location.
+  // The full tab+Space sweep runs once per window after storage is prepared;
+  // later arrivals (restored/adopted tabs, synced Spaces) are migrated when
+  // they are inserted or displayed, and Spaces are re-checked on full passes.
+  let initialMigrationDone = false;
+  const migrateTab = (tab) => {
+    if (!customStoragePrepared || stopped || !tab) return;
+    const previous = tab.zenStaticIcon;
+    if (!mayBeCustomSource(previous)) return;
+    const next = canonicalSource(previous);
+    if (!next || next === previous) return;
+    tab.zenStaticIcon = next;
+    browserWindow.gBrowser.setIcon(tab, next);
+    const {TabStateCache}=ChromeUtils.importESModule('resource:///modules/sessionstore/TabStateCache.sys.mjs');
+    TabStateCache.update(tab.permanentKey,{image:next});
+  };
+  const migrateWorkspaces = () => {
+    if (!customStoragePrepared || stopped) return;
     const spaces=browserWindow.gZenWorkspaces;
     for(const workspace of spaces?.getWorkspaces?.() || []){
       const previous=workspace.icon,next=canonicalSource(previous);
@@ -856,6 +913,28 @@ export function initializeZenIcons(browserWindow) {
       Promise.resolve(spaces.saveWorkspace(workspace)).catch(error=>console.error(`${PREFIX} unable to save migrated Space artwork`,error));
     }
   };
+  let workspaceMigrationTimer = null;
+  const onWorkspaceDataChanged = () => {
+    if (stopped || workspaceMigrationTimer !== null) return;
+    workspaceMigrationTimer = browserWindow.setTimeout(() => {
+      workspaceMigrationTimer = null;
+      migrateWorkspaces();
+    }, 0);
+  };
+  const migrateNativeCustomChoices = () => {
+    if(!customStoragePrepared || stopped)return;
+    if (!initialMigrationDone) {
+      initialMigrationDone = true;
+      for (const tab of browserWindow.gBrowser?.tabs || []) migrateTab(tab);
+    }
+    migrateWorkspaces();
+  };
+  // Folder href canonicalisation is skipped while a folder's href is unchanged
+  // since it was last checked; applied hrefs identify the observer's own writes.
+  const checkedFolderHrefs = new WeakMap();
+  const appliedFolderHrefs = new WeakMap();
+  const folderIconHref = (folder) =>
+    folder?.querySelector?.(FOLDER_ICON_IMAGE_SELECTOR)?.getAttribute("href") ?? null;
   const paintProperties = [
     "--zen-icons-inner-icon-color",
     "--zen-folder-behind-bgcolor",
@@ -880,14 +959,18 @@ export function initializeZenIcons(browserWindow) {
   const refreshFolder = (folder) => {
     if (stopped || !folder) return;
     if(customStoragePrepared){
-      const source=folder.querySelector(':scope > .tab-group-label-container > .tab-group-folder-icon svg .icon image')?.getAttribute('href');
-      const next=canonicalSource(source);
-      if(next && next!==source)updateFolderIcon(browserWindow.document,folder,next);
+      const source=folderIconHref(folder);
+      if (!checkedFolderHrefs.has(folder) || checkedFolderHrefs.get(folder) !== source) {
+        const next=canonicalSource(source);
+        if(next && next!==source)updateFolderIcon(browserWindow.document,folder,next);
+        checkedFolderHrefs.set(folder, folderIconHref(folder));
+      }
     }
     if (!folderStates.has(folder))
       folderStates.set(folder, { before: readPaint(folder) });
     applyFolderShape(folder, customSources);
     folderStates.get(folder).after = readPaint(folder);
+    appliedFolderHrefs.set(folder, folderIconHref(folder));
   };
   const releaseFolder = (folder, { before, after }) => {
     for (const [index, [key, value, priority]] of before.properties.entries()) {
@@ -908,61 +991,200 @@ export function initializeZenIcons(browserWindow) {
     imageStates.delete(image);
   };
 
-  const refreshCustomImages = ({ retry = false } = {}) => {
-    if (stopped) return;
-    migrateNativeCustomChoices();
+  const refreshImage = (image, retry = false) => {
+    if (stopped || image.closest?.(PICKER_SELECTOR)) return;
+    const current = image.getAttribute("src") || "";
+    let state = imageStates.get(image);
+    if (state && current !== state.displayed) {
+      releaseImage(image, state);
+      state = null;
+    }
+    if (!state) {
+      if (!customSourceParts(current)) return;
+      state = { source: current, displayed: current, failed: false };
+      state.onError = () => {
+        if (
+          stopped ||
+          image.getAttribute("src") !== state.displayed ||
+          state.failed
+        )
+          return;
+        state.failed = true;
+        state.displayed = DEFAULT_ICON_FALLBACK;
+        image.src = state.displayed;
+      };
+      imageStates.set(image, state);
+      image.addEventListener("error", state.onError);
+    }
+    if (retry) state.failed = false;
+    const desired = state.failed
+      ? DEFAULT_ICON_FALLBACK
+      : resolveCustomImageDisplaySource(state.source, customSources);
+    state.displayed = desired;
+    if (image.getAttribute("src") !== desired) {
+      image.src = desired;
+    }
+  };
+  const releaseDetachedImages = () => {
     for (const [image, state] of imageStates) {
       if (!browserWindow.document.documentElement.contains(image))
         releaseImage(image, state);
     }
-    for (const image of browserWindow.document.querySelectorAll("img")) {
-      if (image.closest?.(`#${ROOT_ID}, #${FILTER_PANEL_ID}`)) continue;
-      const current = image.getAttribute("src") || "";
-      let state = imageStates.get(image);
-      if (state && current !== state.displayed) {
-        releaseImage(image, state);
-        state = null;
-      }
-      if (!state) {
-        if (!customSourceParts(current)) continue;
-        state = { source: current, displayed: current, failed: false };
-        state.onError = () => {
-          if (
-            stopped ||
-            image.getAttribute("src") !== state.displayed ||
-            state.failed
-          )
-            return;
-          state.failed = true;
-          state.displayed = DEFAULT_ICON_FALLBACK;
-          image.src = state.displayed;
-        };
-        imageStates.set(image, state);
-        image.addEventListener("error", state.onError);
-      }
-      if (retry) state.failed = false;
-      const desired = state.failed
-        ? DEFAULT_ICON_FALLBACK
-        : resolveCustomImageDisplaySource(state.source, customSources);
-      state.displayed = desired;
-      if (image.getAttribute("src") !== desired) {
-        image.src = desired;
-      }
-    }
   };
-
-  const refreshFolderShapes = () => {
-    if (stopped) return;
+  const releaseDetachedFolders = () => {
     for (const [folder, state] of folderStates) {
       if (!browserWindow.document.documentElement.contains(folder))
         releaseFolder(folder, state);
     }
+  };
+
+  const refreshCustomImages = ({ retry = false } = {}) => {
+    if (stopped) return;
+    migrateNativeCustomChoices();
+    releaseDetachedImages();
+    for (const image of browserWindow.document.querySelectorAll("img")) {
+      refreshImage(image, retry);
+    }
+  };
+
+  // Incremental observer work. Images are handled synchronously in the
+  // observer callback (so fallback error listeners attach before a load can
+  // fail); folder paint and detached-state pruning are coalesced into at most
+  // one batch per animation frame, before the next paint.
+  const pendingFolders = new Set();
+  let pendingPrune = false;
+  let pendingFrame = null;
+
+  // Full pass: every folder and image. Runs only on explicit refreshes and when
+  // the custom catalogue (and therefore source availability) changes.
+  const refreshFolderShapes = () => {
+    if (stopped) return;
+    pendingFolders.clear();
+    pendingPrune = false;
+    releaseDetachedFolders();
     for (const folder of browserWindow.document.querySelectorAll(
       "zen-folder",
     )) {
       refreshFolder(folder);
     }
     refreshCustomImages();
+  };
+
+  const flushPendingWork = () => {
+    pendingFrame = null;
+    if (stopped) return;
+    if (pendingPrune) {
+      pendingPrune = false;
+      releaseDetachedImages();
+      releaseDetachedFolders();
+    }
+    const folders = [...pendingFolders];
+    pendingFolders.clear();
+    const root = browserWindow.document.documentElement;
+    for (const folder of folders) {
+      if (root.contains(folder)) refreshFolder(folder);
+    }
+  };
+  const schedulePendingWork = () => {
+    if (pendingFrame !== null || stopped) return;
+    if (!pendingPrune && !pendingFolders.size) return;
+    pendingFrame = browserWindow.requestAnimationFrame(flushPendingWork);
+  };
+  const queueFolder = (folder) => {
+    if (folder?.matches?.("zen-folder")) pendingFolders.add(folder);
+  };
+  const noteLegacyValue = (element, value) => {
+    // A displayed non-canonical custom value means a legacy choice arrived
+    // after the initial migration. Migrate only its owner.
+    if (!customStoragePrepared || !mayBeCustomSource(value) || !customSourceParts(value)) return;
+    const next = canonicalSource(value);
+    if (!next || next === value) return;
+    const tab = element.closest?.("tab");
+    if (tab) migrateTab(tab);
+    else migrateWorkspaces();
+  };
+  const onSourceChanged = (target) => {
+    const value = target.getAttribute?.("src") ?? "";
+    if (target.matches?.("img")) {
+      const state = imageStates.get(target);
+      // Our own fallback/display write, or an unchanged value.
+      if (state && value === state.displayed) return;
+      if (!state && !mayBeCustomSource(value)) return;
+      refreshImage(target);
+      noteLegacyValue(target, value);
+      return;
+    }
+    // Tab favicons (XUL .tab-icon-image) only matter for legacy tab choices.
+    if (mayBeCustomSource(value) && !target.closest?.(PICKER_SELECTOR))
+      noteLegacyValue(target, value);
+  };
+  const onFolderHrefChanged = (target) => {
+    if (target.closest?.(PICKER_SELECTOR)) return;
+    const folder = target.closest?.("zen-folder");
+    if (!folder) return;
+    // Already painted for this exact icon (e.g. our own canonicalising write).
+    if (folderStates.has(folder) && appliedFolderHrefs.get(folder) === folderIconHref(folder))
+      return;
+    queueFolder(folder);
+  };
+  const onAddedImage = (image) => {
+    refreshImage(image);
+    noteLegacyValue(image, image.getAttribute("src") || "");
+  };
+  const onNodeAdded = (node) => {
+    if (node.id === ROOT_ID || node.id === FILTER_PANEL_ID) return;
+    if (node.matches?.("zen-folder")) queueFolder(node);
+    else if (node.matches?.("img")) onAddedImage(node);
+    else if (node.matches?.("tab")) migrateTab(node);
+    for (const element of node.querySelectorAll?.("zen-folder, img") ?? []) {
+      if (element.matches("zen-folder")) queueFolder(element);
+      else onAddedImage(element);
+    }
+  };
+  const mayHoldTrackedState = (node) =>
+    Boolean(node.matches?.("zen-folder, img") || node.querySelector?.("zen-folder, img"));
+  const onMutations = (mutations) => {
+    if (stopped) return;
+    if (!mutations?.length) {
+      // Explicit refresh request (no records): run the full pass now.
+      refreshFolderShapes();
+      return;
+    }
+    for (const mutation of mutations) {
+      const target = mutation.target;
+      if (mutation.type === "attributes") {
+        if (mutation.attributeName === "src") onSourceChanged(target);
+        else if (mutation.attributeName === "href") onFolderHrefChanged(target);
+        else if (
+          mutation.attributeName === BZF_FOLDER_COLOR_ATTRIBUTE &&
+          !target.closest?.(PICKER_SELECTOR)
+        )
+          queueFolder(target);
+        continue;
+      }
+      if (mutation.type !== "childList" || target?.closest?.(PICKER_SELECTOR))
+        continue;
+      let elementChanged = false;
+      for (const node of mutation.addedNodes ?? []) {
+        if (node?.nodeType !== 1) continue;
+        elementChanged = true;
+        onNodeAdded(node);
+      }
+      for (const node of mutation.removedNodes ?? []) {
+        if (node?.nodeType !== 1) continue;
+        elementChanged = true;
+        if (
+          !pendingPrune &&
+          (imageStates.size || folderStates.size) &&
+          mayHoldTrackedState(node)
+        )
+          pendingPrune = true;
+      }
+      // Element changes inside a folder can replace its icon; text-only
+      // changes (tab titles) cannot.
+      if (elementChanged) queueFolder(target?.closest?.("zen-folder"));
+    }
+    schedulePendingWork();
   };
 
   const refreshCustomCatalog = () => {
@@ -1123,11 +1345,7 @@ export function initializeZenIcons(browserWindow) {
     if (!panel || !picker) {
       return false;
     }
-    baseRecords = [
-      ...loadEmojiRecords(),
-      ...ZEN_BUILT_IN_ICONS,
-      ...LUCIDE_ICONS,
-    ];
+    baseRecords = baseCatalogRecords();
     records = baseRecords;
     originalOpen = picker.open;
     widthBefore = {
@@ -1185,33 +1403,22 @@ export function initializeZenIcons(browserWindow) {
     panel.addEventListener("popupshown", onPopupShown);
     panel.addEventListener("popuphidden", onPopupHidden);
     panel.setAttribute("zen-icons-enhanced", "true");
-    folderObserver = new browserWindow.MutationObserver((mutations = []) => {
-      const relevant = mutations.filter(
-        (mutation) =>
-          !mutation.target?.closest?.(`#${ROOT_ID}, #${FILTER_PANEL_ID}`),
-      );
-      if (
-        !mutations.length ||
-        relevant.some((mutation) => mutation.type === "childList")
-      )
-        refreshFolderShapes();
-      else {
-        for (const mutation of relevant) {
-          if (mutation.attributeName === BZF_FOLDER_COLOR_ATTRIBUTE)
-            refreshFolder(mutation.target);
-          else if(mutation.attributeName==='href')
-            refreshFolder(mutation.target.closest?.('zen-folder'));
-        }
-        if (relevant.some((mutation) => mutation.attributeName === "src"))
-          refreshCustomImages();
-      }
-    });
+    // The observation root stays the document: Zen creates custom-artwork
+    // <img> elements outside the tab containers (Space switcher and indicator,
+    // folder tab-search popup). Records are filtered per node instead, so tab
+    // favicon churn and unrelated chrome DOM changes cost a few string checks.
+    folderObserver = new browserWindow.MutationObserver(onMutations);
     folderObserver.observe(browserWindow.document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ["src", "href", BZF_FOLDER_COLOR_ATTRIBUTE],
     });
+    // A Space saved with a legacy artwork value (synced, restored or written
+    // by another script) is not reliably visible as a DOM mutation, so migrate
+    // on Zen's own data event. Deferred out of saveWorkspace's dispatch; a
+    // migrated value is canonical, so the follow-up event saves nothing.
+    browserWindow.addEventListener("ZenWorkspaceDataChanged", onWorkspaceDataChanged);
     disconnectFolderColorBridge = connectFolderColorBridge({
       browserWindow,
       refreshFolder,
@@ -1229,6 +1436,16 @@ export function initializeZenIcons(browserWindow) {
     }
     view?.destroy();
     folderObserver?.disconnect();
+    browserWindow.removeEventListener("ZenWorkspaceDataChanged", onWorkspaceDataChanged);
+    if (workspaceMigrationTimer !== null) {
+      browserWindow.clearTimeout(workspaceMigrationTimer);
+      workspaceMigrationTimer = null;
+    }
+    if (pendingFrame !== null) {
+      browserWindow.cancelAnimationFrame?.(pendingFrame);
+      pendingFrame = null;
+    }
+    pendingFolders.clear();
     disconnectFolderColorBridge?.();
     disconnectSettings?.();
     disconnectGestures?.();

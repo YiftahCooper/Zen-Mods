@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Zen Icons
-// @version        0.3.0-rc.4
+// @version        0.3.0-rc.6
 // @description    Tagged and categorized icon providers for Zen's normal picker.
 // @include        chrome://browser/content/browser.xhtml
 // ==/UserScript==
