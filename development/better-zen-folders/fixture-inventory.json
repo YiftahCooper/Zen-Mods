@@ -328,8 +328,8 @@
     },
     {
       "path": "tests/performance-observers.test.mjs",
-      "bytes": 17461,
-      "sha256": "374e6a9f76c7214c0c9638595bd6f94623c01d29aceb8bbde95b23a0f7becf30"
+      "bytes": 19588,
+      "sha256": "010ea0b840490ea44c561b32111dd3762325eacb86fa907206655be92eebf6cd"
     },
     {
       "path": "tests/preferences.test.mjs",

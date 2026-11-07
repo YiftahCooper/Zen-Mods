@@ -3,7 +3,9 @@
 Scope: browser-window runtime (`better-zen-folders.uc.mjs`) as of **0.3.27**.
 Method: static reading of every observer, listener, timer, frame loop and
 SessionStore write, plus Node regressions in `tests/performance-observers.test.mjs`.
-No profile of a real Zen session exists yet; costs below are reasoned, not measured.
+Costs below are reasoned. Reconcile counts were later measured natively in a disposable
+Zen 1.24.1b profile with ~300 tabs (synthetic, headless; see CURRENT-STATUS.md); no
+Firefox Profiler trace of an everyday session exists.
 "T" is the number of tabs in the window (the reported session has about 296),
 "F" the number of folders, "P" the projected rows (pins and folder contents of
 the active Space).
@@ -27,7 +29,7 @@ attributes that change on every page load.
 | `StickyProjectionMotion` rAF loop | folder collapse/expand/selection animation | 180 ms per gesture | per-frame height writes on changed rows only | changed rows | unchanged |
 | `FolderPinPresentation` observer + 9 capture events | tab-strip childList, id/pinned/essential, tab events | every title change before | O(T) classification; for each folder tab `refreshNativePresentation` (mirror lookup, custom value parse, and for URL pins `SessionStore.getTabState`) | T, folder tabs | text/owned records filtered; button labels written only when changed |
 | `FolderPinRootIntegration` observer + capture listeners | tab-strip childList, pinned/essential | every title change before | O(T) when the root badge preference is on, else O(badges) | T | filtered |
-| `RestoreMetadataSynchronizer` observer (attrs incl. `label`, `image`, `muted`) + 12 events | tab-strip childList/attributes, events | every page load and title change before | full pass: one custom value read per tab, a validated record build + JSON per folder tab | T | text/owned records ignored; label/image/muted/sublabel changes re-serialise only the changed tabs; a never-stored value is no longer "cleared" |
+| `RestoreMetadataSynchronizer` observer (attrs incl. `label`, `image`, `muted`) + 12 events | tab-strip childList/attributes, events | every page load and title change before | full pass: one custom value read per tab, a validated record build + JSON per folder tab | T | text/owned records ignored; label/image/muted/sublabel changes re-serialise only the changed tabs; a never-stored value is no longer "cleared"; a URL-pin intent change (`BetterZenFoldersUrlPinChanged`) re-serialises that tab, since its owned badge no longer triggers a pass |
 | `FolderColorManager` observer (attr `id`) | tab-strip childList | every title change before | `querySelectorAll('zen-folder')`, attribute + two style writes per folder | F | filtered; unchanged projection performs no write |
 | `FolderIconIntegrityManager` observer | tab-strip childList | every title change before | `querySelector` per folder | F | filtered |
 | `FolderButtonManager` observer | tab-strip childList | every title change before | per-folder row queries, attribute write | F | filtered |

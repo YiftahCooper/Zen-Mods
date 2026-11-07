@@ -6391,6 +6391,10 @@ const RESTORE_METADATA_ATTRIBUTES = [
 // live-folder presentation). Every other observed change can move placement,
 // identity or folder snapshots for other tabs and keeps the full pass.
 const RESTORE_TAB_LOCAL_ATTRIBUTES = new Set(["label", "image", "muted", "zen-show-sublabel"]);
+// A URL-pin intent write changes only that tab's recovery record. Its owned
+// badge insertion no longer reaches the observer, so listen for the intent
+// store's own notification (dispatched on the tab after every write).
+const RESTORE_TAB_LOCAL_EVENTS = ["BetterZenFoldersUrlPinChanged"];
 const RSS_PROMPT_CLOSE_EVENT = "DOMModalDialogClosed";
 
 function isLiveFolderOptionCommand(event) {
@@ -6418,6 +6422,7 @@ export class RestoreMetadataSynchronizer {
     this.deferredByRestore = false;
     this.generation = 0;
     this.boundMutations = records => this.scheduleFromMutations(records);
+    this.boundTabLocalEvent = event => this.scheduleTabs([event?.target]);
     this.boundSchedule = event => {
       this.schedule();
       if (!isLiveFolderOptionCommand(event)) return;
@@ -6437,6 +6442,9 @@ export class RestoreMetadataSynchronizer {
     const eventTarget = this.adapters.eventTarget?.();
     for (const type of RESTORE_METADATA_EVENTS) {
       eventTarget?.addEventListener(type, this.boundSchedule, { capture: true, signal });
+    }
+    for (const type of RESTORE_TAB_LOCAL_EVENTS) {
+      eventTarget?.addEventListener(type, this.boundTabLocalEvent, { capture: true, signal });
     }
     eventTarget?.addEventListener(RSS_PROMPT_CLOSE_EVENT, this.boundRssPromptClose, {
       capture: true,
@@ -6498,7 +6506,16 @@ export class RestoreMetadataSynchronizer {
       this.schedule();
       return;
     }
-    if (!tabs.length) return;
+    this.scheduleTabs(tabs);
+  }
+
+  /** Re-serialise only these tabs; anything that is not a tab keeps the full pass. */
+  scheduleTabs(tabs) {
+    if (this.destroyed || !tabs.length) return;
+    if (tabs.some(tab => tab?.localName !== "tab")) {
+      this.schedule();
+      return;
+    }
     for (const tab of tabs) this.pendingTabs.add(tab);
     this.queueSynchronization();
   }

@@ -197,6 +197,48 @@ test("restore metadata never clears or writes a value that was never stored", as
   assert.equal(RESTORE_KEY.length > 0, true);
 });
 
+test("a URL-pin intent change re-serialises only that tab's restore record", async () => {
+  // Native 0.3.27 finding: a URL pin made from the tab menu wrote the intent
+  // after the menu command's full pass, and its badge (an owned decoration)
+  // no longer reached the observer, so the restore record kept urlPin false.
+  const fixture = makeMetadataSyncFixture();
+  fixture.tab.localName = "tab";
+  const siblings = Array.from({ length: 50 }, (_, index) => ({
+    ...fixture.tab, id: `sibling-${index}`, presentation: { ...fixture.tab.presentation },
+  }));
+  fixture.tabs.push(...siblings);
+  fixture.leaf.allItems.push(...siblings);
+  const intents = new Map();
+  fixture.adapters.getUrlPinRecovery = tab => intents.get(tab) ?? { explicit: false, baseline: null };
+  let reads = 0;
+  const getValue = fixture.adapters.sessionStore.getCustomTabValue;
+  fixture.adapters.sessionStore.getCustomTabValue = (tab, key) => { reads++; return getValue(tab, key); };
+  fixture.manager.start(new AbortController().signal);
+  await fixture.flush();
+  assert.equal(JSON.parse(fixture.values.get(fixture.tab)).urlPin.explicit, false);
+  fixture.resetCalls();
+  reads = 0;
+
+  intents.set(fixture.tab, { explicit: true,
+    baseline: { entry: { url: "https://example.test/pinned", title: "Pinned" }, image: null } });
+  // The badge insertion alone is an owned decoration and stays filtered.
+  fixture.observer().callback([elementInsertion(element("button", "better-zen-folders-url-pin"))]);
+  await fixture.flush();
+  assert.deepEqual(fixture.writes, []);
+  // The intent store's notification on the tab re-serialises that tab only.
+  fixture.emit("BetterZenFoldersUrlPinChanged", fixture.tab);
+  await fixture.flush();
+  assert.equal(reads, 1, "only the changed tab is read");
+  assert.deepEqual(fixture.writes.map(write => write.tab), [fixture.tab]);
+  assert.equal(JSON.parse(fixture.values.get(fixture.tab)).urlPin.explicit, true);
+
+  // A notification without a tab target keeps the conservative full pass.
+  reads = 0;
+  fixture.emit("BetterZenFoldersUrlPinChanged", {});
+  await fixture.flush();
+  assert.equal(reads, 51);
+});
+
 test("folder colour projection performs no DOM write when the colour is unchanged", () => {
   const adapters = createBrowserFolderColorAdapters({ document: {}, gBrowser: {} });
   const writes = [];
