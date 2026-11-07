@@ -1,4 +1,4 @@
-// Context Menu Editor 0.1.5 — generated from src/entry.mjs.
+// Context Menu Editor 0.1.6 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -386,18 +386,28 @@
 
   // project:src/store.mjs
   var SETTINGS_PREF = "extension.context-menu-editor.settings";
+  function deepFreeze(value) {
+    if (value && typeof value === "object" && !Object.isFrozen(value)) {
+      Object.freeze(value);
+      for (const child of Object.values(value)) deepFreeze(child);
+    }
+    return value;
+  }
   function createStore(prefs, { onError = () => {
   } } = {}) {
-    let disposed = false, lastUndo = null;
+    let disposed = false, lastUndo = null, cached = null;
     const listeners = /* @__PURE__ */ new Set();
     const raw = () => prefs.getStringPref(SETTINGS_PREF, "");
     const read = () => {
       const value = raw();
+      if (cached?.raw === value) return cached;
+      let result;
       try {
-        return { state: parseState(value), raw: value, error: null };
+        result = { state: deepFreeze(parseState(value)), raw: value, error: null };
       } catch (problem) {
-        return { state: createState(), raw: value, error: problem.message };
+        result = { state: deepFreeze(createState()), raw: value, error: problem.message };
       }
+      return cached = Object.freeze(result);
     };
     const announce = () => {
       if (!disposed) for (const listener of [...listeners]) try {
@@ -454,6 +464,7 @@
         prefs.removeObserver(SETTINGS_PREF, observer);
         listeners.clear();
         lastUndo = null;
+        cached = null;
       }
     };
   }
@@ -3875,7 +3886,16 @@
     if (count < 1 || count > 8) throw new Error("Use 1–8 short Unicode symbols.");
     return { kind: "text", text };
   }
+  var pngVerdicts = /* @__PURE__ */ new Map();
   function normalizedPNG(data, window2) {
+    if (typeof data !== "string") return false;
+    if (pngVerdicts.has(data)) return pngVerdicts.get(data);
+    const verdict = checkPNG(data, window2);
+    if (pngVerdicts.size >= 256) pngVerdicts.delete(pngVerdicts.keys().next().value);
+    pngVerdicts.set(data, verdict);
+    return verdict;
+  }
+  function checkPNG(data, window2) {
     if (typeof data !== "string" || data.length > 8192 || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/u.test(data)) return false;
     let bytes2;
     try {
@@ -4530,6 +4550,7 @@
   } }) {
     const document2 = window2.document, contexts = /* @__PURE__ */ new Map(), retired = /* @__PURE__ */ new Map(), pendingOpenings = /* @__PURE__ */ new WeakMap(), listeners = /* @__PURE__ */ new Set();
     let destroyed = false, inventory = [], trigger = null;
+    let unowned = /* @__PURE__ */ new WeakSet(), syncQueued = false, rootObserver = null;
     const notify = () => {
       inventory = [...contexts.values()].map((c) => ({ id: c.root.id, label: c.label, items: [...c.scan.items, ...[...c.remembered.values()].filter((item) => !c.scan.nodes.has(item.key)).map((item) => ({ ...item, available: false }))] }));
       onInventory(inventory);
@@ -5036,13 +5057,45 @@
       contexts.set(root.id, c);
       observe(c);
     }
-    function sync() {
+    const trackedRoot = (node) => contexts.get(node.id)?.root === node;
+    function noteSubtree(target) {
+      let inside = false;
+      for (let popup = target?.nodeType === 1 ? target.closest("menupopup") : null; popup; popup = popup.parentElement?.closest("menupopup")) {
+        if (trackedRoot(popup)) inside = true;
+        else unowned.delete(popup);
+      }
+      return inside;
+    }
+    function staleRoots() {
+      for (const [id, c] of contexts) if (document2.getElementById(id) !== c.root) return true;
+      for (const spec of ROOTS) if (!contexts.has(spec.id) && document2.getElementById(spec.id)) return true;
+      for (const id of retired.keys()) if (document2.getElementById(id)?.localName === "menupopup") return true;
+      return false;
+    }
+    function rootRecord(record) {
+      if (noteSubtree(record.target)) return false;
+      for (const n of record.addedNodes) if (n.nodeType === 1 && !n.hasAttribute("data-cme-owned") && (n.localName === "menupopup" || n.firstElementChild && n.querySelector("menupopup"))) return true;
+      return false;
+    }
+    function queueSync() {
+      if (syncQueued || destroyed) return;
+      syncQueued = true;
+      window2.queueMicrotask(() => {
+        syncQueued = false;
+        sync();
+      });
+    }
+    function sync(force = false) {
       if (destroyed) return;
+      for (const record of rootObserver?.takeRecords() || []) noteSubtree(record.target);
+      if (force) unowned = /* @__PURE__ */ new WeakSet();
+      let changed = force;
       const specs = new Map(ROOTS.map((spec) => [spec.id, spec]));
       for (const root of document2.querySelectorAll("menupopup[id]")) {
-        if (specs.has(root.id) || root.parentElement?.closest("menupopup,menu") || root.closest("[data-cme-owned]")) continue;
+        if (specs.has(root.id) || trackedRoot(root) || unowned.has(root) || root.parentElement?.closest("menupopup,menu") || root.closest("[data-cme-owned]")) continue;
         const source = resolveSource(root), owner = source?.kind === "mod" ? source : discoverRoot(root, { resolveSource }).items.find((item) => item.source?.kind === "mod")?.source;
         if (owner) specs.set(root.id, { id: root.id, label: root.getAttribute("label") || `${owner.name} menu` });
+        else unowned.add(root);
       }
       for (const [id, c] of contexts) if (!specs.has(id) && c.root.isConnected) specs.set(id, { id, label: c.label });
       for (const [id, c] of contexts) if (document2.getElementById(id) !== c.root) {
@@ -5050,6 +5103,7 @@
         c.observer.disconnect();
         contexts.delete(id);
         retired.set(id, { label: c.label, lastOwners: c.lastOwners, pendingOwners: c.pendingOwners, remembered: c.remembered });
+        changed = true;
       }
       for (const [id, c] of retired) if (document2.getElementById(id)?.localName === "menupopup") specs.set(id, { id, label: c.label });
       for (const spec of specs.values()) {
@@ -5058,9 +5112,10 @@
         if (root) {
           attach(root, spec.label, retired.get(spec.id));
           retired.delete(spec.id);
+          changed = true;
         }
       }
-      notify();
+      if (changed) notify();
     }
     const onShow = (event) => {
       let c = contexts.get(event.target?.id);
@@ -5075,6 +5130,7 @@
         pendingOpenings.set(root, epoch2);
         window2.queueMicrotask(() => {
           if (destroyed || pendingOpenings.get(root) !== epoch2 || event.defaultPrevented || !root.isConnected) return;
+          unowned.delete(root);
           sync();
           const late = contexts.get(root.id);
           if (!late || late.root !== root || late.open) return;
@@ -5128,11 +5184,13 @@
     window2.addEventListener("popupshown", onShown, true);
     window2.addEventListener("popuphiding", onHide, true);
     window2.addEventListener("popuphidden", onHide, true);
-    const rootObserver = new window2.MutationObserver((records) => {
-      if (records.some((r) => [...r.addedNodes, ...r.removedNodes].some((n) => n.nodeType === 1 && (n.localName === "menupopup" || n.querySelector?.("menupopup") || ROOTS.some((s) => n.id === s.id))))) sync();
+    rootObserver = new window2.MutationObserver((records) => {
+      let relevant = false;
+      for (const record of records) if (rootRecord(record)) relevant = true;
+      if (relevant || !syncQueued && staleRoots()) queueSync();
     });
     rootObserver.observe(document2, { childList: true, subtree: true });
-    sync();
+    sync(true);
     const destroy = () => {
       if (destroyed) return;
       destroyed = true;
@@ -5156,7 +5214,7 @@
     };
     window2.addEventListener("unload", destroy, { once: true });
     return { getInventory: () => inventory, noteOwnerSettingsChange, clearOwnerSettingsChanges, refresh() {
-      sync();
+      sync(true);
       for (const c of contexts.values()) reconcile(c);
     }, subscribe(fn) {
       listeners.add(fn);
@@ -6303,9 +6361,19 @@
     }
     function capture(node) {
       if (disposed || !MENU_TAGS.has(node?.localName)) return;
-      const stack = String(new window2.Error().stack || "");
-      const uri = stack.match(/chrome:\/\/sine\/content\/[\w.-]+\/[^\s)]+/g)?.find((value) => !value.startsWith("chrome://sine/content/context-menu-editor/"));
-      if (uri) creation.set(node, uri);
+      creation.set(node, new window2.Error());
+    }
+    function creationURI(node) {
+      const value = creation.get(node);
+      if (!value || typeof value !== "object") return value;
+      let stack = "";
+      try {
+        stack = String(value.stack || "");
+      } catch {
+      }
+      const uri = stack.match(/chrome:\/\/sine\/content\/[\w.-]+\/[^\s)]+/g)?.find((frame) => !frame.startsWith("chrome://sine/content/context-menu-editor/")) || null;
+      creation.set(node, uri);
+      return uri;
     }
     function wrap(name, accept) {
       const original = document2[name], descriptor = Object.getOwnPropertyDescriptor(document2, name);
@@ -6365,7 +6433,7 @@
     function resolve(node) {
       if (disposed || !node) return UNKNOWN;
       uncatalogued = false;
-      const direct = handlerSource(node) || identify(creation.get(node), "creation");
+      const direct = handlerSource(node) || identify(creationURI(node), "creation");
       if (direct) return direct;
       const artwork = identify(node.getAttribute("image"), "artwork");
       if (uncatalogued && Date.now() - lastRefresh > 2e3) void refresh();
@@ -6499,7 +6567,7 @@
     const icons = createIconService(window2, { baseURL: BASE, fetch: (...args) => browserWindow().fetch(...args) });
     const stylesheet = window2.document.createElementNS("http://www.w3.org/1999/xhtml", "link");
     stylesheet.rel = "stylesheet";
-    stylesheet.href = BASE + "style.css?v=0.1.5";
+    stylesheet.href = BASE + "style.css?v=0.1.6";
     stylesheet.setAttribute("data-cme-stylesheet", "true");
     window2.document.documentElement.append(stylesheet);
     const owner = {
