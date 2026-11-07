@@ -1,5 +1,19 @@
 const BASE = 'chrome://sine/content/define-word/';
-export const ACTOR_NAME='DefineWordV031';
+// Stamped from package.json by build.mjs. Gecko caches modules by URL for the
+// session, so module URLs and the actor name change with every release.
+export const VERSION='0.3.5';
+export const ACTOR_NAME=`DefineWordV${VERSION.replace(/\./g,'_')}`;
+// Actor names of earlier releases. Later releases record theirs in REGISTERED.
+const LEGACY_ACTOR_NAMES=['DefineWord','DefineWordV030','DefineWordV031'];
+const REGISTERED=Symbol.for('define-word.registered-actor-names');
+// Each browser window's entry script publishes its owner with the bundled
+// version. Until no window runs older code, its actor must stay registered.
+export function olderCodeRunning(services) {
+  try {
+    for(const window of services.wm.getEnumerator('navigator:browser')){const owner=window.__defineWord;if(owner&&owner.version!==VERSION)return true;}
+    return false;
+  } catch {return true;}
+}
 // Screen CSS pixels, including negative coordinates on monitors left/above the
 // primary display. Copy only geometry; never retain actor-provided extra data.
 export function sanitizeSelectionAnchor(value) {
@@ -17,19 +31,30 @@ async function menuGeometry(window,global) {
   finally {if(timer!==undefined)window.clearTimeout(timer);}
 }
 
-export function createSelectionService({chrome,services}) {
+export function createSelectionService({chrome,services,registered=new Set(),olderCode=()=>true}) {
   let owners=0;
+  // Unregister earlier releases' actors only once every window runs this code;
+  // an updated window must not break one that has not reloaded yet.
+  function releaseOlderActors(){
+    if(olderCode())return;
+    for(const name of new Set([...LEGACY_ACTOR_NAMES,...registered])){
+      if(name===ACTOR_NAME)continue;
+      try{chrome.unregisterWindowActor(name);}catch{}
+      registered.delete(name);
+    }
+  }
   return {acquire() {
-    if (!owners) chrome.registerWindowActor(ACTOR_NAME, {
-      parent:{esModuleURI:`${BASE}actors/DefineWordParent.sys.mjs?v=0.3.1`},
-      child:{esModuleURI:`${BASE}actors/DefineWordChild.sys.mjs?v=0.3.1`},
+    if (!owners) {chrome.registerWindowActor(ACTOR_NAME, {
+      parent:{esModuleURI:`${BASE}actors/DefineWordParent.sys.mjs?v=${VERSION}`},
+      child:{esModuleURI:`${BASE}actors/DefineWordChild.sys.mjs?v=${VERSION}`},
       // This actor only reads selected text/geometry; its parent exposes no
       // privileged message handlers. Gecko 157 enforces this declaration for
       // web and file content processes. Keep the explicit document allowlist.
       safeForUntrustedWebProcess:true,
       allFrames:true, matches:['http://*/*','https://*/*','file:///*'],
-    });
+    });registered.add(ACTOR_NAME);}
     owners++;
+    releaseOlderActors();
     let released=false;
     const snapshots=new WeakMap();
     function isCurrent(window,selection){
@@ -62,12 +87,14 @@ export function createSelectionService({chrome,services}) {
           snapshots.set(selection,{context,global,top,topGlobal,browser});return selection;
         } catch {return null;}
       },
-      release(){if(released)return;released=true;if(--owners===0)chrome.unregisterWindowActor(ACTOR_NAME);},
+      release(){if(released)return;released=true;if(--owners===0){chrome.unregisterWindowActor(ACTOR_NAME);registered.delete(ACTOR_NAME);}},
     };
   }};
 }
 let singleton;
 export function acquireSelectionService() {
-  singleton ||= createSelectionService({chrome:ChromeUtils,services:Services});
+  // System modules share one global, so later releases can find this name.
+  singleton ||= createSelectionService({chrome:ChromeUtils,services:Services,
+    registered:globalThis[REGISTERED] ||= new Set(),olderCode:()=>olderCodeRunning(Services)});
   return singleton.acquire();
 }

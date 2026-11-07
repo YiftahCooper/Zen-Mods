@@ -12,6 +12,16 @@ https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word
 
 Allow JavaScript mods in Sine. Update an existing installation with Sine's update check. For the old standalone repository, update or switch its source to this folder. **Saved settings and dictionary keys survive mod updates.** Keys are stored in Firefox's credential manager, outside the mod files. Saved keys remain visible as masked text. The inline eye button reveals or hides the value. Edits save when you leave the field; clearing it removes that key.
 
+## New in 0.3.5
+
+- Each release now loads its own selection and actor modules. Module URLs and the selection actor name come from one build-time version, so an in-session Sine update no longer reuses cached 0.3.1-era modules. Older actor registrations stay available to windows that have not reloaded yet and are removed once no window runs older code.
+- A Merriam-Webster lookup makes one keyed request and reads the stored key once. Its definition, matching headwords and spelling suggestions come from the same response. Typing in the search field still requests suggestions after a short pause.
+- With the popup closed, window resizes and tab switches no longer do popup work.
+- The popup stays open for same-page address changes, such as single-page-app navigation and `#` links, and for unrelated frame loads. Real page navigation still closes it.
+- Only shortcut, menu-icon and text-size changes refresh open windows. Saving the popup size or a dictionary choice no longer rescans browser shortcuts in every window.
+
+These changes have automated source tests only; native Zen verification of 0.3.5 is pending. Until the in-session update has been checked natively, restart Zen once after updating.
+
 ## New in 0.3.4
 
 - Restore selected-word capture on Gecko 157 by declaring the bounded selection actor safe for web content processes.
@@ -56,7 +66,7 @@ Existing valid default dictionary preferences are preserved on update. Select th
 - **Shortcut:** Record shortcut, press your combination, then Save shortcut. Disable shortcut followed by Save disables it. Some browser or OS shortcuts may conflict.
 - **Menu icon:** toggle the outlined open-book icon in Configure.
 - **Settings:** open **Sine → Define Word → Configure**. There is no settings link in the popup. Configure is capped at 800 CSS pixels and fits narrower windows.
-- **Close:** Escape, Close, changing tabs or navigating cancels pending lookups. Colors follow the browser theme.
+- **Close:** Escape, Close, changing tabs or navigating to another page cancels pending lookups. Same-page address changes and unrelated frame loads keep the popup open; if the frame that held the selection is replaced, the popup closes. Colors follow the browser theme.
 
 Version **0.3.3** uses lowercase request URLs for Free Dictionary API, matching the provider's own case-insensitive lookup. This avoids separate capitalized cache misses: the live `Account` request timed out while `account` worked, and the repaired adapter resolved `Account` successfully. Original search/display text and other dictionaries' capitalization rules are preserved.
 
@@ -64,7 +74,7 @@ The preceding popup repairs preserve selection clearance after window resizing o
 
 Academy requests remove niqqud from the search parameter while retaining the original pointed word when choosing a headword. Merriam-Webster keeps different returned headwords separate, prioritizes the requested capitalization, and retains divided senses, substitute senses, examples and cross-reference text. Unedited search text preserves its original spelling beneath title-cased display, so repeating `may` cannot change its meaning to the month `May`.
 
-Verification: **158 automated tests** pass, including request deadlines and successful retry after a stalled request, provider parsing, credentials, controller cancellation, repeat-opening geometry, all eight resize boundaries and settings behavior. A disposable Chromium run passed **36 production-HTML/CSS input/layout checks**, including 30 stable reopens, real header dragging and eight resize directions, text selection, 10–32 px scaling, RTL/niqqud, keyboard suggestions and masked-key settings with synthetic credentials. Its native XUL panel and Firefox credential manager were simulated, so this does not establish native Zen acceptance.
+Verification: **168 automated tests** pass, including release-version consistency, one Merriam-Webster request per lookup, request deadlines and successful retry after a stalled request, provider parsing, credentials, controller cancellation, repeat-opening geometry, all eight resize boundaries and settings behavior. A disposable Chromium run passed **36 production-HTML/CSS input/layout checks**, including 30 stable reopens, real header dragging and eight resize directions, text selection, 10–32 px scaling, RTL/niqqud, keyboard suggestions and masked-key settings with synthetic credentials. Its native XUL panel and Firefox credential manager were simulated, so this does not establish native Zen acceptance.
 
 Live keyless checks on 2026-10-15 resolved words through Wiktionary, the Academy and Milog; the English spelling query `snese` suggested `sense` first. Hebrew Wiktionary lacks some tested words. The Academy and Milog can return ambiguous readings of unpointed spelling; the pointed headword and alternative matches identify the available meanings. Explicitly pointed Milog searches preserved the intended reading. Free Dictionary API previously resolved `Hello` and `Account` after URL normalization, but a later Windows check resolved only `Hello` while `Account`, `Browser`, `Computer` and `Define` hit the ten-second deadline. Separate earlier diagnostics received Cloudflare HTTP 522, an origin timeout. Requests remain bounded, failures are not presented as missing words, and retry can recover without reopening the popup; the mod cannot guarantee the external service's availability. The provider's [lookup implementation](https://github.com/meetDeveloper/freeDictionaryAPI/blob/master/app.js) and [outage reports](https://github.com/meetDeveloper/freeDictionaryAPI/issues/253) document the relevant behavior. Actual Merriam-Webster and Lexicala authentication were not tested with personal keys.
 
