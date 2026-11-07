@@ -913,6 +913,14 @@ export function initializeZenIcons(browserWindow) {
       Promise.resolve(spaces.saveWorkspace(workspace)).catch(error=>console.error(`${PREFIX} unable to save migrated Space artwork`,error));
     }
   };
+  let workspaceMigrationTimer = null;
+  const onWorkspaceDataChanged = () => {
+    if (stopped || workspaceMigrationTimer !== null) return;
+    workspaceMigrationTimer = browserWindow.setTimeout(() => {
+      workspaceMigrationTimer = null;
+      migrateWorkspaces();
+    }, 0);
+  };
   const migrateNativeCustomChoices = () => {
     if(!customStoragePrepared || stopped)return;
     if (!initialMigrationDone) {
@@ -1406,6 +1414,11 @@ export function initializeZenIcons(browserWindow) {
       attributes: true,
       attributeFilter: ["src", "href", BZF_FOLDER_COLOR_ATTRIBUTE],
     });
+    // A Space saved with a legacy artwork value (synced, restored or written
+    // by another script) is not reliably visible as a DOM mutation, so migrate
+    // on Zen's own data event. Deferred out of saveWorkspace's dispatch; a
+    // migrated value is canonical, so the follow-up event saves nothing.
+    browserWindow.addEventListener("ZenWorkspaceDataChanged", onWorkspaceDataChanged);
     disconnectFolderColorBridge = connectFolderColorBridge({
       browserWindow,
       refreshFolder,
@@ -1423,6 +1436,11 @@ export function initializeZenIcons(browserWindow) {
     }
     view?.destroy();
     folderObserver?.disconnect();
+    browserWindow.removeEventListener("ZenWorkspaceDataChanged", onWorkspaceDataChanged);
+    if (workspaceMigrationTimer !== null) {
+      browserWindow.clearTimeout(workspaceMigrationTimer);
+      workspaceMigrationTimer = null;
+    }
     if (pendingFrame !== null) {
       browserWindow.cancelAnimationFrame?.(pendingFrame);
       pendingFrame = null;
