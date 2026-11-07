@@ -4,11 +4,11 @@
   "description": "Tagged, categorized Zen, Lucide, emoji, and custom icons in Zen's normal picker.",
   "homepage": "https://github.com/YiftahCooper/Zen-Mods/tree/main/zen-icons",
   "author": "Yiftah Cooper",
-  "version": "0.3.0-rc.4",
+  "version": "0.3.0-rc.5",
   "preferences": "preferences.json",
   "chromeManifest": "chrome.manifest",
   "createdAt": "2026-08-23",
-  "updatedAt": "2026-10-15",
+  "updatedAt": "2026-11-07",
   "style": {
     "chrome": "chrome.css"
   },
