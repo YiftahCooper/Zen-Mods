@@ -1,1 +1,4 @@
 .backup-scratch/
+# The repository root ignores tests/; keep this mod's development tests trackable.
+!development/tests/
+!development/tests/**

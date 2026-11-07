@@ -16,6 +16,17 @@ Keep the internal ID `glance-button-position` and the `glance.position.*` prefer
 
 The percentage positions the centre of the visible stack along the Glance panel, with a 15px edge margin. CSS alone uses the available travel distance. Copy URL must read the currently displayed browser URI, including navigation after opening Glance, and must touch the clipboard only when clicked. Hidden buttons remain in the settings order and leave no gaps in the visible stack.
 
+## Run unit tests
+
+`tests/observers.test.mjs` runs both scripts in jsdom with stubbed `Services.prefs`, `ResizeObserver` and unload hook. It needs Node 20+ and no browser. It checks that unrelated tab-panel mutations trigger no document-wide search and that each new Glance container is arranged exactly once. It proves nothing about native geometry or Sine. Install jsdom once into ignored scratch, then run from the collection checkout:
+
+```powershell
+npm install --prefix glance-controls/.backup-scratch/unit-deps --no-audit --no-fund --ignore-scripts jsdom@26.1.0
+node --test "glance-controls/development/tests/*.test.mjs"
+```
+
+Set `GLANCE_UNIT_DEPS` to use a different folder containing `node_modules/jsdom`.
+
 ## Run native tests
 
 Use PowerShell 7 on Windows, Zen, and a **clean disposable profile with Sine installed**. Close that profile before running tests. Pass its `chrome` directory as `-SineChromePath`; the runner copies only `JS` and `utils`, never preferences, cookies, tabs, or passwords. Do not supply an everyday profile: unrelated user scripts in its `JS` directory would also be copied.
