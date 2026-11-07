@@ -20,6 +20,8 @@ this development directory or the whole repository.
   raw browser profiles, personal recordings and raw diagnostics are not distributed.
 - [Testing](TESTING.md): portable source/rendering checks and disposable native
   probes. No test requires the original developer's home directory or browser data.
+- [Performance](PERFORMANCE.md): observers, listeners, timers and SessionStore
+  writes, with their trigger frequency and what scales with tab count.
 - [Third-party inputs](THIRD-PARTY.md): native, Sine and icon fixtures with notices.
 
 The recovery baseline is version **0.3.26**, published in commit

@@ -4,6 +4,32 @@ Baseline: **0.3.26**, runtime commit
 `56789780f376021d276634967961252954f5eee6`. Status is alpha, with limited user
 testing. Publication, source checks, native checks and user acceptance are distinct.
 
+## Unpublished candidate 0.3.27 (runtime performance)
+
+Source and Node checks only; not published, not run in Zen, not accepted. It
+targets lag with several hundred tabs without changing any behaviour contract.
+Tab-strip observers ignore title-text and own-decoration records, restore metadata
+re-serialises only retitled tabs, Sticky no longer re-projects on every keystroke
+and reads layout once per pass, and unchanged colour/label values are not
+rewritten. Inventory, costs and what remains: [PERFORMANCE.md](PERFORMANCE.md).
+
+Native check still required, in a disposable profile with a few hundred tabs:
+
+1. Load or retitle background tabs and confirm, with the Firefox Profiler (JS
+   tracer or markers), that no Better Zen Folders reconcile runs per title change.
+2. Type into a web page; no Sticky projection pass per keystroke.
+3. Sticky underline markers stay centred under folder icons (LTR and RTL,
+   outline-free icons), including after collapse/expand and selection changes.
+4. Folder `+`, unload-button hiding, folder colours and native icon repair still
+   appear for new, moved, renamed and restored folders.
+5. Restore metadata: rename a tab in a live folder, close it, Undo Close Tab;
+   the restored tab keeps folder, position and presentation. Move a tab between
+   folders and restart; placement is retained.
+6. Folder URL-pin badges and root pin badges appear/disappear on pin, unpin, move
+   and restore; drag chooser still re-evaluates while scrolling during a drag.
+7. Disable and re-enable the mod in Sine (supportsUnload): no leftover attributes,
+   decorations or observers.
+
 ## Recent completed repairs
 
 - 0.3.26: folder-plus creation starts in its target folder and applies Top/Bottom

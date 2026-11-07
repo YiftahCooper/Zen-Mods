@@ -76,6 +76,47 @@ function hasLiveWindowOpener(options) {
   return Boolean(context && options.openWindowInfo?.parent?.top === context);
 }
 
+// Performance boundary for every tab-strip MutationObserver. Gecko replaces the
+// text node of a tab label on each title change (and Fluent/sound/throbber text
+// does the same), so a subtree childList observer sees a constant stream of
+// text-only records with hundreds of tabs. No structural reconciler reads text:
+// those records, and additions of this mod's own decorations, cannot change a
+// reconcile result. Element removals always count, even of owned decorations,
+// because another writer may have removed them. Anything unrecognised (empty
+// batches, test fakes, attribute records) stays conservative and counts.
+const NON_ELEMENT_NODE_TYPES = new Set([3, 4, 7, 8]); // text, CDATA, PI, comment
+function isOwnedTabStripDecoration(node) {
+  if (node?.getAttribute?.("data-better-zen-folders-owned") === "true") return true;
+  const className = node?.getAttribute?.("class");
+  return typeof className === "string" && /(?:^|\s)better-zen-folders-/.test(className);
+}
+export function isRelevantTabStripMutation(records, {ignoreOwnedAdditions = true} = {}) {
+  if (!records || typeof records.length !== "number" || records.length === 0) return true;
+  for (const record of Array.from(records)) {
+    if (record?.type !== "childList") return true;
+    for (const node of record.addedNodes ?? []) {
+      if (NON_ELEMENT_NODE_TYPES.has(node?.nodeType)) continue;
+      if (ignoreOwnedAdditions && isOwnedTabStripDecoration(node)) continue;
+      return true;
+    }
+    for (const node of record.removedNodes ?? []) {
+      if (!NON_ELEMENT_NODE_TYPES.has(node?.nodeType)) return true;
+    }
+  }
+  return false;
+}
+
+// Attribute writes that leave the value unchanged still queue MutationObserver
+// records (Gecko's AttributeSetToCurrentValue) for Zen's and this mod's
+// observers. Projection code writes the same values on every pass.
+function setAttributeIfChanged(node, name, value) {
+  const text = String(value);
+  if (node?.getAttribute?.(name) !== text) node?.setAttribute?.(name, text);
+}
+function setStylePropertyIfChanged(style, name, value) {
+  if (style?.getPropertyValue?.(name) !== value || style?.getPropertyPriority?.(name)) style?.setProperty?.(name, value);
+}
+
 /** Related creations inherit a real opener's immediate folder. Supply native
  * insertion options before TabOpen instead of relocating an arbitrary new tab.
  * Glance stays transient until its native full-open move identifies both tabs. */
@@ -1985,7 +2026,7 @@ export class FolderPinRootIntegration {
     this.menu?.addEventListener('popupshowing',this.onMenu);this.menu?.addEventListener('popuphidden',this.onMenuHidden);
     this.unsubscribes = [this.preferences.subscribe?.('showRootPinBadge',this.onRefresh),
       this.preferences.subscribe?.('commandIconMode',()=>this.showMenu())];
-    this.observer = new this.host.MutationObserver(this.onRefresh);
+    this.observer = new this.host.MutationObserver(records => { if (isRelevantTabStripMutation(records)) this.refresh(); });
     this.observer.observe(this.host.gBrowser.tabContainer,{subtree:true,childList:true,attributes:true,attributeFilter:['pinned','zen-essential']});
     this.refresh();
   }
@@ -2067,7 +2108,7 @@ export class FolderPinPresentation {
     for (const name of this.events) this.host.addEventListener(name,this.onEvent,true);
     this.menu = this.host.document.getElementById('tabContextMenu');
     this.menu?.addEventListener('popupshowing',this.onMenu);this.menu?.addEventListener('popuphidden',this.onMenuHidden);
-    this.observer = new this.host.MutationObserver(() => this.schedule());
+    this.observer = new this.host.MutationObserver(records => { if (isRelevantTabStripMutation(records)) this.schedule(); });
     this.observer.observe(this.host.gBrowser.tabContainer,{subtree:true,childList:true,attributes:true,attributeFilter:['id','pinned','zen-essential']});
     this.unsubscribe = this.preferences.subscribe?.('commandIconMode',()=>this.showMenu());
     this.signal = signal;signal?.addEventListener('abort',this.onAbort,{once:true});this.refresh();
@@ -2102,9 +2143,10 @@ export class FolderPinPresentation {
       }
       const pending = this.grace.pending.has(tab);
       const label = pending ? 'Cancel unpinning URL' : 'Unpin URL';
-      button.setAttribute('aria-label',label);button.setAttribute('title',label);
+      setAttributeIfChanged(button,'aria-label',label);setAttributeIfChanged(button,'title',label);
       button.toggleAttribute('data-bzf-url-unpin-pending',pending);
-      button.disabled = Boolean(this.policy.blocked(tab));
+      const disabled = Boolean(this.policy.blocked(tab));
+      if (button.disabled !== disabled) button.disabled = disabled;
     }
     for (const [tab,button] of this.buttons) if (!wanted.has(tab)) {
       this.grace.cancel(tab);button.remove();this.buttons.delete(tab);
@@ -2258,6 +2300,7 @@ export class StickyFolderVisibilityManager {
     this.stickySystemKeyOptions = {capture:true, mozSystemGroup:true};
     this.pending = null;
     this.store = null;
+    this.iconCentreQueue = null;
   }
   start(signal) {
     if (this.started || !this.host.gBrowser?.tabContainer || !this.host.document?.querySelectorAll
@@ -2290,7 +2333,7 @@ export class StickyFolderVisibilityManager {
       .map(id => this.host.document.getElementById(id)).filter(Boolean);
     for (const menu of this.menus) menu.addEventListener('popupshowing', this.onEvent);
     this.observer = typeof this.host.MutationObserver === "function"
-      ? new this.host.MutationObserver(() => this.schedule()) : null;
+      ? new this.host.MutationObserver(records => { if (isRelevantTabStripMutation(records)) this.schedule(); }) : null;
     this.observer?.observe(this.host.gBrowser.tabContainer, {subtree:true, childList:true, attributes:true,
       attributeFilter:["collapsed", "collapsedpinnedtabs", "active", "pinned", "hidden", "selected",
         "multiselected", "visuallyselected", "zen-workspace-id", "id",
@@ -2475,6 +2518,9 @@ export class StickyFolderVisibilityManager {
   }
   refresh() {
     if (!this.started) return;
+    // A nested pass (motion.animate re-projects synchronously) owns its own
+    // queue and hands the outer one back when it finishes.
+    const outerIconCentreQueue = this.iconCentreQueue, iconCentreQueue = this.iconCentreQueue = [];
     try {
       for (const [item, pending] of this.stickyRemovals) {
         if (!this.validStickyRemoval(item, pending)) this.cancelStickyRemoval(item);
@@ -2585,10 +2631,16 @@ export class StickyFolderVisibilityManager {
       }
       focusFallback?.focus?.();
       this.host.gBrowser.tabContainer._invalidateCachedVisibleTabs?.();
+      // Read phase: one layout flush serves underline centring, focusable-row
+      // geometry and motion heights. The centring writes follow it; they move
+      // only the absolutely positioned marker, never a row's box.
+      const centres = this.measureIconCentres(iconCentreQueue.splice(0));
       this.projectNativeFocusableItems();
       this.motion.measure(projection);
+      this.applyIconCentres(centres);
       for (const group of selectionMotion) void this.motion.animate(group).catch(error=>this.report(error));
     } catch (error) { this.report(error); }
+    finally { this.iconCentreQueue = outerIconCentreQueue ?? null; }
   }
   stickyToggleTargets(item) {
     if (!item?.isConnected || !this.stickyEnabled(item) || !this.isVisibilityItem(item)
@@ -2620,21 +2672,21 @@ export class StickyFolderVisibilityManager {
       button.appendChild(ear);row.appendChild(button);this.decorations.add(button);
     }
     const sticky = this.rowSticky(item);
-    if (this.isRootPinnedItem(item)) button.setAttribute('data-bzf-root-sticky-control', 'true');
+    if (this.isRootPinnedItem(item)) setAttributeIfChanged(button, 'data-bzf-root-sticky-control', 'true');
     else button.removeAttribute('data-bzf-root-sticky-control');
     const kind = item.isZenFolder ? 'Folder'
       : this.host.gBrowser.isSplitViewWrapper?.(item) ? 'Split View' : 'Tab';
-    button.setAttribute('aria-label', `Sticky ${kind}`);
-    button.setAttribute('aria-pressed', String(sticky));
-    button.setAttribute('title', sticky ? `Turn off Sticky for this ${kind.toLowerCase()}.`
-      : `Make this ${kind.toLowerCase()} Sticky — keep visible when its folder or Space pins are collapsed.`);
     const pendingRemoval = this.stickyRemovals.has(item);
-    button.toggleAttribute('data-bzf-sticky-pending', pendingRemoval);
-    if (pendingRemoval) {
-      button.setAttribute('data-bzf-sticky-pending', 'true');
-      button.setAttribute('title', 'Removing Sticky shortly. Click again to keep it Sticky.');
-      button.setAttribute('aria-label', `Cancel removing Sticky from this ${kind.toLowerCase()}`);
-    }
+    // Resolve the final labels first: each pass otherwise rewrites the same
+    // strings (or flips them twice while a removal is pending).
+    setAttributeIfChanged(button, 'aria-label', pendingRemoval
+      ? `Cancel removing Sticky from this ${kind.toLowerCase()}` : `Sticky ${kind}`);
+    setAttributeIfChanged(button, 'aria-pressed', String(sticky));
+    setAttributeIfChanged(button, 'title', pendingRemoval ? 'Removing Sticky shortly. Click again to keep it Sticky.'
+      : sticky ? `Turn off Sticky for this ${kind.toLowerCase()}.`
+        : `Make this ${kind.toLowerCase()} Sticky — keep visible when its folder or Space pins are collapsed.`);
+    if (pendingRemoval) setAttributeIfChanged(button, 'data-bzf-sticky-pending', 'true');
+    else button.removeAttribute('data-bzf-sticky-pending');
     // One active keyboard/pointer surface per mode. The hidden corner control
     // retains state only; it must never remain an invisible gutter target.
     const icon = this.preferences?.get('stickyMarker') === 'underline'
@@ -2649,28 +2701,43 @@ export class StickyFolderVisibilityManager {
       icon.appendChild(mark); button._bzfUnderline = mark; this.decorations.add(mark);
     }
     if (button._bzfUnderline) {
-      button.setAttribute('data-bzf-sticky-marker', 'underline');
-      button.setAttribute('tabindex','-1'); button.setAttribute('aria-hidden','true');
-      button._bzfUnderline.setAttribute('data-bzf-sticky', String(sticky));
-      button._bzfUnderline.setAttribute('aria-label',button.getAttribute('aria-label'));
-      button._bzfUnderline.setAttribute('aria-pressed',String(sticky));
-      button._bzfUnderline.setAttribute('title', button.getAttribute('title'));
+      setAttributeIfChanged(button, 'data-bzf-sticky-marker', 'underline');
+      setAttributeIfChanged(button, 'tabindex', '-1'); setAttributeIfChanged(button, 'aria-hidden', 'true');
+      setAttributeIfChanged(button._bzfUnderline, 'data-bzf-sticky', String(sticky));
+      setAttributeIfChanged(button._bzfUnderline, 'aria-label', button.getAttribute('aria-label'));
+      setAttributeIfChanged(button._bzfUnderline, 'aria-pressed', String(sticky));
+      setAttributeIfChanged(button._bzfUnderline, 'title', button.getAttribute('title'));
       button._bzfUnderline.toggleAttribute('data-bzf-sticky-pending', pendingRemoval);
       if (item.isZenFolder) {
         // Native folder fronts and outline-free glyphs can be translated inside
         // their slot. Centre under the visible artwork without moving that art.
         const art = icon.querySelector(item.hasAttribute('zen-icons-enlarge-inner-icon') ? 'svg .icon' : 'svg .front')
           ?? icon.querySelector('svg');
-        const slot = icon.getBoundingClientRect(), paint = art?.getBoundingClientRect();
-        if (paint?.width > 0 && slot.width > 0) {
-          const centre = paint.x + paint.width / 2;
-          const offset = this.host.getComputedStyle(icon).direction === 'rtl' ? slot.right-centre : centre-slot.x;
-          button._bzfUnderline.style.setProperty('--bzf-sticky-icon-centre',`${offset}px`);
-        } else button._bzfUnderline.style.removeProperty('--bzf-sticky-icon-centre');
+        // Geometry is read once per refresh, after every attribute write, and
+        // applied afterwards. Measuring here interleaved reads and writes and
+        // forced one synchronous reflow per folder.
+        const job = {mark:button._bzfUnderline, icon, art};
+        if (this.iconCentreQueue) this.iconCentreQueue.push(job);
+        else this.applyIconCentres(this.measureIconCentres([job]));
       }
     } else {
       button.removeAttribute('data-bzf-sticky-marker');
       button.removeAttribute('tabindex'); button.removeAttribute('aria-hidden');
+    }
+  }
+  measureIconCentres(jobs) {
+    return jobs.map(({mark, icon, art}) => {
+      const slot = icon.getBoundingClientRect(), paint = art?.getBoundingClientRect();
+      if (!(paint?.width > 0 && slot.width > 0)) return {mark, value:null};
+      const centre = paint.x + paint.width / 2;
+      const offset = this.host.getComputedStyle(icon).direction === 'rtl' ? slot.right-centre : centre-slot.x;
+      return {mark, value:`${offset}px`};
+    });
+  }
+  applyIconCentres(centres) {
+    for (const {mark, value} of centres) {
+      if (value === null) mark.style.removeProperty('--bzf-sticky-icon-centre');
+      else setStylePropertyIfChanged(mark.style, '--bzf-sticky-icon-centre', value);
     }
   }
   removeUnderline(button) {
@@ -2943,7 +3010,10 @@ export class StickyFolderVisibilityManager {
   handleEvent(event) {
     if (!this.started) return;
     if (this.handleStickyToggle(event)) return;
-    if (['pointerdown','mousedown','mouseup','auxclick','dblclick','keyup'].includes(event.type)) return;
+    // keypress is registered only for the toggle isolation above. Gecko also
+    // routes keys typed into web content through this chrome window, so it must
+    // never schedule a full projection pass per keystroke.
+    if (['pointerdown','mousedown','mouseup','auxclick','dblclick','keyup','keypress'].includes(event.type)) return;
     if (event.type === 'TabSelect') {
       this.selectionChanged = true;
       // Native animateSelect auto-expands a folder when all children are active.
@@ -3366,7 +3436,7 @@ export class DragDiagnosticRecorder {
         configuredDelays[key] = Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : null;
       } catch { configuredDelays[key] = null; }
     }
-    return {schema: 1, diagnosticBuild: "0.3.26", configuredDelays,
+    return {schema: 1, diagnosticBuild: "0.3.27", configuredDelays,
       enabled: this.enabled, capacity: this.capacity, truncated: this.truncated,
       droppedEvents: {...this.droppedEvents}, attempts: this.attempt,
       entries: this.entries.map(entry => ({...entry, reasons: [...entry.reasons]}))};
@@ -4477,7 +4547,9 @@ export class FolderColorManager {
     }
     const tabContainer = this.adapters.tabContainer?.();
     if (tabContainer) {
-      this.observer = this.adapters.createMutationObserver?.(() => this.reconcileAll()) ?? null;
+      this.observer = this.adapters.createMutationObserver?.(records => {
+        if (isRelevantTabStripMutation(records)) this.reconcileAll();
+      }) ?? null;
       this.observer?.observe?.(tabContainer, {
         attributes: true,
         attributeFilter: ["id"],
@@ -5001,7 +5073,9 @@ export class FolderIconIntegrityManager {
     this.started = false;
     this.destroyed = false;
     this.pendingFolderCreateRepairs = new WeakSet();
-    this.boundReconcileAll = this.reconcileAll.bind(this);
+    this.boundMutations = records => {
+      if (isRelevantTabStripMutation(records)) this.reconcileAll();
+    };
     this.boundFolderEvent = this.onFolderEvent.bind(this);
     this.boundDestroy = this.destroy.bind(this);
   }
@@ -5014,7 +5088,7 @@ export class FolderIconIntegrityManager {
     this.eventTarget?.addEventListener?.("TabGroupCreate", this.boundFolderEvent, true);
     const tabContainer = this.adapters.tabContainer?.() ?? null;
     if (tabContainer) {
-      this.observer = this.adapters.createMutationObserver?.(this.boundReconcileAll) ?? null;
+      this.observer = this.adapters.createMutationObserver?.(this.boundMutations) ?? null;
       this.observer?.observe?.(tabContainer, { childList: true, subtree: true });
     }
     this.reconcileAll();
@@ -6313,6 +6387,10 @@ const RESTORE_METADATA_ATTRIBUTES = [
   "zen-show-sublabel",
   "zen-workspace-id",
 ];
+// Attributes whose change can alter only the changed tab's own record (its
+// live-folder presentation). Every other observed change can move placement,
+// identity or folder snapshots for other tabs and keeps the full pass.
+const RESTORE_TAB_LOCAL_ATTRIBUTES = new Set(["label", "image", "muted", "zen-show-sublabel"]);
 const RSS_PROMPT_CLOSE_EVENT = "DOMModalDialogClosed";
 
 function isLiveFolderOptionCommand(event) {
@@ -6333,10 +6411,13 @@ export class RestoreMetadataSynchronizer {
     this.started = false;
     this.destroyed = false;
     this.scheduled = false;
+    this.fullSyncPending = false;
+    this.pendingTabs = new Set();
     this.cancelLiveOptionTask = null;
     this.rssPromptCloseArmed = false;
     this.deferredByRestore = false;
     this.generation = 0;
+    this.boundMutations = records => this.scheduleFromMutations(records);
     this.boundSchedule = event => {
       this.schedule();
       if (!isLiveFolderOptionCommand(event)) return;
@@ -6363,7 +6444,7 @@ export class RestoreMetadataSynchronizer {
     });
     const tabContainer = this.adapters.tabContainer?.();
     if (tabContainer) {
-      this.observer = this.adapters.createMutationObserver?.(this.boundSchedule) ?? null;
+      this.observer = this.adapters.createMutationObserver?.(this.boundMutations) ?? null;
       this.observer?.observe?.(tabContainer, {
         attributes: true,
         childList: true,
@@ -6381,6 +6462,8 @@ export class RestoreMetadataSynchronizer {
     this.started = false;
     this.generation++;
     this.scheduled = false;
+    this.fullSyncPending = false;
+    this.pendingTabs.clear();
     this.cancelLiveOptionTask?.();
     this.cancelLiveOptionTask = null;
     this.rssPromptCloseArmed = false;
@@ -6390,17 +6473,53 @@ export class RestoreMetadataSynchronizer {
   }
 
   schedule() {
+    if (this.destroyed) return;
+    this.fullSyncPending = true;
+    this.queueSynchronization();
+  }
+
+  /** Title, favicon and mute changes arrive for every loading tab. They cannot
+   * alter another tab's record, so only the changed tabs are re-serialised.
+   * Text-only and owned-decoration childList records cannot alter any record. */
+  scheduleFromMutations(records) {
+    if (this.destroyed) return;
+    if (!records || typeof records.length !== "number" || records.length === 0) {
+      this.schedule();
+      return;
+    }
+    const tabs = [];
+    for (const record of Array.from(records)) {
+      if (record?.type === "attributes" && RESTORE_TAB_LOCAL_ATTRIBUTES.has(record.attributeName)
+        && record.target?.localName === "tab") {
+        tabs.push(record.target);
+        continue;
+      }
+      if (record?.type === "childList" && !isRelevantTabStripMutation([record])) continue;
+      this.schedule();
+      return;
+    }
+    if (!tabs.length) return;
+    for (const tab of tabs) this.pendingTabs.add(tab);
+    this.queueSynchronization();
+  }
+
+  queueSynchronization() {
     if (this.destroyed || this.scheduled) return;
     this.scheduled = true;
     const generation = this.generation;
     Promise.resolve().then(() => {
       this.scheduled = false;
+      const full = this.fullSyncPending;
+      const tabs = [...this.pendingTabs];
+      this.fullSyncPending = false;
+      this.pendingTabs.clear();
       if (this.destroyed || generation !== this.generation) return;
       if (this.isRestoreActive()) {
         this.deferredByRestore = true;
         return;
       }
-      this.synchronize();
+      if (full) this.synchronize();
+      else this.synchronizeTabs(tabs);
     });
   }
 
@@ -6439,13 +6558,28 @@ export class RestoreMetadataSynchronizer {
     for (const tab of tabs) this.synchronizeTab(tab, folderSnapshots);
   }
 
+  synchronizeTabs(changed) {
+    let tabs;
+    try {
+      tabs = new Set(this.adapters.listTabs?.() ?? []);
+    } catch (error) {
+      this.reportError(error);
+      return;
+    }
+    // Same membership rule as the full pass: closed/foreign tabs are skipped.
+    const folderSnapshots = new Map();
+    for (const tab of changed) if (tabs.has(tab)) this.synchronizeTab(tab, folderSnapshots);
+  }
+
   synchronizeTab(tab, folderSnapshots = null) {
     let current;
     try {
       current = this.adapters.sessionStore.getCustomTabValue(tab, RESTORE_KEY);
       if (!isRestorableFolderTab(tab, this.adapters)) {
         if (this.adapters.isSessionRestoreCandidate?.(tab) === true) return;
-        if (current !== "") this.adapters.clearRestoreValue(tab);
+        // Nothing stored: a delete would be a no-op, and its fallback empty
+        // write would make SessionStore re-serialise the whole session.
+        if (current !== "" && current !== undefined && current !== null) this.adapters.clearRestoreValue(tab);
         return;
       }
       const serialized = JSON.stringify(buildRestoreRecord(tab, this.adapters, { folderSnapshots }));
@@ -7549,6 +7683,7 @@ export class FolderUnloadManager {
     this.pendingTabs = new Map();
     this.started = false;
     this.reconcile = this.reconcile.bind(this);
+    this.onMutations = records => { if (isRelevantTabStripMutation(records)) this.reconcile(); };
     this.destroy = this.destroy.bind(this);
   }
 
@@ -7560,7 +7695,7 @@ export class FolderUnloadManager {
     this.reconcile();
     const root = this.host.gBrowser.tabContainer;
     if (root && this.host.MutationObserver) {
-      this.observer = new this.host.MutationObserver(this.reconcile);
+      this.observer = new this.host.MutationObserver(this.onMutations);
       this.observer.observe(root, {childList: true, subtree: true});
     }
     root?.addEventListener?.("TabGroupUpdate", this.reconcile);
@@ -7705,7 +7840,9 @@ export class FolderButtonManager {
 
     const tabContainer = this.adapters.tabContainer();
     if (!tabContainer) return;
-    this.observer = this.adapters.createMutationObserver(() => this.reconcileAll());
+    this.observer = this.adapters.createMutationObserver(records => {
+      if (isRelevantTabStripMutation(records)) this.reconcileAll();
+    });
     this.observer.observe(tabContainer, { childList: true, subtree: true });
     signal?.addEventListener?.("abort", () => this.destroy(), { once: true });
   }
@@ -8019,8 +8156,8 @@ export class EmptyRegularFolderManager {
     });
     const tabContainer = this.adapters.tabContainer?.();
     if (tabContainer) {
-      this.observer = this.adapters.createMutationObserver(() => {
-        if (this.candidates.size > 0) this.scheduleReconciliation();
+      this.observer = this.adapters.createMutationObserver(records => {
+        if (this.candidates.size > 0 && isRelevantTabStripMutation(records)) this.scheduleReconciliation();
       });
       this.observer.observe(tabContainer, { childList: true, subtree: true });
     }
@@ -8873,9 +9010,13 @@ export function createBrowserFolderColorAdapters(host) {
     },
     isFolder: folder => folder?.isZenFolder === true,
     projectColor: (folder, color) => {
-      folder.setAttribute?.("data-better-zen-folders-color", color);
-      folder.style?.setProperty?.("--better-zen-folders-custom-color", color);
-      folder.style?.setProperty?.("--better-zen-folders-folder-color", color);
+      // Reconciliation reprojects every folder on each structural change; an
+      // unchanged colour must not dirty the folder's style or attributes.
+      if (folder.getAttribute?.("data-better-zen-folders-color") !== color) {
+        folder.setAttribute?.("data-better-zen-folders-color", color);
+      }
+      setStylePropertyIfChanged(folder.style, "--better-zen-folders-custom-color", color);
+      setStylePropertyIfChanged(folder.style, "--better-zen-folders-folder-color", color);
     },
     clearProjectedColor: folder => {
       folder.removeAttribute?.("data-better-zen-folders-color");
@@ -9168,7 +9309,7 @@ export function createBrowserFolderColorMenuAdapters(host, preferences = null) {
     }
     const build = String(host.Services?.appinfo?.appBuildID ?? "");
     return {
-      time: Date.now(), diagnosticBuild: "0.3.26 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
+      time: Date.now(), diagnosticBuild: "0.3.27 / preset-links", browserBuild: /^\d{14}$/.test(build) ? build : null,
       storedColor: picker.actions.read?.() ?? null, persistenceReadStatus, persistedColor,
       linkedPreset: picker.actions.readPreset?.() ?? null,
       projectedColor: normalizeFolderColor(folder?.style?.getPropertyValue?.("--better-zen-folders-custom-color")),
@@ -11952,11 +12093,16 @@ export function createBrowserFolderEndDropAdapters(host, visibility = null, pref
       return () => host.clearTimeout(timer);
     },
     watch: callback => {
-      const observer = new host.MutationObserver(callback);
+      // Drag-only. Title text does not move destinations; the chooser's own
+      // footer insertion still counts so its first layout is rechecked.
+      const observer = new host.MutationObserver(records => {
+        if (isRelevantTabStripMutation(records, {ignoreOwnedAdditions: false})) callback();
+      });
       observer.observe(tabs, { childList: true, subtree: true, attributes: true,
         attributeFilter: ["data-bzf-visibility", "hidden", "collapsed", "zen-workspace-id", "zen-live-folder", "split-view-group"] });
-      host.addEventListener("scroll", callback, true);
-      host.addEventListener("resize", callback, true);
+      // The callback only arms one deferred refresh; it never cancels scrolling.
+      host.addEventListener("scroll", callback, {capture: true, passive: true});
+      host.addEventListener("resize", callback, {capture: true, passive: true});
       host.addEventListener("ZenWorkspacesUIUpdate", callback, true);
       const unsubscribe = preferences?.subscribe?.("colourCodeDragDestinations", callback);
       return () => {
