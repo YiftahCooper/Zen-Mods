@@ -1,2 +1,3 @@
 export class DefineWordParent extends JSWindowActorParent {}
-export {DefineWordParent as DefineWordV031Parent};
+// build.mjs stamps the release actor name; Gecko looks up `${name}Parent`.
+export {DefineWordParent as DefineWordV0_3_5Parent};

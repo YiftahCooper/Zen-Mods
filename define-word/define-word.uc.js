@@ -1,4 +1,4 @@
-// Define Word 0.3.4 - generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.5 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
@@ -223,16 +223,33 @@
     const learners = providerId === "mw-learners", sourceUrl = `https://www.merriam-webster.com/${learners ? "learner/" : ""}dictionary/${encodeURIComponent(selected.headword)}`;
     return { headword: selected.headword, language: "en", senses, matches, sourceUrl, attribution: { label: learners ? "Merriam-Webster's Learner's Dictionary" : "Merriam-Webster's Collegiate® Dictionary", url: sourceUrl, brand: "merriam-webster" } };
   }
+  function suggestionsOf(data) {
+    if (!Array.isArray(data)) return [];
+    const words = data.map((item) => typeof item === "string" ? text(item) : headwordOf(item));
+    return [...new Set(words.filter(Boolean))].slice(0, 8).map((word) => ({ word, language: "en" }));
+  }
   function merriamWebster(kind) {
     const id = `mw-${kind}`;
-    return { id, label: kind === "learners" ? "Merriam-Webster Learner's" : "Merriam-Webster Collegiate", language: "en", keyRequired: true, suggestionsLabel: "Matching words", async suggest(options) {
-      const data = await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options);
-      if (!Array.isArray(data)) return [];
-      const words = data.map((item) => typeof item === "string" ? text(item) : headwordOf(item));
-      return [...new Set(words.filter(Boolean))].slice(0, 8).map((word) => ({ word, language: "en" }));
-    }, async lookup(options) {
-      return parseMerriamWebster(await requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options), options.query, id);
-    } };
+    const request2 = (options) => requestJson(`https://www.dictionaryapi.com/api/v3/references/${kind}/json/${encodeURIComponent(options.query)}?key=${encodeURIComponent(options.key)}`, options);
+    return {
+      id,
+      label: kind === "learners" ? "Merriam-Webster Learner's" : "Merriam-Webster Collegiate",
+      language: "en",
+      keyRequired: true,
+      suggestionsLabel: "Matching words",
+      async suggest(options) {
+        return suggestionsOf(await request2(options));
+      },
+      async lookup(options) {
+        return parseMerriamWebster(await request2(options), options.query, id);
+      },
+      // Definitions and spelling suggestions share one endpoint. An explicit
+      // lookup derives both from one keyed request instead of spending two.
+      async lookupWithSuggestions(options) {
+        const data = await request2(options);
+        return { definition: parseMerriamWebster(data, options.query, id), suggestions: suggestionsOf(data) };
+      }
+    };
   }
 
   // project:src/providers/lexicala.mjs
@@ -359,6 +376,18 @@
   var providers = new Map([freeDictionary, wiktionary("en"), wiktionary("he"), merriamWebster("collegiate"), merriamWebster("learners"), lexicalaHebrew, academyHebrew, milogHebrew].map((p) => [p.id, p]));
 
   // project:src/lookup.mjs
+  function suggestionsFor(candidates2, term) {
+    const suggestions = [], seen = /* @__PURE__ */ new Set();
+    for (const candidate of candidates2) {
+      const word = normalizeTerm(candidate?.word);
+      const identity = word.query?.toLocaleLowerCase("en");
+      if (word.status || word.language !== term.language || candidate.language !== term.language || seen.has(identity)) continue;
+      seen.add(identity);
+      suggestions.push({ word: word.query, language: term.language });
+      if (suggestions.length === 8) break;
+    }
+    return suggestions;
+  }
   function createLookupService({ providers: providers2, credentials, fetch = globalThis.fetch, parseDocument, timers = globalThis }) {
     async function run({ term, providerId, signal }, operation) {
       if (term?.status) return term;
@@ -391,25 +420,27 @@
         if (abort.signal.aborted) return { status: "cancelled" };
         const options = { query: term.query, signal: abort.signal, key, fetch, parseDocument };
         if (operation === "suggest") {
-          const candidates2 = await provider.suggest(options), suggestions = [], seen = /* @__PURE__ */ new Set();
-          if (!Array.isArray(candidates2)) return { status: "unavailable" };
-          for (const candidate of candidates2) {
-            const word = normalizeTerm(candidate?.word);
-            const identity = word.query?.toLocaleLowerCase("en");
-            if (word.status || word.language !== term.language || candidate.language !== term.language || seen.has(identity)) continue;
-            seen.add(identity);
-            suggestions.push({ word: word.query, language: term.language });
-            if (suggestions.length === 8) break;
-          }
-          return { status: "ok", suggestions };
+          const candidates3 = await provider.suggest(options);
+          if (!Array.isArray(candidates3)) return { status: "unavailable" };
+          return { status: "ok", suggestions: suggestionsFor(candidates3, term) };
         }
-        let definition = await provider.lookup(options), normalizedRetry = false;
+        const shared = typeof provider.lookupWithSuggestions === "function";
+        let candidates2;
+        async function define(request3) {
+          if (!shared) return provider.lookup(request3);
+          const result = await provider.lookupWithSuggestions(request3);
+          if (candidates2 === void 0) candidates2 = result?.suggestions ?? null;
+          return result?.definition || null;
+        }
+        let definition = await define(options), normalizedRetry = false;
         const fallback = term.language === "he" ? term.withoutNiqqud : term.query?.toLowerCase();
         if (provider.supportsFallback !== false && !definition && fallback && fallback !== term.query && !abort.signal.aborted) {
           normalizedRetry = true;
-          definition = await provider.lookup({ ...options, query: fallback });
+          definition = await define({ ...options, query: fallback });
         }
-        return definition ? { status: "ok", definition, normalizedRetry } : { status: "no-result" };
+        const outcome = definition ? { status: "ok", definition, normalizedRetry } : { status: "no-result" };
+        if (shared) outcome.suggestions = Array.isArray(candidates2) ? { status: "ok", suggestions: suggestionsFor(candidates2, term) } : { status: "unavailable" };
+        return outcome;
       }
       try {
         return await Promise.race([request2().catch((error) => ({ status: ["rate-limit", "cancelled", "unauthorized", "access-denied"].includes(error?.code) ? error.code : "unavailable" })), stopped]);
@@ -574,7 +605,7 @@
       if (manual && isOpen() && !drag) apply(manual.width, manual.height);
     }
     const windowResized = (event) => {
-      if (event.target === window2) {
+      if (event.target === window2 && isOpen()) {
         constrainHeight();
         fit();
       }
@@ -1417,9 +1448,10 @@
       else item.removeAttribute("image");
       popup?.setTextSize?.(settings.textSize);
     }
-    let generation = 0, pending, suggestionsPending, debounce, disposed2 = false, opened = false, lastTerm, lastProvider, lastSelection, originBrowser;
+    let generation = 0, pending, suggestionsPending, debounce, disposed2 = false, opened = false, capturing = null, lastTerm, lastProvider, lastSelection, originBrowser;
     const available = (language) => [...deps.providers.values()].filter((p) => p.language === language);
     const current = () => originBrowser === window2.gBrowser.selectedBrowser && (!lastSelection || deps.selection.isCurrent(window2, lastSelection));
+    const idle = () => !opened && capturing === null;
     function cancel() {
       generation++;
       pending?.abort();
@@ -1509,7 +1541,8 @@
       popup.show(lastSelection?.anchor);
       opened = true;
       if (term.status || !term.language) return;
-      void suggest(term, providerId, token);
+      const provider = deps.providers.get(providerId), shared = typeof provider?.lookupWithSuggestions === "function";
+      if (!shared) void suggest(term, providerId, token);
       let outcome;
       try {
         outcome = await deps.lookup.lookup({ term, providerId, signal: pending.signal });
@@ -1523,6 +1556,7 @@
         return;
       }
       popup.render({ ...state, outcome, textSize: deps.settings().textSize });
+      if (shared) popup.renderSuggestions?.({ outcome: outcome.suggestions || { status: ["ok", "no-result"].includes(outcome.status) ? "unavailable" : outcome.status }, label: provider.suggestionsLabel || "Matching words" });
       if (outcome.status === "ok" && outcome.definition?.matches?.length) popup.renderSuggestions?.({ outcome: { status: "ok", suggestions: outcome.definition.matches }, label: "Matching dictionary entries" });
     }
     async function define(contextMenu) {
@@ -1532,11 +1566,14 @@
       const token = generation;
       originBrowser = window2.gBrowser.selectedBrowser;
       let selection;
+      capturing = token;
       try {
         selection = await deps.selection.capture(window2, contextMenu);
       } catch {
         if (token === generation) close();
         return;
+      } finally {
+        if (capturing === token) capturing = null;
       }
       if (disposed2 || token !== generation) return;
       if (!contextMenu && !selection?.rawText?.trim() && repeat && deps.selection.isCurrent(window2, repeat)) selection = repeat;
@@ -1559,12 +1596,20 @@
     };
     item.addEventListener("command", command);
     menu?.addEventListener("popupshowing", showing);
-    const dismiss = () => close();
-    const progress = { onLocationChange(browser) {
-      if (browser === originBrowser) close();
+    const dismiss = () => {
+      if (!idle()) close();
+    };
+    const SAME_DOCUMENT = 1;
+    const progress = { onLocationChange(browser, webProgress, _request, _location, flags = 0) {
+      if (idle() || browser !== originBrowser) return;
+      if (webProgress?.isTopLevel === false || flags & SAME_DOCUMENT) {
+        if (opened && !current()) close();
+        return;
+      }
+      close();
     } };
     const tabClosed = (event) => {
-      if (event.target.linkedBrowser === originBrowser) close();
+      if (!idle() && event.target.linkedBrowser === originBrowser) close();
     };
     window2.gBrowser.tabContainer.addEventListener("TabSelect", dismiss);
     window2.gBrowser.tabContainer.addEventListener("TabClose", tabClosed);
@@ -1586,13 +1631,16 @@
     } };
   }
 
+  // project:src/version.mjs
+  var VERSION = "0.3.5";
+
   // project:src/sine-settings.mjs
   function createSineSettingsBridge(window2, options) {
     const { document: document2 } = window2;
     let controls, container, dialog, disposed2 = false;
     const style = document2.createElementNS("http://www.w3.org/1999/xhtml", "link");
     style.rel = "stylesheet";
-    style.href = "chrome://sine/content/define-word/style.css?v=0.3.2";
+    style.href = `chrome://sine/content/define-word/style.css?v=${VERSION}`;
     document2.documentElement.append(style);
     const reset = () => controls?.reset();
     function openRequestedDialog() {
@@ -1684,18 +1732,20 @@
   // project:src/entry.js
   window.__defineWord?.unload();
   var CREDENTIAL_TOPIC = "define-word-credentials-changed";
+  var SHORTCUT_PREF = `${PREF}shortcut`;
+  var OBSERVED_PREFS = [SHORTCUT_PREF, `${PREF}show-icon`, `${PREF}text-size`];
   var controller;
   var shortcut;
   var settingsBridge;
   var observer;
   var credentialObserver;
   var disposed = false;
-  var owner = { unload() {
+  var owner = { version: VERSION, unload() {
     if (disposed) return;
     disposed = true;
     window.removeEventListener("load", start);
     window.removeEventListener("unload", owner.unload);
-    if (observer) Services.prefs.removeObserver(PREF, observer);
+    if (observer) for (const name of OBSERVED_PREFS) Services.prefs.removeObserver(name, observer);
     if (credentialObserver) Services.obs.removeObserver(credentialObserver, CREDENTIAL_TOPIC);
     shortcut?.destroy();
     controller?.destroy();
@@ -1723,7 +1773,7 @@
         });
         return;
       }
-      const { acquireSelectionService } = ChromeUtils.importESModule("chrome://sine/content/define-word/src/selection.sys.mjs?v=0.3.1");
+      const { acquireSelectionService } = ChromeUtils.importESModule(`chrome://sine/content/define-word/src/selection.sys.mjs?v=${VERSION}`);
       selection = acquireSelectionService();
       const lookup = createLookupService({
         providers,
@@ -1755,12 +1805,12 @@
         void controller.define();
       }, onConflict: () => {
       } });
-      observer = { observe() {
+      observer = { observe(_subject, _topic, name) {
         const settings = readSettings(Services.prefs);
-        controller.updateAppearance(settings);
-        shortcut.update(settings.shortcut);
+        if (name === SHORTCUT_PREF) shortcut.update(settings.shortcut);
+        else controller.updateAppearance(settings);
       } };
-      Services.prefs.addObserver(PREF, observer);
+      for (const name of OBSERVED_PREFS) Services.prefs.addObserver(name, observer);
       credentialObserver = { observe(_subject, _topic, id) {
         controller.credentialsChanged(id);
       } };
