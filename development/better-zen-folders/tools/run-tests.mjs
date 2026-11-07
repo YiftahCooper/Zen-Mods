@@ -12,6 +12,20 @@ const scratch=join(home,'.backup-scratch');await mkdir(scratch,{recursive:true})
 const project=await mkdtemp(join(scratch,'test-project-'));
 for(const part of ['tests','fixtures'])await cp(join(home,part),join(project,part),{recursive:true});
 await cp(join(home,'fixture-project'),project,{recursive:true});
+// Sine installs a Zen-Mods mod by unpacking the whole repository inside the
+// profile's sine-mods/<mod id>/ folder, so a deep repository path exceeds the
+// Windows path limit and aborts the update. Deep fixtures are stored under
+// long-fixtures/ and restored here to the paths the tests expect.
+const longFixtures=JSON.parse(await readFile(join(home,'long-fixtures/map.json'),'utf8'));
+for(const [stored,target] of Object.entries(longFixtures)){
+ const destination=join(project,target.replace(/^fixture-project\//,''));
+ await mkdir(dirname(destination),{recursive:true});await cp(join(home,'long-fixtures',stored),destination);
+}
+const repo=resolve(home,'../..'),listed=spawnSync('git',['ls-files'],{cwd:repo,encoding:'utf8'});
+if(listed.status===0){
+ const deep=listed.stdout.split(/\r?\n/).filter(file=>file.length>100);
+ if(deep.length)throw Error('Repository paths over 100 characters break Sine updates on Windows; move them under long-fixtures/: '+deep.join(', '));
+}
 for(const part of ['chrome.css','preferences.json','theme.json','scripts/better-zen-folders.uc.mjs']){
  await mkdir(dirname(join(project,part)),{recursive:true});await cp(join(runtime,part),join(project,part));
 }

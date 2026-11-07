@@ -1,0 +1,7 @@
+{
+  "1-better-zen-folders.uc.mjs": "fixture-project/artifacts/releases/20260921T152454Z-v0.3.6-round2-890c0fbf/package/scripts/better-zen-folders.uc.mjs",
+  "2-chrome.css": "fixture-project/artifacts/releases/20260922T055656Z-v0.3.11-round2-6b597aa8/package/chrome.css",
+  "3-vertical-tabs.css": "fixture-project/artifacts/task-8-root-cause/omni/chrome/browser/content/browser/zen-styles/zen-tabs/vertical-tabs.css",
+  "4-eclipse.svg": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/lucide/eclipse.svg",
+  "5-square.svg": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/selectable/square.svg"
+}

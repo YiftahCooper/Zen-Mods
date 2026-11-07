@@ -529,12 +529,14 @@
     {
       "path": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/lucide/eclipse.svg",
       "bytes": 581,
-      "sha256": "7d3f3a8a1c8ef893d2220da47a07be0e8f743a6d3a0be545394049a844440b18"
+      "sha256": "7d3f3a8a1c8ef893d2220da47a07be0e8f743a6d3a0be545394049a844440b18",
+      "storedAt": "long-fixtures/4-eclipse.svg"
     },
     {
       "path": "fixtures/zen-icons/src/browser/themes/shared/zen-icons/common/selectable/square.svg",
       "bytes": 562,
-      "sha256": "024af828681ab2d5266e0dd50e360f371ce5e2ffc27d1fe82c299b36bd7d36bd"
+      "sha256": "024af828681ab2d5266e0dd50e360f371ce5e2ffc27d1fe82c299b36bd7d36bd",
+      "storedAt": "long-fixtures/5-square.svg"
     },
     {
       "path": "fixture-project/artifacts/native-20260915/tab.js",
@@ -559,12 +561,14 @@
     {
       "path": "fixture-project/artifacts/releases/20260921T152454Z-v0.3.6-round2-890c0fbf/package/scripts/better-zen-folders.uc.mjs",
       "bytes": 323269,
-      "sha256": "775e63ee26e0551d783df3a2bb24667202441691e53ad745e398b00244101e20"
+      "sha256": "775e63ee26e0551d783df3a2bb24667202441691e53ad745e398b00244101e20",
+      "storedAt": "long-fixtures/1-better-zen-folders.uc.mjs"
     },
     {
       "path": "fixture-project/artifacts/releases/20260922T055656Z-v0.3.11-round2-6b597aa8/package/chrome.css",
       "bytes": 24877,
-      "sha256": "85572605102c68c577dfa46eaf1a40486a68d967adf2a60e72752733e5c033f0"
+      "sha256": "85572605102c68c577dfa46eaf1a40486a68d967adf2a60e72752733e5c033f0",
+      "storedAt": "long-fixtures/2-chrome.css"
     },
     {
       "path": "fixture-project/artifacts/round3-review/native/drag-and-drop.js",
@@ -579,7 +583,8 @@
     {
       "path": "fixture-project/artifacts/task-8-root-cause/omni/chrome/browser/content/browser/zen-styles/zen-tabs/vertical-tabs.css",
       "bytes": 34284,
-      "sha256": "768d84fd7fe13ba6433f88d251411c1cd1dc1f46f62fc3bc1e499e1441db4855"
+      "sha256": "768d84fd7fe13ba6433f88d251411c1cd1dc1f46f62fc3bc1e499e1441db4855",
+      "storedAt": "long-fixtures/3-vertical-tabs.css"
     },
     {
       "path": "fixture-project/tmp/round10-menu-alignment-proposal.patch",

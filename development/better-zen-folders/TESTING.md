@@ -17,6 +17,16 @@ cache. Both are optional machine-local configuration, not repository constants.
 `BZF_PYTHON` when the Python executable is not named `python` on Windows or `python3`
 elsewhere. `npm run test:prepare` assembles inputs without executing tests.
 
+## Repository path length
+
+Sine installs and updates a Zen-Mods mod by unpacking the whole repository inside
+`chrome/sine-mods/<mod id>/`. Better Zen Folders has a 36-character id, so a repository
+path much over 100 characters exceeds the Windows path limit in a normal profile and
+aborts the update halfway. Fixtures that need deep paths are stored in
+`long-fixtures/` and listed in `long-fixtures/map.json`; `tools/run-tests.mjs`
+restores them to their original paths in the temporary test project and refuses to
+run while any tracked repository path is over 100 characters.
+
 ## Proof boundaries and platform checks
 
 - An absent historical screenshot is an explicit skip. Its original personal
