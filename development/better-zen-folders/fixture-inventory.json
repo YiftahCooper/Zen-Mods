@@ -327,6 +327,11 @@
       "sha256": "f260c958ae5040161dd25545aa4c634661b1175526a6ccd6dbf627f69986621a"
     },
     {
+      "path": "tests/performance-observers.test.mjs",
+      "bytes": 19588,
+      "sha256": "010ea0b840490ea44c561b32111dd3762325eacb86fa907206655be92eebf6cd"
+    },
+    {
       "path": "tests/preferences.test.mjs",
       "bytes": 18376,
       "sha256": "4447682c89c73d8f3947a5694779db8af514d3449a7ca5d38a5ba6d57a5a3cad"

@@ -43,13 +43,14 @@ const prefs={
 writeFileSync(join(profile,'user.js'),Object.entries(prefs).map(([k,v])=>`user_pref(${JSON.stringify(k)}, ${JSON.stringify(v)});`).join('\n'));
 const log=[];
 const proc=spawn(process.env.BZF_ZEN_BINARY || 'C:/Program Files/Zen Browser/zen.exe',['-headless','-no-remote','-profile',profile,'--marionette','--remote-allow-system-access'],{
- windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,MOZ_HEADLESS:'1',MOZ_NO_REMOTE:'1',MOZ_CRASHREPORTER_DISABLE:'1'},
+ windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,MOZ_HEADLESS:'1',MOZ_NO_REMOTE:'1',MOZ_CRASHREPORTER_DISABLE:'1',MOZ_REMOTE_ALLOW_SYSTEM_ACCESS:'1'},
 });
 proc.stdout.on('data',d=>{log.push(d.toString());if(d.toString().includes('SPIKE:'))process.stdout.write(d);});proc.stderr.on('data',d=>log.push(d.toString()));
 let socket,buffer=Buffer.alloc(0),next=0;const pending=new Map();
+const scriptTimeout=Number(process.env.BZF_NATIVE_TIMEOUT_MS)||40000;
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 function receive(data){buffer=Buffer.concat([buffer,data]);while(true){const colon=buffer.indexOf(58);if(colon<0)return;const n=Number(buffer.subarray(0,colon).toString());if(buffer.length<colon+1+n)return;const msg=JSON.parse(buffer.subarray(colon+1,colon+1+n));buffer=buffer.subarray(colon+1+n);if(Array.isArray(msg)&&msg[0]===1){const p=pending.get(msg[1]);if(p){pending.delete(msg[1]);clearTimeout(p.timer);msg[2]?p.reject(Error(JSON.stringify(msg[2]))):p.resolve(msg[3]);}}}}
-function command(name,parameters={}){return new Promise((resolve,reject)=>{const id=++next;const timer=setTimeout(()=>{pending.delete(id);reject(Error('Timeout '+name));},45000);pending.set(id,{resolve,reject,timer});const body=JSON.stringify([0,id,name,parameters]);socket.write(Buffer.byteLength(body)+':'+body);});}
+function command(name,parameters={}){return new Promise((resolve,reject)=>{const id=++next;const timer=setTimeout(()=>{pending.delete(id);reject(Error('Timeout '+name));},scriptTimeout+5000);pending.set(id,{resolve,reject,timer});const body=JSON.stringify([0,id,name,parameters]);socket.write(Buffer.byteLength(body)+':'+body);});}
 const results={profile,pid:proc.pid,port,started:new Date().toISOString(),steps:[]};
 const receiptId=`${proc.pid}-${Date.now()}`;
 try{
@@ -59,8 +60,8 @@ try{
  results.session=session;
  const actual=session.capabilities?.['moz:profile'];if(actual&&resolve(actual)!==resolve(profile))throw Error('Wrong profile '+actual);
  await command('Marionette:SetContext',{value:'chrome'});
- const execute=script=>command('WebDriver:ExecuteScript',{script,args:[],newSandbox:false,sandbox:'system',scriptTimeout:40000});
- const executeAsync=script=>command('WebDriver:ExecuteAsyncScript',{script,args:[],newSandbox:false,sandbox:'system',scriptTimeout:40000});
+ const execute=script=>command('WebDriver:ExecuteScript',{script,args:[],newSandbox:false,sandbox:'system',scriptTimeout});
+ const executeAsync=script=>command('WebDriver:ExecuteAsyncScript',{script,args:[],newSandbox:false,sandbox:'system',scriptTimeout});
  for(let i=0;i<60;i++){const state=await execute('return {ready: !!(window.gZenFolders && window.gZenWorkspaces?.activeWorkspace), location:location.href, workspaces:window.gZenWorkspaces?.getWorkspaces?.()?.length};');results.ready=state;if(state.value?.ready||state.ready)break;await delay(200);}
  const file=process.argv[2];
  if(file){const code=readFileSync(resolve(file),'utf8');const result=await executeAsync(code);results.steps.push({file,result});}

@@ -4,6 +4,66 @@ Baseline: **0.3.26**, runtime commit
 `56789780f376021d276634967961252954f5eee6`. Status is alpha, with limited user
 testing. Publication, source checks, native checks and user acceptance are distinct.
 
+## Unpublished candidate 0.3.27 (runtime performance)
+
+Not published, not installed in an everyday profile, not user-accepted. It targets
+lag with several hundred tabs without changing any behaviour contract. Tab-strip
+observers ignore title-text and own-decoration records, restore metadata
+re-serialises only retitled tabs, Sticky no longer re-projects on every keystroke
+and reads layout once per pass, and unchanged colour/label values are not
+rewritten. Inventory, costs and what remains: [PERFORMANCE.md](PERFORMANCE.md).
+
+### Native verification (disposable profiles, 2026-11-07)
+
+Synthetic headless runs of fresh disposable profiles: Zen **1.24.1b**, Gecko
+159.0.1, build 20261106124806, with the repository's frozen Sine loader. The same
+harness and probes ran against main's 0.3.26 for comparison. Probes and how to run
+them are described in TESTING.md (`perf-observers.js`, `checklist.js`, restart pair).
+
+**Regression found and repaired.** Native comparison showed that a URL pin made
+from the tab menu left the tab's restore record at `urlPin.explicit: false` (0.3.26
+had it current within the same task). The menu command's full pass runs before the
+asynchronous intent write, and the badge that used to trigger the next pass is an
+owned decoration the 0.3.27 observers now ignore. The restore synchronizer now
+re-serialises that tab on the intent store's `BetterZenFoldersUrlPinChanged`
+notification (a tab-local pass, no full pass). A unit regression was added; it fails
+on the unrepaired runtime. The pin itself survived a restart in both versions, so
+the stale record was found as a metadata mismatch, not as a lost pin.
+
+Results on the final candidate (all checks programmatic, not physical input):
+
+| Checklist item | Result |
+| --- | --- |
+| 1. Title churn, ~300 tabs | Pass. 309 Gecko `_setTabLabel` retitles, 320 real page retitles and 8 reloads: zero Sticky, colour, icon, folder-button, unload, URL-pin and full restore passes (0.3.26: one of each per retitle, 309-320, except timer-coalesced Sticky at 7-155). Only per-tab restore passes run. BZF time about 50 ms per scenario versus about 2,100-2,500 ms for 0.3.26. A structural control still reached every reconciler. |
+| 2. Typing in a page | Pass. 40 keys through `nsITextInputProcessor` reached the page and chrome saw 40 keypresses; zero Sticky passes (0.3.26: 40). |
+| 3. Underline centring | Pass for default and custom-icon folders, LTR and RTL, after collapse/expand and selection changes (within 0.1 px). See the open item below for Zen Icons' folder-shape switch. |
+| 4. Folder decorations | Pass for new, nested-moved, renamed and later-created folders and for folders restored after restart: `+`, unload hiding/showing, colour and native icon repair. |
+| 5. Restore metadata | Pass. Folder renames reach records; Undo Close Tab keeps folder and neighbours for a regular tab and folder, slot and renamed label for a synthetic RSS live-folder tab; a tab moved between folders keeps placement and colour after restart. |
+| 6. URL-pin and root badges | Pass for pin, unpin (API and real badge click), move, Undo Close Tab, root pin/unpin and move into a folder. A menu URL pin survives restart. |
+| 7. Sine disable/re-enable | Pass. No leftover classes, attributes or custom properties; all nine observers disconnected; listener counts return to the same values across two cycles; decorations and colour return. |
+
+The existing native folder-plus probes also pass on 1.24.1b: seven cases with URL
+pins, without URL pins and with Zen Icons 0.3.0-rc.4, plus the simple baseline and
+six Settings-homepage cases. No console error or warning came from the mod (capture
+control confirmed). Final runtime: Node suite 1,373 pass, 0 fail, 3 expected skips
+(historical screenshot and two opt-in installed-Zen checks); 16 Python checks pass.
+
+Pre-existing, unchanged by 0.3.27 (identical in 0.3.26):
+
+- With Zen Icons, hiding a custom-icon folder's shape (outline-free icon) leaves the
+  underline about 7.6 px off-centre until the next Sticky pass (collapse/expand
+  corrects it). It persisted at least 1.5 s.
+- Any structural change still runs every reconciler once; native Zen also rewrote
+  ~280 artificially retitled tab labels after a folder creation in this session.
+
+Still manual-only or unproven:
+
+- A Firefox Profiler trace of an everyday-sized session, and perceived smoothness.
+- Drag chooser re-evaluation while scrolling during a native drag session.
+- Physical mouse and keyboard input, the real tab-rename editor UI and the Sine
+  Settings toggle UI (the probes call the same native and Sine functions directly).
+- Everyday-profile acceptance, other sidebar mods, and live RSS/GitHub providers.
+
 ## Recent completed repairs
 
 - 0.3.26: folder-plus creation starts in its target folder and applies Top/Bottom

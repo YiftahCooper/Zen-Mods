@@ -75,6 +75,26 @@ handler against a synthetic disabled mod entry. A clean bootstrap may use a
 different Sine version; record it and do not promote old qualification to a new
 environment merely because the script starts.
 
+Performance and checklist probes (0.3.27):
+
+- `perf-observers.js` builds about 300 tabs and twelve folders, then counts each
+  observer callback and reconcile through a chrome-context wrapper installed only
+  while stock Sine reloads the mod. It drives title churn (Gecko `_setTabLabel` and
+  real self-retitling pages), page reloads, 40 keystrokes typed into a page through
+  `nsITextInputProcessor`, and a structural control that must still reconcile.
+- `checklist.js` covers folder decorations, underline centring (LTR/RTL, outline-free
+  icons with `BZF_WITH_ICONS=1`), restore metadata (folder rename, Undo Close Tab in a
+  regular and a synthetic RSS live folder), URL-pin badges and Sine disable/re-enable.
+- `node tools/native/run.mjs restart-move.js restart-verify.js` runs two phases on one
+  profile: move a tab between folders and pin a URL from the tab menu, quit, resume.
+
+Names given together run in order against the same owned profile, one Zen at a time.
+Zen 1.24 / Gecko 159 needs `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` for chrome-context
+Marionette; the driver sets it on the launched process only. `BZF_NATIVE_TIMEOUT_MS`
+raises the per-script timeout (default 40000) for the larger probes. The repository's
+frozen Sine loader (`../better-pins/artifacts/review-runtime`) is a suitable clean
+`BZF_SINE_BOOTSTRAP`.
+
 Never turn a successful disposable test into authority to alter an everyday
 profile. Saved preferences and real browsing sessions are outside these scripts'
 scope. A native engine failure, harness failure and product assertion failure
