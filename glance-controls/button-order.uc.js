@@ -14,6 +14,7 @@
   ])];
 
   if (window.gBrowser) {
+    const containerClass = 'zen-glance-sidebar-container';
     function arrange(container, order) {
       if (!container) return;
       const buttons = order.map(key => container.querySelector(selectors[key])).filter(Boolean);
@@ -22,12 +23,40 @@
       });
     }
     const template = document.getElementById('zen-glance-sidebar-template');
+    // Load, preference changes and unload are rare, so they may search the
+    // whole document. The mutation path below never does.
     function update(order = readOrder()) {
-      arrange(template?.content.querySelector('.zen-glance-sidebar-container'), order);
-      document.querySelectorAll('.zen-glance-sidebar-container').forEach(group => arrange(group, order));
+      arrange(template?.content.querySelector(`.${containerClass}`), order);
+      document.querySelectorAll(`.${containerClass}`).forEach(group => arrange(group, order));
+      // Drop the records caused by our own moves.
+      domObserver.takeRecords();
+    }
+    // Copy URL is added to the template after it was arranged (script load
+    // order), so each Glance clone must be arranged when it is inserted.
+    // Only containers added in this batch, or containers that gained a child,
+    // are arranged; text and unrelated chrome churn costs no query.
+    function onMutations(records) {
+      const pending = new Set();
+      for (const { target, addedNodes } of records) {
+        for (const node of addedNodes) {
+          if (node.nodeType !== Node.ELEMENT_NODE) continue;
+          if (target.classList?.contains(containerClass)) {
+            pending.add(target);
+            break;
+          }
+          if (node.classList.contains(containerClass)) pending.add(node);
+          else if (node.firstElementChild) {
+            for (const group of node.getElementsByClassName(containerClass)) pending.add(group);
+          }
+        }
+      }
+      if (!pending.size) return;
+      const order = readOrder();
+      for (const group of pending) if (group.isConnected) arrange(group, order);
+      domObserver.takeRecords();
     }
     const preferenceObserver = { observe: () => update() };
-    const domObserver = new MutationObserver(() => update());
+    const domObserver = new MutationObserver(onMutations);
     domObserver.observe(document.getElementById('tabbrowser-tabpanels'), { childList: true, subtree: true });
     Services.prefs.addObserver(preference, preferenceObserver);
     update();

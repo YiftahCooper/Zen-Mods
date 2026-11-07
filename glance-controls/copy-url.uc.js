@@ -11,18 +11,34 @@
     }
   });
 
-  function watchGroups() {
+  const containerClass = 'zen-glance-sidebar-container';
+
+  function track(group) {
+    if (groups.has(group) || !group.isConnected) return;
+    groups.add(group);
+    resizeObserver.observe(group);
+  }
+
+  // Look only at nodes added in this batch, never the whole document.
+  function watchGroups(records) {
+    let removed = false;
+    for (const { addedNodes, removedNodes } of records) {
+      if (removedNodes.length) removed = true;
+      for (const node of addedNodes) {
+        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+        if (node.classList.contains(containerClass)) track(node);
+        else if (node.firstElementChild) {
+          for (const group of node.getElementsByClassName(containerClass)) track(group);
+        }
+      }
+    }
+    if (!removed) return;
     for (const group of groups) {
       if (!group.isConnected) {
         resizeObserver.unobserve(group);
         groups.delete(group);
       }
     }
-    document.querySelectorAll('.zen-glance-sidebar-container').forEach(group => {
-      if (groups.has(group)) return;
-      groups.add(group);
-      resizeObserver.observe(group);
-    });
   }
 
   function addButton(container) {
@@ -64,10 +80,13 @@
     }
   }
 
-  addButton(template?.content.querySelector('.zen-glance-sidebar-container'));
-  document.querySelectorAll('.zen-glance-sidebar-container').forEach(addButton);
+  addButton(template?.content.querySelector(`.${containerClass}`));
+  // One whole-document search at load covers a Glance that is already open.
+  for (const group of document.querySelectorAll(`.${containerClass}`)) {
+    addButton(group);
+    track(group);
+  }
   document.addEventListener('command', onCommand);
-  watchGroups();
   // Glance clones the template when opening a new panel. Watch only browser
   // chrome child changes, never page content or attribute/animation updates.
   const mutationObserver = new MutationObserver(watchGroups);
