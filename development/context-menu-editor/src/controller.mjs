@@ -1,4 +1,5 @@
 import {ROOTS,discoverRoot,isHidden,isTransient} from './registry.mjs';
+import {decoratedMenuKey,decoratedRow,l10nIdOf} from './decorated-menus.mjs';
 import {changedOwnerPlacement} from './owner-settings.mjs';
 import {appendFittedSymbol,fitSymbol} from './icon-view.mjs';
 import {mergeInventory,recordHasEdits} from './model.mjs';
@@ -40,6 +41,8 @@ function ignorableRecord(c,record){
 export function createMenuController(window,{getState,resolveIcon=()=>null,resolveSource=()=>null,onInventory=()=>{},onOwnerChange=()=>{},
  classifyPopup=()=>'foreign',isNativeRow=()=>false}) {
  const document=window.document,contexts=new Map(),retired=new Map(),pendingOpenings=new WeakMap(),listeners=new Set();
+ // Unmanaged menus decorated for their current opening, and each menu's opening epoch.
+ const decorated=new Map(),decorationEpochs=new WeakMap();
  let destroyed=false,inventory=[],trigger=null;
  // Untracked top-level popups already found to have no mod owner. An entry is
  // dropped when that popup's subtree changes, when it opens (listeners cannot be
@@ -222,6 +225,17 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   fields.set(name,{before,priority,applied:value});
   node.style.setProperty(name,value);
  }
+ /** Undo recorded attribute and style writes that nobody has overwritten since. */
+ function revertWrites(c){
+  for(const [node,fields]of c.attrs)for(const [name,record]of fields){
+   if(node.getAttribute(name)!==record.applied)continue;
+   if(record.before===null)node.removeAttribute(name);else node.setAttribute(name,record.before);
+  }
+  for(const [node,fields]of c.styles)for(const [name,record]of fields){
+   if(node.style.getPropertyValue(name)!==record.applied)continue;
+   if(record.before)node.style.setProperty(name,record.before,record.priority);else node.style.removeProperty(name);
+  }
+ }
  function restore(c,keepMenus=false){
   pause(c);
   // Owner writes can arrive while an editor-created popup is open. Retain its
@@ -231,14 +245,7 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    if(c.root.contains(container.menu)&&container.popup.parentNode===container.menu){retained.add(container.menu);retained.add(container.popup);}
    else c.menus.delete(key);
   }
-  for(const [node,fields]of c.attrs)for(const [name,record]of fields){
-   if(node.getAttribute(name)!==record.applied)continue;
-   if(record.before===null)node.removeAttribute(name);else node.setAttribute(name,record.before);
-  }
-  for(const [node,fields]of c.styles)for(const [name,record]of fields){
-   if(node.style.getPropertyValue(name)!==record.applied)continue;
-   if(record.before)node.style.setProperty(name,record.before,record.priority);else node.style.removeProperty(name);
-  }
+  revertWrites(c);
   // Restore in reverse *source* order, independent of the permutation's move
   // order. Each surviving later sibling is already a valid source anchor.
   // Detached owner parents remain valid destinations; removed/reparented nodes
@@ -372,6 +379,60 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    attr(c,node,'data-cme-icons',off?'off':'on');
    if(!off)prependIcon(c,node,icon,options);
   }
+ }
+ // Unmanaged right-click menus (DECORATED_MENUS, 0.2.3): exact browser rows get
+ // their mapped glyph for this opening only. Nothing is observed, saved or
+ // rearranged; closing the menu or unloading the editor removes every write.
+ function releaseDecorated(popup){
+  const d=decorated.get(popup);
+  if(!d)return;
+  decorated.delete(popup);
+  revertWrites(d);
+  // The custom properties were this opening's only inline style.
+  if(!d.hadStyle&&popup.getAttribute('style')==='')popup.removeAttribute('style');
+  for(const node of d.owned)node.remove();
+ }
+ function decorateUnmanaged(popup,menuKey,event){
+  const options={...getState()?.options};
+  if(options.enabled===false||options.showIcons===false||shiftBypass(event,null))return;
+  const rows=[];
+  for(const node of popup.children){
+   const row=decoratedRow(menuKey,node);
+   // Checks and radios keep their native state slot; a row with its own
+   // artwork, a mod's row or a row this editor already marked stays as it is.
+   if(!row||['checkbox','radio'].includes(node.getAttribute('type'))||node.getAttribute('image')||node.classList.contains('menuitem-iconic')||
+    node.hasAttribute('data-cme-owned')||node.hasAttribute('data-cme-item')||node.querySelector(':scope > .cme-decoration')||resolveSource(node)?.kind==='mod')continue;
+   const icon=resolveIcon({kind:node.localName==='menu'?'native-menu':'command',nativeId:node.id||null,l10nId:l10nIdOf(node),label:node.getAttribute('label')||''},{},options);
+   if(icon?.source==='builtin'&&icon.type==='image')rows.push([node,icon]);
+  }
+  if(!rows.length)return;
+  const d={root:popup,attrs:new Map(),styles:new Map(),owned:new Set(),fallbackWrites:new WeakMap(),hadStyle:popup.hasAttribute('style')};
+  decorated.set(popup,d);
+  attr(d,popup,'data-cme-decorated',menuKey);
+  style(d,popup,'--cme-icon-size',`${options.iconSize??16}px`);
+  style(d,popup,'--cme-icon-gap',`${options.iconGap??8}px`);
+  style(d,popup,'--cme-icon-align',options.iconAlignment||'center');
+  for(const [node,icon]of rows){
+   attr(d,node,'data-cme-item','true');
+   attr(d,node,'data-cme-icons','on');
+   prependIcon(d,node,icon,options);
+  }
+ }
+ /** One key lookup per popupshowing; only the listed menus do any work. */
+ function queueDecoration(event){
+  const popup=event.target,menuKey=decoratedMenuKey(popup);
+  if(!menuKey||popup.parentElement?.closest('menupopup,menu')||popup.closest('[data-cme-owned]'))return;
+  releaseDecorated(popup);
+  const epoch=(decorationEpochs.get(popup)||0)+1;
+  decorationEpochs.set(popup,epoch);
+  // The owner's popupshowing handlers finish first, as for managed menus. A
+  // mod's rows can make this a managed menu on its first opening (B6); then
+  // the managed overlay decorates it and this one stays out.
+  window.queueMicrotask(()=>{
+   if(destroyed||decorationEpochs.get(popup)!==epoch||event.defaultPrevented||!popup.isConnected)return;
+   if(contexts.get(popup.id)?.root===popup)return;
+   decorateUnmanaged(popup,menuKey,event);
+  });
  }
  function apply(c){
   const initial=getState();
@@ -745,7 +806,7 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
  const onShow=event=>{
   let c=contexts.get(event.target?.id);
   if(c&&c.root!==event.target){sync();c=contexts.get(event.target?.id);}
-  if(!c){onFirstShow(event);return;}
+  if(!c){onFirstShow(event);queueDecoration(event);return;}
   if(c.root!==event.target)return;
   c.epoch++;
   c.reconciliations=0;
@@ -764,6 +825,11 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
  };
  const onHide=event=>{
   if(event.target)pendingOpenings.set(event.target,(pendingOpenings.get(event.target)||0)+1);
+  // A superseded opening can still report popuphidden while the menu is open.
+  if(decorationEpochs.has(event.target)&&(event.type==='popuphiding'||!['open','showing'].includes(event.target.state))){
+   decorationEpochs.set(event.target,decorationEpochs.get(event.target)+1);
+   releaseDecorated(event.target);
+  }
   const c=contexts.get(event.target?.id);
   if(!c||c.root!==event.target)return;
   c.epoch++;
@@ -805,6 +871,7 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    restore(c);
    c.observer.disconnect();
   }
+  for(const popup of [...decorated.keys()])releaseDecorated(popup);
   contexts.clear();retired.clear();listeners.clear();
   for(const [type,listener]of windowListeners)window.removeEventListener(type,listener,true);
   window.removeEventListener('unload',destroy);

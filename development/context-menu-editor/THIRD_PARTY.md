@@ -48,6 +48,11 @@ screen, bookmark, folder, space and toolbar commands, and the container
 submenu's current localization IDs). `assets/catalog.json` lists every local
 addition under `localAdditions`.
 
+Version 0.2.3 adds no artwork. Its local mappings assign glyphs already in the
+library (copied Fluent glyphs and Zen references listed above) to rows of the
+address bar, downloads, Zen Library, extension, site panel, tab group and
+Picture-in-Picture menus.
+
 Fluent SVG context paint is replaced with `#667b91`, and contextual opacity with
 `1`, so it can render in the HTML gallery and native menu decorations.
 `assets/catalog.json` records the source archive checksum, original and adopted

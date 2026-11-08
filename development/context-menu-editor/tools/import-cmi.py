@@ -46,6 +46,18 @@ LOCAL_BY_L10N = {
     "menu-share-copy-links":"link", "menu-file-share-qrcode3":"qr-code", "menu-share-windows":"share",
     # The ID-less container submenu actions under their current Fluent IDs (CMI maps the older ones).
     "user-context-add-container2":"container-tab", "user-context-manage-containers2":"manage",
+    # 0.2.3: ID-less rows of unmanaged menus (src/decorated-menus.mjs pairs each with its class, anonid or command).
+    "urlbar-input-dismiss-autofill":"close", "urlbar-input-remove-from-history":"forget", "clear-search-history":"forget",
+    "downloads-cmd-pause":"media-pause", "downloads-cmd-resume":"media-play", "downloads-cmd-unblock":"checkmark",
+    "downloads-cmd-use-system-default":"open", "downloads-cmd-show-menuitem-2":{"fluent":"folder-open","zen":"folder"},
+    "downloads-cmd-go-to-download-page":"ext-link", "downloads-cmd-remove-from-history":"forget",
+    "downloads-cmd-clear-list":"close-all", "downloads-cmd-clear-downloads":"close-all",
+    "zen-site-data-manage-addons":"extension",
+    # Zen Library rows (paired with their data-action) and the library button's download stack.
+    "library-history-menu-open":"ext-link", "library-history-menu-forget":"edit-delete", "places-forget-domain-data":"forget",
+    "library-downloads-menu-retry":"reload", "library-downloads-menu-clear-preview":"close",
+    # The Picture-in-Picture toggle's Move row names the side it moves to.
+    "picture-in-picture-move-toggle-left":"arrow-left", "picture-in-picture-move-toggle-right":"arrow-right",
 }
 def both(icon_id): return icon_id
 LOCAL_BY_ID = {
@@ -88,6 +100,26 @@ LOCAL_BY_ID = {
     "toolbar-context-always-show-extensions-button":both("extension"), "toolbar-context-pin-to-toolbar":both("pin"),
     "toolbar-context-full-screen-autohide":both("fullscreen"), "toolbar-context-full-screen-exit":both("fullscreen-exit"),
     "zen-context-menu-compact-mode":both("sidebar"), "zen-toolbar-context-set-profile":both("container-tab"),
+    # 0.2.3 unmanaged menus (src/decorated-menus.mjs). Text field menu (address bar and other fields).
+    "edit-contextmenu-undo":both("edit-undo"), "edit-contextmenu-redo":both("edit-redo"),
+    "edit-contextmenu-cut":both("edit-cut"), "edit-contextmenu-copy":both("edit-copy"),
+    "edit-contextmenu-paste":both("edit-paste"), "edit-contextmenu-delete":both("edit-delete"),
+    "edit-contextmenu-select-all":both("edit-select-all"), "strip-on-share":both("link"),
+    # Extensions panel menu (the same actions as the toolbar menu's extension rows).
+    "unified-extensions-context-menu-move-widget-up":both("arrow-up"),
+    "unified-extensions-context-menu-move-widget-down":both("arrow-down"),
+    "unified-extensions-context-menu-manage-extension":both("extension"),
+    "unified-extensions-context-menu-remove-extension":both("edit-delete"),
+    "unified-extensions-context-menu-report-extension":both("report"),
+    # Zen site panel actions.
+    "context_zenClearSiteData":both("forget"), "context_zenOpenGetAddons":both("plus"), "context_zenOpenSiteSettings":both("settings"),
+    # Tab group list menus.
+    "open-tab-group-context-menu_moveToThisWindow":both("move-tab"), "open-tab-group-context-menu_moveToNewWindow":both("window"),
+    "open-tab-group-context-menu_share":both("share"), "open-tab-group-context-menu_delete":both("edit-delete"),
+    "saved-tab-group-context-menu_openInThisWindow":both("open"), "saved-tab-group-context-menu_openInNewWindow":both("window"),
+    "saved-tab-group-context-menu_delete":both("edit-delete"),
+    # Zen ships no hide (crossed-eye) glyph; that row stays bare in the Zen pack.
+    "context_HidePictureInPictureToggle":{"fluent":"hide"},
 }
 
 def local_icons(pack_id, existing):

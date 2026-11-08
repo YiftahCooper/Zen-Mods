@@ -1,7 +1,29 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.2.**
+an interactive Sine settings editor. **Version 0.2.3.**
+
+Version 0.2.3 adds icons to right-click menus the editor does not manage. These
+menus get icons only: they do not appear in the editor, nothing about them is
+saved, and closing the menu or turning the mod off puts them back exactly as
+Zen drew them. The **Show icons** switch and your icon pack and size apply.
+
+- **Address bar and text fields.** Undo, Redo, Cut, Copy, Copy Clean Link,
+  Paste, Paste & Go, Delete, Select All, and the address bar's Remove from
+  History and autofill rows.
+- **Downloads.** The Zen Library's download menu, the download list that opens
+  from the Library button, and Firefox's downloads panel (if you added the
+  downloads button back).
+- **Zen Library history and boosts**, the extensions menu, an extension's
+  address bar button, the "…" menu in Zen's site panel, the tab group list, and
+  the Picture-in-Picture toggle on videos.
+- **Left without an icon on purpose:** check rows (such as Reveal Password or
+  "Always open similar files"), lists of your own things (search engines,
+  extensions, spaces, back/forward history), and rows that already have Zen's
+  own artwork. The Zen icon pack has no "hide" glyph, so Hide from Zen and Hide
+  Picture-in-Picture toggle stay plain there instead of getting a placeholder.
+- In the Bookmarks menu, Forget About This Site now uses the forget glyph
+  instead of the generic delete one.
 
 Version 0.2.2 fills in missing icons across the menus the editor manages.
 
@@ -240,6 +262,13 @@ no network request when a menu opens. Existing owner-provided icon URLs remain
 controlled by that owner.
 
 ## Verification
+
+Version 0.2.3 adds unit tests for every new mapping and skip rule (check rows,
+native artwork, mod rows, the icon switch and pack, close and unload restore),
+and a native check that opens each newly covered menu and counts the rows that
+show a loaded icon with the mod off and on. Some of those menus need an
+extension, a video, a tab group or Zen's site panel to open for real; the check
+opens them by code.
 
 Version 0.2.2 adds unit tests for the new glyph mappings, the toolbar menu and
 check/radio rows, and a native check that every visible action row in the real

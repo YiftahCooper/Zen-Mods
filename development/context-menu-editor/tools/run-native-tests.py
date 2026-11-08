@@ -39,6 +39,7 @@ def main():
         ('local-mods-editor-first','tests/native/local-mods-behavior.js',False),
         ('local-mods-editor-last','tests/native/local-mods-behavior.js',False),
         ('submenu-geometry','tests/native/submenu-geometry.js',False),
+        ('unmanaged-menu-icons','tests/native/unmanaged-menu-icons.js',False),
         ('menu-stress','tests/native/menu-stress.js',False),
         ('process-restart','tests/native/restart-setup.js',False),
         ('legacy-import','tests/native/legacy-import-setup.js',False),

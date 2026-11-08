@@ -226,6 +226,26 @@ original nodes and removes the editor's owned containers and styles.
   Local glyph mappings live in `LOCAL_BY_ID`/`LOCAL_BY_L10N` in
   `tools/import-cmi.py`; new Fluent glyphs are adopted with
   `tools/adopt-fluent.py` and pinned by hash in `FLUENT_GLYPHS`.
+- **Unmanaged menus (0.2.3).** `src/decorated-menus.mjs` lists right-click
+  menus CME does not manage and their exact browser rows: by ID, else by exact
+  localization ID plus one owner marker (class, `anonid`, `command`,
+  `data-action`, or none for the Library button's bare download-stack rows).
+  Menus are keyed by ID, by exact class for the ID-less Zen Library menus
+  (`.zen-library-downloads-menu` and so on), or as `zen-library-download-stack`
+  for a bare `menupopup` (no ID, no class) directly in `#mainPopupSet`. The
+  controller's existing capture `popupshowing` listener makes one key lookup;
+  for a listed top-level menu it queues one microtask and decorates rows whose
+  mapping is an exact `builtin` image. It never makes the menu a root, adds no
+  inventory or settings entry, saves nothing and adds no observer or timer.
+  Writes are recorded and reverted on `popuphiding` (a superseded `popuphidden`
+  is ignored) and on destroy. Rows are skipped when they are check/radio, carry
+  `image` or `.menuitem-iconic`, are CME-owned or already marked, or resolve to
+  a mod. `enabled`, `showIcons`, Shift bypass, pack, size, gap and alignment
+  apply. If a mod adds rows so the menu becomes managed (B6), the managed
+  overlay decorates it and this path steps aside. Customization-mode menus,
+  user-item lists, left-click menus and rows with native artwork are left out.
+  `tests/unmanaged-menu-icons.test.mjs` and the `unmanaged-menu-icons` native
+  stage cover it.
 - **Saved-state size (B4).** Settings up to 1 MiB / 40,000 records load. Saves aim
   for 512 KiB / 10,000 records: unedited remembered `mod:` rows go first, oldest
   first; edits are never dropped. Absent remembered rows are saved only once

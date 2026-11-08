@@ -13,7 +13,8 @@ test('Fluent bytes and browser-provided Zen references retain complete mapped ar
   assert.deepEqual(data.localAdditions,{fluentGlyphs:['comment','highlight','qr-code'],
     zenReferences:['AI-chat','AI-summarize','comment','highlight','qr-code','sort','unloadTab']});
   assert.deepEqual(data.packs.map(pack=>pack.icons.length),[141,154]);
-  assert.equal(Object.values(data.mappings).reduce((count,mapping)=>count+Object.keys(mapping.byId).length,0),560);
+  // 560 through 0.2.2, plus 0.2.3's ID mappings for unmanaged menus (24 Fluent, 23 Zen: no Zen hide glyph).
+  assert.equal(Object.values(data.mappings).reduce((count,mapping)=>count+Object.keys(mapping.byId).length,0),607);
   const browserManifest=JSON.parse(await readFile(new URL('../assets/zen-browser-icons.json',import.meta.url),'utf8'));
   assert.deepEqual(await readdir(new URL('../assets/packs/',import.meta.url)),['fluent'],'No copied Zen artwork is packaged.');
   for(const pack of data.packs){
