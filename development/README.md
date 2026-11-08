@@ -5,6 +5,8 @@ root are generated from these.
 
 - [Better Zen Folders](better-zen-folders/README.md): architecture, current status,
   complete regression suite, versioned fixture inputs and disposable native probes.
+- [Context Menu Editor](context-menu-editor/DEVELOPMENT.md): source modules, unit and native
+  tests, and the build that produces the published `context-menu-editor/` folder.
 - [Zen Icons](zen-icons/README.md): source, icon catalogue, build and test suite. The
   Lucide icon assets are regenerated from the pinned `lucide-static` package.
 - [Define Word](define-word/README.md): source, build (`npm run build`, `npm run check`)

@@ -1,0 +1,267 @@
+# Context Menu Editor
+
+Arrange Zen's native right-click menus, create submenus and choose icons through
+an interactive Sine settings editor. **Version 0.2.0.**
+
+Version 0.2.0 is a reliability release. Your saved settings load unchanged.
+
+- **Fewer surprise reverts.** Another mod now "owns" a menu choice only through
+  the exact settings named in its own preferences file. Zen or Firefox changing
+  their own settings (for example `zen.workspaces.*`) no longer undoes your
+  edits, and similar-looking setting names are no longer grouped together.
+- **Share keeps its place and icon.** Share now has a fixed icon in both icon
+  packs. If a second Share menu ever appears, your edits follow the one the
+  browser keeps updating.
+- **Source names are more accurate.** A row the browser creates is no longer
+  credited to a mod just because that mod's code was running further up the
+  call. Browser menus are adopted only for rows a mod actually added to them.
+- **Settings stay small.** Rows from mods that are no longer present are only
+  saved once you edit them, and at most 200 remembered rows are kept per menu.
+  A very large older settings value no longer turns customization off; when a
+  save would be too large, unedited remembered rows are dropped first.
+- **Less work per window.** Each window starts with one refresh instead of
+  several, and new windows reuse the menu list the first window read.
+  The package no longer ships two unused JSON files.
+
+Version 0.1.6 reduces background work. The editor no longer rescans the browser
+window after its own menu changes or unrelated interface updates, remembers
+menus already found to need no editing, and reads saved settings once per change.
+Menus, saved settings and source tags behave as before.
+
+Version 0.1.5 tightens the menu's side spacing and removes duplicate empty icon
+slots on mod-added commands. Icon size, alignment and gap controls still apply;
+native checkmarks and radio buttons keep their own status slots.
+
+Version 0.1.4 adds the native Share submenu to the editor and gives it an icon.
+Move to Folder and Better Zen Folders' Move to Space now use clearer icons.
+Native submenus keep their live parent in place while their owner fills in
+anonymous service actions; those actions no longer trigger a parent rebuild.
+
+## Install
+
+1. Install [Sine](https://github.com/CosmoCreeper/Sine) and open its mod settings
+   in Zen.
+2. Paste this complete folder URL into Sine's GitHub installation field:
+
+   ```text
+   https://github.com/YiftahCooper/Zen-Mods/tree/main/context-menu-editor
+   ```
+
+3. Install the mod and allow its JavaScript when Sine asks. Restart Zen if
+   prompted, then open **Configure** for Context Menu Editor.
+
+After updating from an older editor or disabling the two replaced mods, fully
+exit and reopen Zen once. The older Context-Menu-Icons script does not support
+live unloading, so a browser restart clears any code left from that session.
+If Sine automatic updates are off, use its **Check for Updates** control first
+and verify that Context Menu Editor shows version **0.1.6**. Restarting by itself
+does not download an update.
+
+**Disable Zen Context Menu and Context-Menu-Icons before enabling this editor.**
+It replaces their menu ordering, visibility and icon customization. Their CSS
+can conflict with the editor. You can keep them installed but disabled while
+trying this version, then remove them when satisfied. Supported saved preferences
+are imported once when this editor has no saved configuration. Some separate
+upstream styling and folding behavior is not included.
+
+Keep other mods that add commands or submenus enabled. This editor discovers
+their entries and identifies their source when sufficient evidence is available.
+Open the relevant right-click menu once if its owner creates entries lazily.
+
+## Keep your existing preferences
+
+On its first run, the editor checks for saved settings from Zen Context Menu
+(`uc.hidecontext.*` and supported `uc.fixcontext.*` values) and
+Context-Menu-Icons (`cmi-*`). It imports supported choices only when
+`extension.context-menu-editor.settings` is empty. Existing editor data,
+including data it cannot read, is preserved.
+
+The import covers supported command visibility groups, icon visibility and
+pack, separator visibility and strength, preference for clean links, per-menu
+hiding of disabled commands, extension icon monochrome and basic corner/hover
+choices. Old preferences are left untouched. Commands that appear later receive
+their imported visibility once; re-enabling one here keeps your newer choice.
+
+These choices become your profile's saved configuration. Zen restarts, Sine
+reloads and mod updates do not reset it or rerun the import over it. Public
+defaults remain Fluent icons, visible separators and visible disabled commands.
+A profile with no old preferences starts with those normal defaults.
+
+Legacy pixel offsets, toolbar-only styling, stale options with no corresponding
+menu action and arbitrary CSS folding selectors are not imported. The editor's
+size, alignment and spacing controls replace the older pack-specific offsets.
+Use **Appearance → Spacing and style → Show separators** and
+**Menu options → Prefer clean links** to change those imported choices. Clean
+links are preferred only when the clean command and its containing submenus
+are usable; otherwise ordinary Copy Link remains available.
+
+## Use the editor
+
+Open **Configure** for this mod in Sine. Choose **Page menu**, **Tab menu**,
+**Folder menu** or **Bookmarks menu**. A discovered mod-owned menu also appears
+in the selector. Open a menu in Zen once if its owner creates entries lazily.
+
+The list follows the shape of a menu. Each row has a drag handle, an enable
+checkbox, an icon, a name, a submenu arrow where needed, and **⋯** for actions.
+Foreign items show a small source tag.
+
+- Drag to reorder. **⋯ → Move up / Move down / Move to** provides alternatives.
+- Clear the checkbox to hide an item and retain its position.
+- Click a name to rename it. Enter saves; Escape or leaving the field cancels.
+  **Reset name** restores the current label supplied by its owner.
+- Click an icon to open **Built-in**, **Image** or **Symbol**. Review the preview
+  and choose **Save icon**. Cancel keeps the previous choice. **Automatic**
+  clears the custom artwork; **Reset icon** also turns that item's icon on.
+- **⋯ → Remove** hides the item from the menu and the normal editor list.
+  **Menu options → Restore removed items** brings it back.
+- **Add → Submenu** creates a named group. Move supported items inside it or
+  back out. Removing a custom submenu returns its children to its position.
+- **Add → Separator** creates a draggable divider. Redundant visible dividers
+  are hidden automatically. Blank spacers are not added.
+
+The top controls keep occasional settings out of the rows:
+
+| Control | What it does |
+| --- | --- |
+| Add | Create a submenu or separator at the selected location. |
+| Appearance | Choose the icon pack, size, alignment and gap. Open Spacing and style for row spacing, corners, hover shading, separator visibility and strength, and monochrome extension icons. |
+| Find an item (⌕) | Highlight a name or source mod, expand its parents and jump between matches. Every row stays in the list. |
+| Menu options (⋯) | Enable customization, hide unavailable commands for this menu, prefer clean links in the Page menu, enable Shift bypass, restore removed items, restore order or reset this menu. |
+| Undo | Undo the last completed change. |
+
+Each completed edit saves immediately. Opening settings does not save or
+normalize the configuration. The dialog is at most 620 CSS pixels wide and
+shrinks to fit the window. Panels open beside the relevant control and stay
+inside the viewport. Escape closes a panel and returns focus to its button.
+
+## Discovery and source names
+
+New commands **and submenus** with stable IDs are discovered dynamically,
+including entries added after startup. Children stay beneath their submenu.
+Separate mod-owned native popups can also be discovered, such as Zen Site
+Appearance Toggle's toolbar menu. There is no command-owner allowlist.
+
+The editor can also retain an ID-less mod command or submenu when its source,
+original label and native ancestry identify it unambiguously. This supports
+Better Pins' recreated menu rows. An original-label or locale change creates a
+new identity for such a row. Duplicate, unknown anonymous and content-generated
+rows remain under their owner's control; selected text and generated bookmark
+names are not saved as identities. Recreated stable-ID nodes reuse their saved
+edits. Temporarily absent mod items retain their position and customization.
+
+Source tags use the installed Sine catalogue and evidence from creation or
+command/popup handler scripts. The browser's own menu markup identifies Zen
+Browser rows. Existing and later-created items can both be attributed.
+**Source unknown** is shown when the evidence is insufficient. **Icon: Mod name**
+identifies an artwork supplier without claiming that it created the command.
+Source paths, live labels and provenance metadata stay in memory.
+
+Automatic icons use exact command/localization mappings, existing owner
+artwork, a confident action match, or a neutral fallback. The picker has 285
+choices across FluentUI and ZenUI, including spare icons. A future action does
+not need an editor update to appear, but its meaning cannot always be inferred.
+Every suggested icon can be replaced. ZenUI references installed Zen artwork
+with a bundled Fluent fallback; copied ZenUI drawings are not distributed.
+
+Zen and the owning mod still determine when a command is valid. A link-only
+command stays link-only after moving it. Entries stay in their original menu.
+Children with delegated native handlers stay inside their original submenu;
+the editor explains these movement restrictions. A foreign submenu can be
+renamed, re-iconed and rearranged as a unit. Custom submenus can be created
+inside a native submenu where its handlers permit it.
+
+Navigation buttons are independent rows while retaining their original
+eligibility. The AI menu and its dependent separator stay together. Native
+checkmarks and radio status retain their own slots. The editor keeps original
+nodes and handlers, restores owner presentation when a menu closes, and releases
+the overlay if another mod continually rewrites the same presentation.
+
+## Which mod's settings win?
+
+Saving here applies the editor's choices. If you then change a relevant setting
+in an owning mod and it changes that menu item, the affected choice returns to
+that mod. Saving here again takes control back. An icon-only change in the owner
+does not discard an unrelated name or arrangement set here. Source-based
+handling applies to individual commands, nested submenus and discovered popups.
+
+This uses observable Sine preferences and their material menu effects. A mod
+owns only the exact preference names declared in its own `preferences.json`.
+Zen, Firefox and platform namespaces (`zen.*`, `browser.*`, `layout.*`,
+`extensions.*`, `ui.*` and similar) never count as a mod's setting. Setting
+names identify affected fields: name, icon, visibility and order. A setting
+named only after a menu, state or configuration affects none of them. Routine
+dynamic labels or icons without an observed settings change keep editor
+overrides. Preference values are not collected.
+
+There are limits to inferring intent across independent mods. While a menu is
+closed, a pending owner change waits for its next opening. After that, a
+two-second settling window allows asynchronous effects; later routine updates
+do not indefinitely revoke editor choices. Pending events are held in memory,
+so restarting before an effect appears loses that pending history. Already
+yielded choices persist. A mod that uses no observable preferences, ambiguous
+ownership, an unusually named setting or a much later effect may need an
+explicit reset or edit here. Universal latest-user-intent detection is not
+promised.
+
+## Image handling
+
+Files and pasted images are limited to 5 MiB. Direct HTTPS imports are limited
+to 256 KiB and eight seconds. Decoded dimensions are limited to 4096 pixels per
+side. SVG input rejects scripts and external references. Accepted artwork is
+normalized to a transparent 32 × 32 PNG with its aspect ratio preserved, then
+stored in settings. It no longer needs its original file or URL. One to eight
+Unicode symbols or joined emoji also resize to fit the icon slot.
+
+Network images load only after **Load image** is requested. HTTPS imports omit
+credentials and referrers and reject redirects. Pack and imported artwork need
+no network request when a menu opens. Existing owner-provided icon URLs remain
+controlled by that owner.
+
+## Verification
+
+Version 0.2.0 was tested with 242 unit tests and the full native suite in
+disposable headless Zen 1.24.1b profiles (Gecko 159). Three native stages that
+failed on 0.1.6 under Zen 1.24 were test-harness problems: a fresh Zen 1.24
+profile starts on a hidden placeholder tab that cannot be right-clicked. The
+harness now opens a real tab first; 0.1.6 and 0.2.0 both pass those stages.
+
+Version 0.1.3 added regression tests for one-time import, late command discovery,
+per-menu availability, clean-link fallback and retained settings. Its native
+legacy-import test uses two separate headless Zen processes with the same newly
+created disposable profile. It exercises real Sine reloads, later editor edits,
+changed old preferences and exact saved-state readback after restart.
+
+Version 0.1.4 adds native Share discovery, movement-icon and popup-lifecycle
+regressions. The submenu geometry probe measures actual screen adjacency and
+requires each parent to remain attached while Share, Folder and Space popups
+open, across display scales and Sine reloads. It never invokes clipboard or
+external sharing commands.
+
+The RC3 baseline also passed a separate headed disposable Zen run with eight
+checks through the real Windows file picker, including trusted file delivery,
+draft/save behavior and transparent 32 × 32 PNG normalization. This picker
+result belongs to RC3; the image-import implementation is unchanged in 0.1.3.
+
+Native coverage includes 15 page contexts, actual bookmark/folder commands,
+eight local mods in both load orders, two browser windows, Sine unload/reload,
+a complete Zen process restart, 30 repeated menu openings and 24 layout cases
+across text direction, zoom and display scale. Define Word's automated dictionary
+responses were deterministic fixtures; its selection actor, parser and popup ran.
+
+Tests used Zen 1.23.2b / Gecko 157.0.1, build 20261009073723, and Sine revision
+`fb0bd4ca6af888f10648e126947f7d1f82228433`. This is disposable-profile coverage;
+it cannot establish every future mod, theme, locale or everyday configuration.
+Gecko's trusted helper completes drops after pointer-started drags. Raw Windows
+image-clipboard data and physical input remain separate proof limits; native
+text, symbol and PNG-data-URL paste were tested without accessing the Windows
+system clipboard.
+
+## Credits and license
+
+The menu controller and settings editor are new code, informed by KiKaraage's
+Zen Context Menu. Icon assets and mappings were adopted from Starry-AXQG's
+Context-Menu-Icons with accompanying notices. ZenUI uses artwork supplied by
+the installed browser with a bundled Fluent fallback.
+
+See [THIRD_PARTY.md](THIRD_PARTY.md), [LICENSE](LICENSE) and [licenses](licenses/)
+for the source and artwork notices.

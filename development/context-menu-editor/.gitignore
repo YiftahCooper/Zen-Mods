@@ -1,0 +1,9 @@
+.backup-scratch/
+node_modules/
+__pycache__/
+*.pyc
+*.part
+# Local-only history kept in the old disk folder, never in this public repo.
+releases/
+evidence/
+preview/

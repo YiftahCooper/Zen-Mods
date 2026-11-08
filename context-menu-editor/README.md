@@ -1,7 +1,27 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.1.6.**
+an interactive Sine settings editor. **Version 0.2.0.**
+
+Version 0.2.0 is a reliability release. Your saved settings load unchanged.
+
+- **Fewer surprise reverts.** Another mod now "owns" a menu choice only through
+  the exact settings named in its own preferences file. Zen or Firefox changing
+  their own settings (for example `zen.workspaces.*`) no longer undoes your
+  edits, and similar-looking setting names are no longer grouped together.
+- **Share keeps its place and icon.** Share now has a fixed icon in both icon
+  packs. If a second Share menu ever appears, your edits follow the one the
+  browser keeps updating.
+- **Source names are more accurate.** A row the browser creates is no longer
+  credited to a mod just because that mod's code was running further up the
+  call. Browser menus are adopted only for rows a mod actually added to them.
+- **Settings stay small.** Rows from mods that are no longer present are only
+  saved once you edit them, and at most 200 remembered rows are kept per menu.
+  A very large older settings value no longer turns customization off; when a
+  save would be too large, unedited remembered rows are dropped first.
+- **Less work per window.** Each window starts with one refresh instead of
+  several, and new windows reuse the menu list the first window read.
+  The package no longer ships two unused JSON files.
 
 Version 0.1.6 reduces background work. The editor no longer rescans the browser
 window after its own menu changes or unrelated interface updates, remembers
@@ -164,12 +184,14 @@ that mod. Saving here again takes control back. An icon-only change in the owner
 does not discard an unrelated name or arrangement set here. Source-based
 handling applies to individual commands, nested submenus and discovered popups.
 
-This uses observable Sine preferences and their material menu effects. Exact
-declared properties and unambiguous declared preference families identify the
-owner. Setting names identify affected fields: name, icon, visibility and order;
-a general menu/configuration setting can affect all four. Routine dynamic
-labels or icons without an observed settings change keep editor overrides.
-Preference values are not collected.
+This uses observable Sine preferences and their material menu effects. A mod
+owns only the exact preference names declared in its own `preferences.json`.
+Zen, Firefox and platform namespaces (`zen.*`, `browser.*`, `layout.*`,
+`extensions.*`, `ui.*` and similar) never count as a mod's setting. Setting
+names identify affected fields: name, icon, visibility and order. A setting
+named only after a menu, state or configuration affects none of them. Routine
+dynamic labels or icons without an observed settings change keep editor
+overrides. Preference values are not collected.
 
 There are limits to inferring intent across independent mods. While a menu is
 closed, a pending owner change waits for its next opening. After that, a
@@ -196,6 +218,12 @@ no network request when a menu opens. Existing owner-provided icon URLs remain
 controlled by that owner.
 
 ## Verification
+
+Version 0.2.0 was tested with 242 unit tests and the full native suite in
+disposable headless Zen 1.24.1b profiles (Gecko 159). Three native stages that
+failed on 0.1.6 under Zen 1.24 were test-harness problems: a fresh Zen 1.24
+profile starts on a hidden placeholder tab that cannot be right-clicked. The
+harness now opens a real tab first; 0.1.6 and 0.2.0 both pass those stages.
 
 Version 0.1.3 added regression tests for one-time import, late command discovery,
 per-menu availability, clean-link fallback and retained settings. Its native
