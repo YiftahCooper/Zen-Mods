@@ -65,6 +65,16 @@ try{
       checks.nativeShareHasVisibleIcon=(checks.nativeShareHasVisibleIcon??true)&&visible;
       checks.nativeShareFirstLive=(checks.nativeShareFirstLive??true)&&first;
       details.cases.at(-1).share=diagnose();
+      // SharingUtils rebuilt these ID-less rows on this opening; since Gecko 159
+      // they carry no artwork of their own (Firefox bug 2009747).
+      const rows=[...popup.querySelectorAll(':scope > menuitem:is(.share-copy-link,.share-qrcode-item,.share-windows-item)')];
+      const art=rows.map(row=>{const image=row.querySelector(':scope > .cme-decoration img'),box=image?.getBoundingClientRect();
+       return {row:row.className,src:image?.getAttribute('src')||null,loaded:Boolean(image?.complete&&image.naturalWidth>0),width:box?.width||0};});
+      details.cases.at(-1).serviceRows=art;
+      const ok=rows.some(row=>row.classList.contains('share-copy-link'))&&art.every(row=>row.src&&row.loaded&&row.width>0)&&
+       art.filter(row=>row.row==='share-qrcode-item').every(row=>row.src==='chrome://browser/content/sharing/qr-code.svg');
+      checks[name+'_shareServiceRowsHaveIcons']=ok;
+      checks.shareServiceRowsHaveIcons=(checks.shareServiceRowsHaveIcons??true)&&ok;
      }
     }finally{root.insertBefore=insert;await close();}
    }

@@ -1,4 +1,4 @@
-import {ROOTS,discoverRoot,isHidden} from './registry.mjs';
+import {ROOTS,NATIVE_SHARE_KEY,SHARE_SERVICE_ROWS,discoverRoot,isHidden} from './registry.mjs';
 import {changedOwnerPlacement} from './owner-settings.mjs';
 import {appendFittedSymbol,fitSymbol} from './icon-view.mjs';
 import {mergeInventory,recordHasEdits} from './model.mjs';
@@ -321,7 +321,9 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   attr(c,node,'data-cme-icons',iconsOff?'off':'on');
   if(iconsOff)return;
   const icon=resolveIcon(descriptor,record,options);
-  if(!icon)return;
+  if(icon)prependIcon(c,node,icon,options);
+ }
+ function prependIcon(c,node,icon,options){
   const deco=document.createElementNS(HTML,'span');
   deco.className='cme-decoration';
   deco.setAttribute('data-cme-icon','true');
@@ -345,6 +347,24 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   c.owned.add(deco);
   node.prepend(deco);
   if(icon.type==='text'){deco.textContent='';appendFittedSymbol(window,deco,icon.text,options.iconSize||16);}
+ }
+ // SharingUtils rebuilds the native Share menu's rows without IDs on every
+ // opening, and Gecko 159 dropped their artwork (Firefox bug 2009747). Give
+ // them their exact mapped icon only: no identity, placement, label or
+ // visibility change. Every write is recorded, so restore() removes it.
+ function decorateServiceRows(c,popup,options){
+  const menu=popup?.parentElement;
+  if(popup?.localName!=='menupopup'||!menu||descriptorOf(c,menu)?.key!==NATIVE_SHARE_KEY)return;
+  for(const node of popup.children){
+   if(node.localName!=='menuitem'||node.id||c.scan.byNode.has(node)||node.getAttribute('data-cme-item'))continue;
+   const row=SHARE_SERVICE_ROWS.find(row=>node.classList.contains(row.className)&&node.getAttribute('data-l10n-id')===row.l10nId);
+   if(!row)continue;
+   attr(c,node,'data-cme-item','true');
+   attr(c,node,'data-cme-icons',options.showIcons===false?'off':'on');
+   if(options.showIcons===false)continue;
+   const icon=resolveIcon({kind:'command',nativeId:null,l10nId:row.l10nId,label:node.getAttribute('label')||''},{},options);
+   if(icon?.source==='builtin')prependIcon(c,node,icon,options);
+  }
  }
  function apply(c){
   const initial=getState();
@@ -494,6 +514,8 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    }
    accessKeys(c,container,records);
   }
+  const share=c.scan.nodes.get(NATIVE_SHARE_KEY);
+  if(share&&!records[NATIVE_SHARE_KEY]?.hidden&&!records[NATIVE_SHARE_KEY]?.removed)decorateServiceRows(c,[...share.children].find(n=>n.localName==='menupopup'),options);
  }
  function reconcile(c){
   if(destroyed||!c.root.isConnected)return;
@@ -548,8 +570,12 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
     const state=getState();
     if(state?.options?.enabled!==false&&!c.bypass){
      const saved=state?.roots?.[c.root.id]?.records||{};
+     const options={...state?.options};
      withPaused(c,()=>{
-      for(const popup of new Set(ownerOnly.map(record=>record.target.closest('menupopup'))))accessKeys(c,popup,saved);
+      for(const popup of new Set(ownerOnly.map(record=>record.target.closest('menupopup')))){
+       decorateServiceRows(c,popup,options);
+       accessKeys(c,popup,saved);
+      }
      });
     }
    }

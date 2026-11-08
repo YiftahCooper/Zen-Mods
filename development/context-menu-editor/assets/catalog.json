@@ -1486,6 +1486,22 @@
           "path": "assets/packs/fluent/zoom-out.svg",
           "sha256": "8ae5bda8be89522f4c4fd82213fe0c2c207f0814beff056156084a8fb0e8cd22",
           "originalSha256": "8e16c69c224d4195f3524ec4ea47aa5e2e102d2c2b94b3e2febf3c0499a60a33"
+        },
+        {
+          "id": "qr-code",
+          "label": "QR code",
+          "tags": [
+            "qr",
+            "code"
+          ],
+          "path": "assets/packs/fluent/qr-code.svg",
+          "sha256": "34ced1ba5650d68abd7c022ed0e13e7a856d77e71c35c0836d1d8f3b6d22f790",
+          "originalSha256": "69f9c0a55a5362e7299af893426f5096156c6ad459f02642a53f5b325284b55a",
+          "source": {
+            "repository": "https://github.com/microsoft/fluentui-system-icons",
+            "revision": "e15fc0de25fab983e3e42bac8798be69a85c23bf",
+            "file": "assets/QR Code/SVG/ic_fluent_qr_code_20_regular.svg"
+          }
         }
       ]
     },
@@ -2783,6 +2799,15 @@
             "out"
           ],
           "browserPath": "chrome://browser/skin/zen-icons/zoom-out.svg"
+        },
+        {
+          "id": "qr-code",
+          "label": "QR code",
+          "tags": [
+            "qr",
+            "code"
+          ],
+          "browserPath": "chrome://browser/content/sharing/qr-code.svg"
         }
       ]
     }
@@ -3057,7 +3082,10 @@
         "user-context-new-tab": "new-tab-image",
         "user-context-add-container": "container-tab",
         "user-context-manage-containers": "manage",
-        "tab-context-share-url": "share"
+        "tab-context-share-url": "share",
+        "menu-share-copy-links": "link",
+        "menu-file-share-qrcode3": "qr-code",
+        "menu-share-windows": "share"
       }
     },
     "zen": {
@@ -3320,7 +3348,10 @@
         "user-context-new-tab": "tab",
         "user-context-add-container": "container-tab",
         "user-context-manage-containers": "manage",
-        "tab-context-share-url": "share"
+        "tab-context-share-url": "share",
+        "menu-share-copy-links": "link",
+        "menu-file-share-qrcode3": "qr-code",
+        "menu-share-windows": "share"
       }
     }
   },

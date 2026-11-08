@@ -9,6 +9,28 @@ ROOT = Path(__file__).resolve().parent.parent
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
+# Local additions, not from CMI. The Fluent QR glyph is adopted from Microsoft's
+# Fluent UI System Icons (MIT, licenses/FluentUI-System-Icons-MIT.txt): the
+# 20 px regular outline, recoloured like the other Fluent assets and drawn at
+# 16 px. The ZenUI choice is the browser's own share-panel QR artwork; it is
+# referenced, not copied. A missing browser resource falls back to the Fluent file.
+FLUENT_QR = {"repository":"https://github.com/microsoft/fluentui-system-icons",
+             "revision":"e15fc0de25fab983e3e42bac8798be69a85c23bf",
+             "file":"assets/QR Code/SVG/ic_fluent_qr_code_20_regular.svg",
+             "originalSha256":"69f9c0a55a5362e7299af893426f5096156c6ad459f02642a53f5b325284b55a",
+             "sha256":"34ced1ba5650d68abd7c022ed0e13e7a856d77e71c35c0836d1d8f3b6d22f790"}
+SHARE_ROWS = {"menu-share-copy-links":"link","menu-file-share-qrcode3":"qr-code","menu-share-windows":"share"}
+
+def local_icon(pack_id):
+    entry = {"id":"qr-code","label":"QR code","tags":["qr","code"]}
+    if pack_id == "zen":
+        return {**entry, "browserPath":"chrome://browser/content/sharing/qr-code.svg"}
+    path = "assets/packs/fluent/qr-code.svg"
+    if digest((ROOT/path).read_bytes()) != FLUENT_QR["sha256"]:
+        raise ValueError("Unexpected local QR asset")
+    return {**entry, "path":path, "sha256":FLUENT_QR["sha256"], "originalSha256":FLUENT_QR["originalSha256"],
+            "source":{key:FLUENT_QR[key] for key in ("repository","revision","file")}}
+
 def adopt_svg(data):
     text = data.decode("utf-8")
     if re.search(r"<!DOCTYPE|<!ENTITY|<script\b|<foreignObject\b|\bon\w+\s*=", text, re.I):
@@ -95,10 +117,14 @@ def build(archive):
                           "better-zen-folders-move-space":"move-tab"})
             # SharingUtils' Share submenu has no ID; its localization ID is stable.
             by_l10n.setdefault("tab-context-share-url","share")
+            # Its rows (Gecko 159+) are ID-less too and lost their own artwork
+            # upstream (Firefox bug 2009747), so they use exact localization IDs.
+            pack["icons"].append(local_icon(pack_id))
+            by_l10n.update(SHARE_ROWS)
             output["packs"].append(pack)
             output["mappings"][pack_id]={"byId":by_id,"byL10n":by_l10n}
     output["transformation"]="Fluent SVG context-fill/context-stroke replaced by #667b91; contextual opacity replaced by 1. Zen artwork referenced from the installed browser, not copied."
-    (ROOT/"assets"/"catalog.json").write_text(json.dumps(output,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    (ROOT/"assets"/"catalog.json").write_text(json.dumps(output,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
     print(f"Catalogued {sum(len(p['icons']) for p in output['packs'])} icons; {sum(len(m['byId']) for m in output['mappings'].values())} ID mappings.")
 
 if __name__=="__main__":

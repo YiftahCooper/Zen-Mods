@@ -206,6 +206,14 @@ original nodes and removes the editor's owned containers and styles.
   `tab-context-share-url` to `share`. The cause of the reported Share loss was not
   reproduced in disposable profiles; `tests/native/submenu-geometry.js` records a
   diagnostic for each case.
+- **Share rows (0.2.1).** Gecko 159 dropped the artwork of SharingUtils' Copy
+  Link and QR rows (Firefox bug 2009747). Those rows, and More Options, have no
+  ID and are rebuilt on every Share opening, so they get no editor identity. The
+  controller decorates only the exact class plus localization ID pairs in
+  `SHARE_SERVICE_ROWS` (`src/registry.mjs`) inside the identified native Share
+  menu, with exact `byL10n` mappings only. It does this in the normal pass and in
+  the owner-only submenu path, paused and recorded so closing restores the rows.
+  `tools/import-cmi.py` adds these mappings and the local `qr-code` entries.
 - **Saved-state size (B4).** Settings up to 1 MiB / 40,000 records load. Saves aim
   for 512 KiB / 10,000 records: unedited remembered `mod:` rows go first, oldest
   first; edits are never dropped. Absent remembered rows are saved only once

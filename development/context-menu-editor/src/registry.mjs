@@ -11,6 +11,14 @@ const transient = node => node.matches?.('.spell-suggestion, .spell-suggestion-i
 const AI_IDS = new Set(['context_askChat','context-ask-chat','context-ask-chatgpt','context-genai']);
 // The rows SharingUtils inserts Share after (classic and alternative tab menu layouts).
 const SHARE_ANCHORS = ['context_moveTabOptions','context_shareSelectedTabs'];
+export const NATIVE_SHARE_KEY = 'native:tab-context-share-url';
+// The rows SharingUtils rebuilds inside that Share menu on every opening. They
+// have no ID and no editor identity; only their artwork is presented.
+export const SHARE_SERVICE_ROWS = Object.freeze([
+ Object.freeze({className:'share-copy-link',l10nId:'menu-share-copy-links'}),
+ Object.freeze({className:'share-qrcode-item',l10nId:'menu-file-share-qrcode3'}),
+ Object.freeze({className:'share-windows-item',l10nId:'menu-share-windows'}),
+]);
 const digest=value=>{
  let a=2166136261,b=5381;for(const char of value){const code=char.codePointAt(0);a=Math.imul(a^code,16777619);b=Math.imul(b,33)^code;}
  return (a>>>0).toString(36)+(b>>>0).toString(36);
@@ -37,7 +45,7 @@ export function discoverRoot(root,{resolveSource=()=>null}={}) {
  // SharingUtils creates this browser submenu without an ID. Its exact native
  // root, role class and localization ID are stable; its translated label is not.
  // Keep this adapter narrow and leave ambiguous or source-owned rows alone.
- const nativeShareKey='native:tab-context-share-url';
+ const nativeShareKey=NATIVE_SHARE_KEY;
  const nativeShares=root.id==='tabContextMenu'?all.filter(node=>{
   const source=sources.get(node);
   return !node.id&&!transient(node)&&node.parentElement===root&&node.localName==='menu'&&node.classList.contains('share-tab-url-item')&&node.getAttribute('data-l10n-id')==='tab-context-share-url'&&(!source||['unknown','browser'].includes(source.kind));

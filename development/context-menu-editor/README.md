@@ -1,7 +1,13 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.0.**
+an interactive Sine settings editor. **Version 0.2.1.**
+
+Version 0.2.1 restores the icons inside the tab menu's **Share** submenu.
+Zen 1.24 (Firefox 159) stopped giving Copy Link and Create QR Code their own
+icons. The editor now shows Copy Link, Create QR Code and More Options with
+icons from your chosen pack, following **Show icons**. These rows are
+decorated only: they cannot be moved or renamed, and nothing else changes.
 
 Version 0.2.0 is a reliability release. Your saved settings load unchanged.
 
@@ -218,6 +224,9 @@ no network request when a menu opens. Existing owner-provided icon URLs remain
 controlled by that owner.
 
 ## Verification
+
+Version 0.2.1 adds unit tests for the Share submenu rows and a native check
+that each rebuilt row shows a loaded icon in every geometry case.
 
 Version 0.2.0 was tested with 242 unit tests and the full native suite in
 disposable headless Zen 1.24.1b profiles (Gecko 159). Three native stages that

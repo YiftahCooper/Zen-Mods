@@ -34,7 +34,7 @@ function asset(result,id,pack='fluent') {
 
 test('gallery exposes bundled Fluent and browser-provided Zen sources with search tags',()=>{
   const p=platform(), icons=createIconService(p.window,{baseURL:'https://preview.invalid/mod/'}), catalog=icons.catalog();
-  assert.equal(catalog.length,285);assert.deepEqual([...new Set(catalog.map(i=>i.pack))],['fluent','zen']);
+  assert.equal(catalog.length,287);assert.deepEqual([...new Set(catalog.map(i=>i.pack))],['fluent','zen']);
   const copy=catalog.find(i=>i.pack==='fluent'&&i.id==='edit-copy');
   assert.equal(copy.src,'https://preview.invalid/mod/assets/packs/fluent/edit-copy.svg');assert.ok(copy.tags.includes('copy'));
   const zenCopy=catalog.find(i=>i.pack==='zen'&&i.id==='edit-copy');
@@ -42,6 +42,9 @@ test('gallery exposes bundled Fluent and browser-provided Zen sources with searc
   const zenOnly=catalog.find(i=>i.pack==='zen'&&i.id==='dart-down');
   assert.equal(zenOnly.fallbackSrc,'https://preview.invalid/mod/assets/packs/fluent/info.svg');
   assert.equal(catalog.filter(i=>i.pack==='zen'&&i.src.startsWith('chrome://browser/skin/')).length,147);
+  const zenQR=catalog.find(i=>i.pack==='zen'&&i.id==='qr-code');
+  assert.equal(zenQR.src,'chrome://browser/content/sharing/qr-code.svg');
+  assert.equal(zenQR.fallbackSrc,'https://preview.invalid/mod/assets/packs/fluent/qr-code.svg');
   assert.throws(()=>catalog.push({}),TypeError);p.dom.window.close();
 });
 test('resolved native assets carry local fallback artwork and retain Zen aliases',()=>{

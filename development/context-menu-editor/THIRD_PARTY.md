@@ -11,7 +11,8 @@ Its repository MIT notice is preserved in
 `licenses/Context-Menu-Icons-MIT.txt`.
 
 The library contains 138 copied FluentUI SVGs and 147 references to artwork
-already bundled with the installed Zen browser. The upstream
+already bundled with the installed Zen browser, plus the QR glyphs described
+below. The upstream
 CSS supplies the exact command/localization mappings. Broken upstream references
 to `sidebars-right`, `edit-theme` and `new-tab` use existing `sidebar-right`,
 `color` and `plus` artwork, respectively. The full upstream styling, settings and
@@ -20,6 +21,18 @@ Local mappings assign Back, Forward, Reload and Stop to existing artwork in
 both packs. Move to Folder uses a folder glyph, and Better Zen Folders' Move
 to Space uses the move-tab glyph instead of a generic menu fallback. These
 overrides are local to Context Menu Editor.
+
+The Share submenu rows map by localization ID: Copy Link to `link`, Create QR
+Code to a new `qr-code` entry and More Options to `share`. CMI has no QR
+glyph. The FluentUI pack's `assets/packs/fluent/qr-code.svg` is Microsoft's
+[Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons/tree/e15fc0de25fab983e3e42bac8798be69a85c23bf)
+`ic_fluent_qr_code_20_regular.svg` at revision
+`e15fc0de25fab983e3e42bac8798be69a85c23bf`, recoloured to `#667b91` like the
+other Fluent files and sized to 16 px. Its MIT notice is in
+`licenses/FluentUI-System-Icons-MIT.txt`; `assets/catalog.json` records its
+source, original and adopted SHA-256 values. The ZenUI pack references the
+browser's own share-panel artwork, `chrome://browser/content/sharing/qr-code.svg`,
+which is not copied; a missing resource uses the local Fluent QR glyph.
 
 Fluent SVG context paint is replaced with `#667b91`, and contextual opacity with
 `1`, so it can render in the HTML gallery and native menu decorations.

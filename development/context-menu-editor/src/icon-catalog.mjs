@@ -7,7 +7,9 @@ export function createIconCatalog(baseURL = DEFAULT_ICON_BASE) {
   const base = String(baseURL).replace(/\/?$/u, '/');
   const localFluent = new Map(data.packs.find(pack=>pack.id==='fluent').icons.map(icon=>[icon.id,base+icon.path]));
   const entries = Object.freeze(data.packs.flatMap(pack => pack.icons.map(icon => {
-    if(icon.browserPath && !/^chrome:\/\/browser\/skin\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.svg$/u.test(icon.browserPath))throw new Error('Invalid built-in browser icon reference.');
+    // Browser artwork only: skin icons, plus the share panel's QR glyph, which
+    // Firefox ships under content/sharing rather than skin.
+    if(icon.browserPath && !/^chrome:\/\/browser\/(?:skin|content\/sharing)\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.svg$/u.test(icon.browserPath))throw new Error('Invalid built-in browser icon reference.');
     return Object.freeze({
       pack:pack.id, id:icon.id, label:icon.label, src:icon.browserPath || base + icon.path,
       ...(icon.browserPath ? {fallbackSrc:localFluent.get(icon.id) || localFluent.get('info')} : {}),
