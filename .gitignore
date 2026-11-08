@@ -1,5 +1,8 @@
+# Tests are source and must be committed. Scratch output belongs in .backup-scratch/.
 artifacts/
-tests/
 node_modules/
 __pycache__/
 *.zip
+.backup-scratch/
+.npm-cache/
+dist/

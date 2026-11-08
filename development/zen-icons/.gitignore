@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.backup-scratch/
+__pycache__/
+# Generated from lucide-static by npm run generate:icons
+src/browser/themes/shared/zen-icons/common/lucide/
+src/browser/themes/shared/zen-icons/lucide.inc.mn

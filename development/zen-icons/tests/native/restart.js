@@ -1,0 +1,23 @@
+const done=arguments[arguments.length-1];
+(async()=>{
+  const w=Services.wm.getMostRecentWindow('navigator:browser'),doc=w.document;
+  const pause=ms=>new Promise(r=>w.setTimeout(r,ms));
+  const wait=async(fn,label)=>{for(let i=0;i<300;i++){if(fn())return;await pause(100);}throw Error('Timeout '+label);};
+  const checks=[],check=(name,ok,detail)=>{checks.push({name,passed:Boolean(ok),detail});if(!ok)throw Error(name+': '+JSON.stringify(detail));};
+  const id=Services.prefs.getStringPref('zen-icons.test.folder-id');
+  await wait(()=>w.__betterZenFoldersController && doc.getElementById('PanelUI-zen-emojis-picker')?.hasAttribute('zen-icons-enhanced'),'combined restart activation');
+  await wait(()=>doc.getElementById(id),'restored folder');
+  const folder=doc.getElementById(id);
+  const tab=[...w.gBrowser.tabs].find(t=>w.SessionStore.getCustomTabValue(t,'zen-icons-native-marker')==='persistent-tab');
+  check('native tab restored with stable metadata',Boolean(tab));
+  check('selected tab icon survives process restart',String(tab.zenStaticIcon).includes('/display-lucide/dog.svg'),tab.zenStaticIcon);
+  const image=folder.querySelector(':scope > .tab-group-label-container > .tab-group-folder-icon svg .icon image');
+  check('selected custom folder icon survives process restart',String(image?.getAttribute('href')).includes('/Animals/fish.png'),image?.getAttribute('href'));
+  check('outline-off choice survives restart',folder.hasAttribute('zen-icons-hide-folder-shape'));
+  check('canonical folder colour survives restart',folder.getAttribute('data-better-zen-folders-color')==='#ff8000');
+  check('separate folder default survives restart',Services.prefs.getBoolPref('zen-icons.folder.show-emoji')===false && Services.prefs.getBoolPref('zen-icons.tab.show-emoji',true)===true);
+  const spaceId=Services.prefs.getStringPref('zen-icons.test.space-id');
+  const workspace=w.gZenWorkspaces.getWorkspaceFromId(spaceId);
+  check('custom Space icon survives process restart',String(workspace?.icon).includes('fish.png'),workspace?.icon);
+  return {passed:true,checks};
+})().then(done,error=>done({passed:false,error:String(error),stack:error.stack}));

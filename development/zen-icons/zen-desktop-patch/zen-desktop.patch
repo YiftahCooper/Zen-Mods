@@ -1,0 +1,3317 @@
+diff --git a/locales/en-US/browser/browser/zen-general.ftl b/locales/en-US/browser/browser/zen-general.ftl
+index 31bdff0..0a3aa52 100644
+--- a/locales/en-US/browser/browser/zen-general.ftl
++++ b/locales/en-US/browser/browser/zen-general.ftl
+@@ -89,6 +89,25 @@ zen-icons-picker-svg =
+   .label = Icons
+ zen-emojis-picker-search =
+   .placeholder = Search emojis
++zen-icons-picker-search =
++  .placeholder = Search icons and emojis by name or tag
++zen-icons-picker-filter =
++  .label = Filter
++  .tooltiptext = Choose icon providers or jump to a category
++zen-icons-picker-providers = Providers
++zen-icons-picker-categories = Categories
++zen-icons-picker-provider-emoji = Emojis
++zen-icons-picker-provider-zen = Zen icons
++zen-icons-picker-provider-lucide = Lucide
++zen-icons-picker-provider-custom = Custom icons
++zen-icons-picker-open-custom-folder =
++  .label = Open custom icon folder
++zen-icons-picker-custom-loading = Loading custom icons…
++zen-icons-picker-custom-status = { $count } loaded, { $skipped } skipped
++zen-icons-picker-custom-error = Custom icons unavailable
++zen-icons-picker-empty = No matching icons from the enabled providers
++zen-icons-picker-show-folder-shape =
++  .label = Show folder shape
+ 
+ urlbar-search-mode-zen_actions = Actions
+ zen-site-data-settings = Settings
+diff --git a/src/browser/base/content/zen-panels/emojis-picker.inc b/src/browser/base/content/zen-panels/emojis-picker.inc
+index 2bc42e2..c4d9301 100644
+--- a/src/browser/base/content/zen-panels/emojis-picker.inc
++++ b/src/browser/base/content/zen-panels/emojis-picker.inc
+@@ -1,23 +1,94 @@
+-# This Source Code Form is subject to the terms of the Mozilla Public
+-# License, v. 2.0. If a copy of the MPL was not distributed with this
+-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
++# This Source Code Form is subject to the terms of the Mozilla Public # License,
++v. 2.0. If a copy of the MPL was not distributed with this # file, You can
++obtain one at http://mozilla.org/MPL/2.0/.
+ 
+-<panel type="arrow" orient="vertical" id="PanelUI-zen-emojis-picker" position="bottomright topright" side="bottom">
++<panel
++  type="arrow"
++  orient="vertical"
++  id="PanelUI-zen-emojis-picker"
++  position="bottomright topright"
++  side="bottom"
++>
+   <hbox id="PanelUI-zen-picker-header">
+     <toolbarbutton class="toolbarbutton-1" />
+     <hbox id="PanelUI-zen-emojis-buttons-wrapper">
+-      <toolbarbutton id="PanelUI-zen-emojis-picker-change-emojis" class="selected" data-l10n-id="zen-icons-picker-emoji" />
+-      <toolbarbutton id="PanelUI-zen-emojis-picker-change-svg" data-l10n-id="zen-icons-picker-svg" />
++      <toolbarbutton
++        id="PanelUI-zen-emojis-picker-change-emojis"
++        class="selected"
++        data-l10n-id="zen-icons-picker-emoji"
++      />
++      <toolbarbutton
++        id="PanelUI-zen-emojis-picker-change-svg"
++        data-l10n-id="zen-icons-picker-svg"
++      />
+     </hbox>
+-    <toolbarbutton id="PanelUI-zen-emojis-picker-none" class="toolbarbutton-1" />
++    <toolbarbutton
++      id="PanelUI-zen-emojis-picker-none"
++      class="toolbarbutton-1"
++    />
++  </hbox>
++  <hbox id="PanelUI-zen-icon-picker-search-row">
++    <html:input
++      type="search"
++      id="PanelUI-zen-emojis-picker-search"
++      data-l10n-id="zen-icons-picker-search"
++    />
++    <toolbarbutton
++      id="PanelUI-zen-icon-picker-filter-button"
++      class="toolbarbutton-1"
++      popup="PanelUI-zen-icon-picker-filter"
++      data-l10n-id="zen-icons-picker-filter"
++    />
+   </hbox>
+   <hbox id="PanelUI-zen-emojis-picker-pages">
+-    <vbox emojis="true">
+-      <hbox id="PanelUI-zen-emojis-picker-header">
+-        <html:input type="search" id="PanelUI-zen-emojis-picker-search" data-l10n-id="zen-emojis-picker-search" />
++    <vbox class="zen-icon-picker-page" emojis="true">
++      <vbox
++        id="PanelUI-zen-emojis-picker-list"
++        class="zen-icon-picker-groups"
++      />
++    </vbox>
++    <vbox class="zen-icon-picker-page" icons="true">
++      <vbox
++        id="PanelUI-zen-emojis-picker-svgs"
++        class="zen-icon-picker-groups"
++      />
++      <hbox id="PanelUI-zen-custom-icon-actions">
++        <toolbarbutton
++          id="PanelUI-zen-open-custom-icon-folder"
++          class="subviewbutton"
++          data-l10n-id="zen-icons-picker-open-custom-folder"
++        />
++        <label id="PanelUI-zen-custom-icon-status" />
+       </hbox>
+-      <hbox id="PanelUI-zen-emojis-picker-list" />
+     </vbox>
+-    <hbox svgs="true" id="PanelUI-zen-emojis-picker-svgs" />
+   </hbox>
++  <hbox id="PanelUI-zen-folder-shape-row" hidden="true">
++    <checkbox
++      id="PanelUI-zen-folder-shape-toggle"
++      data-l10n-id="zen-icons-picker-show-folder-shape"
++    />
++  </hbox>
++</panel>
++
++<panel
++  type="arrow"
++  orient="vertical"
++  id="PanelUI-zen-icon-picker-filter"
++  position="after_start"
++>
++  <vbox class="zen-icon-filter-section">
++    <label
++      class="zen-icon-filter-heading"
++      data-l10n-id="zen-icons-picker-providers"
++    />
++    <vbox id="PanelUI-zen-icon-provider-filters" />
++  </vbox>
++  <separator class="thin" />
++  <vbox class="zen-icon-filter-section">
++    <label
++      class="zen-icon-filter-heading"
++      data-l10n-id="zen-icons-picker-categories"
++    />
++    <vbox id="PanelUI-zen-icon-category-jumps" />
++  </vbox>
+ </panel>
+diff --git a/src/browser/themes/shared/zen-icons/common/selectable/CREDITS.md b/src/browser/themes/shared/zen-icons/common/selectable/CREDITS.md
+index 9ba1647..f9d29e5 100644
+--- a/src/browser/themes/shared/zen-icons/common/selectable/CREDITS.md
++++ b/src/browser/themes/shared/zen-icons/common/selectable/CREDITS.md
+@@ -1,3 +1,5 @@
+ # Icons used in Zen's emoji picker:
+ 
+ Credit to [Ionicons](https://ionic.io/ionicons) by [Ionic Framework](https://ionic.io/), used under the [MIT License](https://opensource.org/license/MIT).
++
++Additional picker icons are generated from [Lucide](https://lucide.dev/) 1.33.0, used under the ISC License. Lucide includes icons derived from [Feather](https://feathericons.com/), used under the MIT License. The complete notices are vendored beside the generated icons in `common/lucide/LICENSE.md`.
+diff --git a/src/browser/themes/shared/zen-icons/jar.inc.mn b/src/browser/themes/shared/zen-icons/jar.inc.mn
+index 91c0cc4..142aaa0 100644
+--- a/src/browser/themes/shared/zen-icons/jar.inc.mn
++++ b/src/browser/themes/shared/zen-icons/jar.inc.mn
+@@ -540,4 +540,5 @@
+ *  skin/classic/browser/zen-icons/selectable/warning.svg          (../shared/zen-icons/common/selectable/warning.svg) 
+ *  skin/classic/browser/zen-icons/selectable/water.svg          (../shared/zen-icons/common/selectable/water.svg) 
+ *  skin/classic/browser/zen-icons/selectable/weight.svg          (../shared/zen-icons/common/selectable/weight.svg) 
++#include lucide.inc.mn
+   skin/classic/browser/zen-icons/icons.css                      (../shared/zen-icons/icons.css) 
+diff --git a/src/zen/common/jar.inc.mn b/src/zen/common/jar.inc.mn
+index bd87aa4..9c36a34 100644
+--- a/src/zen/common/jar.inc.mn
++++ b/src/zen/common/jar.inc.mn
+@@ -16,6 +16,10 @@
+         content/browser/zen-components/ZenMenubar.mjs                           (../../zen/common/modules/ZenMenubar.mjs)
+ 
+         content/browser/zen-components/ZenEmojisData.min.mjs                    (../../zen/common/emojis/ZenEmojisData.min.mjs)
++        content/browser/zen-components/ZenBuiltInIcons.mjs                     (../../zen/common/emojis/ZenBuiltInIcons.mjs)
++        content/browser/zen-components/ZenIconRegistry.mjs                     (../../zen/common/emojis/ZenIconRegistry.mjs)
++        content/browser/zen-components/ZenLucideIcons.mjs                      (../../zen/common/emojis/ZenLucideIcons.mjs)
++        content/browser/zen-components/ZenCustomIconPacks.mjs                  (../../zen/common/emojis/ZenCustomIconPacks.mjs)
+         content/browser/zen-components/ZenEmojiPicker.mjs                       (../../zen/common/emojis/ZenEmojiPicker.mjs)
+ 
+ *       content/browser/zen-styles/zen-theme.css                                (../../zen/common/styles/zen-theme.css)
+diff --git a/src/zen/common/styles/zen-single-components.css b/src/zen/common/styles/zen-single-components.css
+index 4b8c0d7..ab4e820 100644
+--- a/src/zen/common/styles/zen-single-components.css
++++ b/src/zen/common/styles/zen-single-components.css
+@@ -55,25 +55,25 @@
+ /* Emojis picker */
+ 
+ #PanelUI-zen-emojis-picker {
+-  --panel-width: 250px;
++  --panel-width: 340px;
+   --panel-padding: 0px;
+ 
+-  #PanelUI-zen-emojis-picker-header {
+-    gap: 10px;
+-    align-items: center;
+-    padding: 0 10px;
+-    padding-bottom: 6px;
+-  }
+-
+   #PanelUI-zen-emojis-picker-pages {
+     overflow: hidden;
+-    max-height: 230px;
++    height: 390px;
++    max-height: 55vh;
+ 
+     & > * {
+       min-width: 100%;
+     }
+   }
+ 
++  .zen-icon-picker-page {
++    overflow-y: auto;
++    overflow-x: hidden;
++    min-height: 0;
++  }
++
+   &[only-svg-icons="true"] {
+     & #PanelUI-zen-emojis-picker-change-emojis {
+       display: none;
+@@ -83,7 +83,7 @@
+       pointer-events: none;
+     }
+ 
+-    & #PanelUI-zen-emojis-picker-pages > vbox[emojis="true"] {
++    & #PanelUI-zen-emojis-picker-pages > [emojis="true"] {
+       display: none;
+     }
+   }
+@@ -99,9 +99,24 @@
+     display: none;
+   }
+ 
++  #PanelUI-zen-icon-picker-search-row {
++    align-items: center;
++    gap: 6px;
++    padding: 0 10px 8px;
++  }
++
+   #PanelUI-zen-emojis-picker-search {
+-    padding: 4px;
++    box-sizing: border-box;
++    min-width: 0;
+     width: 100%;
++    padding: 5px 7px;
++  }
++
++  #PanelUI-zen-icon-picker-filter-button {
++    appearance: none;
++    min-width: max-content;
++    padding: 5px 8px;
++    border-radius: 6px;
+   }
+ 
+   #PanelUI-zen-picker-header {
+@@ -135,42 +150,16 @@
+ 
+   #PanelUI-zen-emojis-picker-list,
+   #PanelUI-zen-emojis-picker-svgs {
+-    overflow-y: auto;
+-    overflow-x: hidden;
+     width: 100%;
+-
+-    padding: 10px;
+-    padding-top: 5px;
+-
+-    gap: 5px;
+-    display: grid;
+-    grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+-
+-    .zen-emojis-picker-emoji {
+-      font-size: 14px;
+-      padding: 0 !important;
+-      & image {
+-        display: none;
+-      }
+-    }
+-
+-    .zen-emojis-picker-svg {
+-      padding: 4px !important;
+-      & label {
+-        display: none;
+-      }
+-
+-      & .toolbarbutton-icon {
+-        width: 22px;
+-      }
+-    }
++    box-sizing: border-box;
++    padding: 0 8px 8px;
+   }
+ 
+   .zen-emojis-picker-emoji,
+   .zen-emojis-picker-svg,
+   #PanelUI-zen-emojis-picker-none {
+-    width: 22px;
+-    height: 22px;
++    width: 30px;
++    height: 30px;
+     appearance: none;
+     transition: opacity 0.08s ease-in-out;
+ 
+@@ -180,6 +169,122 @@
+       cursor: pointer;
+     }
+   }
++
++  .zen-emojis-picker-emoji {
++    padding: 0 !important;
++    font-size: 17px;
++
++    & image {
++      display: none;
++    }
++  }
++
++  .zen-emojis-picker-svg {
++    padding: 4px !important;
++    -moz-context-properties: fill, stroke;
++    fill: currentColor;
++    stroke: currentColor;
++
++    & label {
++      display: none;
++    }
++
++    & .toolbarbutton-icon {
++      width: 22px;
++      height: 22px;
++      object-fit: contain;
++    }
++  }
++
++  .zen-icon-picker-group {
++    display: block;
++    margin-bottom: 4px;
++  }
++
++  .zen-icon-picker-group-header {
++    appearance: none;
++    width: 100%;
++    min-height: 28px;
++    padding: 4px 6px;
++    border-radius: 6px;
++    font-weight: 600;
++
++    &::before {
++      content: "▾";
++      margin-inline-end: 6px;
++      opacity: 0.7;
++    }
++
++    &[aria-expanded="false"]::before {
++      content: "▸";
++    }
++
++    &:hover {
++      background-color: color-mix(in srgb, currentColor 8%, transparent);
++    }
++  }
++
++  .zen-icon-picker-grid {
++    display: grid;
++    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
++    gap: 4px;
++    padding: 5px 2px 8px;
++  }
++
++  .zen-icon-picker-empty {
++    display: block;
++    padding: 24px 12px;
++    text-align: center;
++    opacity: 0.65;
++  }
++
++  #PanelUI-zen-custom-icon-actions {
++    align-items: center;
++    gap: 6px;
++    padding: 5px 10px 9px;
++    border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
++
++    & toolbarbutton {
++      min-width: 0;
++      flex: 1;
++    }
++
++    & label {
++      margin: 0;
++      opacity: 0.65;
++      font-size: 0.85em;
++    }
++  }
++
++  #PanelUI-zen-folder-shape-row {
++    padding: 8px 12px;
++    border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
++  }
++}
++
++#PanelUI-zen-icon-picker-filter {
++  --panel-width: 260px;
++  --panel-padding: 6px;
++
++  .zen-icon-filter-section {
++    padding: 4px;
++  }
++
++  .zen-icon-filter-heading {
++    margin: 2px 6px 6px;
++    font-size: 0.9em;
++    font-weight: 700;
++  }
++
++  #PanelUI-zen-icon-category-jumps {
++    max-height: 260px;
++    overflow-y: auto;
++  }
++
++  checkbox,
++  .zen-icon-category-jump {
++    min-height: 28px;
++  }
+ }
+ 
+ .toolbarbutton-1:not(#tabs-newtab-button),
+diff --git a/src/zen/folders/ZenFolder.mjs b/src/zen/folders/ZenFolder.mjs
+index 088131f..ed8e40c 100644
+--- a/src/zen/folders/ZenFolder.mjs
++++ b/src/zen/folders/ZenFolder.mjs
+@@ -59,7 +59,7 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+           <ellipse cx="18" cy="16" rx="1.25" ry="1.25"/>
+         </g>
+       </svg>`,
+-    "image/svg+xml"
++    "image/svg+xml",
+   ).documentElement;
+ 
+   constructor() {
+@@ -78,7 +78,7 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+ 
+     this.labelElement.parentElement.setAttribute("context", "zenFolderActions");
+ 
+-    this.labelElement.onRenameFinished = newLabel => {
++    this.labelElement.onRenameFinished = (newLabel) => {
+       this.name = newLabel.trim() || "Folder";
+       const event = new CustomEvent("ZenFolderRenamed", {
+         bubbles: true,
+@@ -129,7 +129,7 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+   get childActiveGroups() {
+     if (this.tagName === "zen-workspace-collapsible-pins") {
+       return Array.from(
+-        this.parentElement.querySelectorAll("zen-folder[has-active]")
++        this.parentElement.querySelectorAll("zen-folder[has-active]"),
+       );
+     }
+     return Array.from(this.querySelectorAll("zen-folder[has-active]"));
+@@ -196,11 +196,11 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+ 
+   get allItems() {
+     return [...this.groupContainer.children].filter(
+-      child =>
++      (child) =>
+         !(
+           child.classList.contains("zen-tab-group-start") ||
+           child.classList.contains("pinned-tabs-container-separator")
+-        )
++        ),
+     );
+   }
+ 
+@@ -221,6 +221,26 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+     return this.icon.querySelector("image")?.getAttribute("href") || "";
+   }
+ 
++  get userIconValue() {
++    return this.getAttribute("zen-user-icon") || this.iconURL;
++  }
++
++  set userIconValue(value) {
++    if (value) {
++      this.setAttribute("zen-user-icon", value);
++    } else {
++      this.removeAttribute("zen-user-icon");
++    }
++  }
++
++  get showFolderShape() {
++    return !this.hasAttribute("zen-hide-folder-shape");
++  }
++
++  set showFolderShape(value) {
++    this.toggleAttribute("zen-hide-folder-shape", !value);
++  }
++
+   set activeTabs(tabs) {
+     if (tabs.length) {
+       this._activeTabs = tabs;
+@@ -303,7 +323,7 @@ export class nsZenFolder extends MozTabbrowserTabGroup {
+       this.isLiveFolder &&
+       tabsFromOutside.length
+     ) {
+-      tabsFromOutside.forEach(tab => {
++      tabsFromOutside.forEach((tab) => {
+         tab.setAttribute("folder-active", "true");
+       });
+       gZenFolders.animateCollapse(this);
+diff --git a/src/zen/folders/ZenFolders.mjs b/src/zen/folders/ZenFolders.mjs
+index 653beb6..d975a48 100644
+--- a/src/zen/folders/ZenFolders.mjs
++++ b/src/zen/folders/ZenFolders.mjs
+@@ -38,7 +38,7 @@ function groupIsCollapsiblePins(group) {
+ class nsZenFolders extends nsZenDOMOperatedFeature {
+   #ZEN_MAX_SUBFOLDERS = Services.prefs.getIntPref(
+     "zen.folders.max-subfolders",
+-    5
++    5,
+   );
+ 
+   #popup = null;
+@@ -91,14 +91,14 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+              command="cmd_zenNewLiveFolder"
+              image="chrome://browser/skin/zen-icons/selectable/logo-rss.svg"/>
+          </menupopup>
+-       </menu>`
++       </menu>`,
+     );
+     document
+       .getElementById("toolbar-context-openANewTab")
+       .after(contextMenuItemsToolbar);
+ 
+     const folderActionsMenu = document.getElementById("zenFolderActions");
+-    folderActionsMenu.addEventListener("popupshowing", event => {
++    folderActionsMenu.addEventListener("popupshowing", (event) => {
+       const target = event.explicitOriginalTarget;
+       let folder;
+       if (gBrowser.isTabGroupLabel(target)) {
+@@ -120,11 +120,11 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       gZenLiveFoldersUI.buildContextMenu(folder);
+ 
+       const newSubfolderItem = document.getElementById(
+-        "context_zenFolderNewSubfolder"
++        "context_zenFolderNewSubfolder",
+       );
+       newSubfolderItem.toggleAttribute(
+         "disabled",
+-        folder.level >= this.#ZEN_MAX_SUBFOLDERS - 1
++        folder.level >= this.#ZEN_MAX_SUBFOLDERS - 1,
+       );
+ 
+       const changeFolderSpace = document
+@@ -133,13 +133,13 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       changeFolderSpace.innerHTML = "";
+       for (const workspace of [...gZenWorkspaces.getWorkspaces()].reverse()) {
+         const item = gZenWorkspaces.generateMenuItemForWorkspace(workspace);
+-        item.addEventListener("command", event => {
++        item.addEventListener("command", (event) => {
+           if (!this.#lastFolderContextMenu) {
+             return;
+           }
+           this.changeFolderToSpace(
+             this.#lastFolderContextMenu,
+-            event.target.closest("menuitem").getAttribute("zen-workspace-id")
++            event.target.closest("menuitem").getAttribute("zen-workspace-id"),
+           );
+         });
+         changeFolderSpace.appendChild(item);
+@@ -148,15 +148,15 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     folderActionsMenu.addEventListener(
+       "popuphidden",
+-      event => {
++      (event) => {
+         if (event.target === folderActionsMenu) {
+           this.#lastFolderContextMenu = null;
+         }
+       },
+-      { once: true }
++      { once: true },
+     );
+ 
+-    folderActionsMenu.addEventListener("command", event => {
++    folderActionsMenu.addEventListener("command", (event) => {
+       if (!this.#lastFolderContextMenu) {
+         return;
+       }
+@@ -236,21 +236,21 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     SessionStore.promiseInitialized.then(() => {
+       gBrowser.tabContainer.addEventListener(
+         "dragstart",
+-        this.cancelPopupTimer.bind(this)
++        this.cancelPopupTimer.bind(this),
+       );
+     });
+   }
+ 
+   #initMoveTabToFolder() {
+     const moveTabToFolderMenu = document.getElementById(
+-      "context_zenMoveToFolder"
++      "context_zenMoveToFolder",
+     );
+     moveTabToFolderMenu.addEventListener("popupshowing", () => {
+       const separator = moveTabToFolderMenu.querySelector("menuseparator");
+       let tabs = TabContextMenu.contextTab?.multiselected
+         ? gBrowser.selectedTabs
+         : [TabContextMenu.contextTab];
+-      let groups = gBrowser.tabGroups.filter(group => {
++      let groups = gBrowser.tabGroups.filter((group) => {
+         const isZenFolder = group?.isZenFolder;
+         const isLiveFolder = group?.isLiveFolder;
+         const spaceId = group?.getAttribute("zen-workspace-id");
+@@ -261,7 +261,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         ) {
+           return false;
+         }
+-        return !tabs.some(tab => tab.group === group);
++        return !tabs.some((tab) => tab.group === group);
+       });
+       separator.hidden = groups.length === 0;
+       for (const group of groups) {
+@@ -279,7 +279,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     moveTabToFolderMenu.addEventListener("popuphidden", () => {
+       const items = moveTabToFolderMenu.querySelectorAll(
+-        ".context-zen-move-to-folder-item"
++        ".context-zen-move-to-folder-item",
+       );
+       for (const item of items) {
+         delete item._group;
+@@ -287,7 +287,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       }
+     });
+ 
+-    moveTabToFolderMenu.addEventListener("command", event => {
++    moveTabToFolderMenu.addEventListener("command", (event) => {
+       if (!event.target.classList.contains("context-zen-move-to-folder-item")) {
+         return;
+       }
+@@ -323,7 +323,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     if (isActiveFolder) {
+       for (const folder of group.activeGroups) {
+         folder.activeTabs = [...new Set([...folder.activeTabs, tab])].sort(
+-          (a, b) => a._tPos > b._tPos
++          (a, b) => a._tPos > b._tPos,
+         );
+         this.setFolderIndentation([tab], folder, /* for collapse = */ true);
+       }
+@@ -504,8 +504,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     }
+ 
+     // Prevent create folder inside Live Folder
+-    const thereIsOneLiveFolderTab = tabs?.some(tab =>
+-      tab.hasAttribute("zen-live-folder-item-id")
++    const thereIsOneLiveFolderTab = tabs?.some((tab) =>
++      tab.hasAttribute("zen-live-folder-item-id"),
+     );
+     if (thereIsOneLiveFolderTab) {
+       return;
+@@ -526,23 +526,23 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+   async #convertFolderToSpace(folder) {
+     const currentWorkspace = gZenWorkspaces.getActiveWorkspaceFromCache();
+-    let selectedTab = folder.tabs.find(tab => tab.selected);
+-    const icon = folder.icon?.querySelector("svg .icon image");
++    let selectedTab = folder.tabs.find((tab) => tab.selected);
++    const icon = folder.userIconValue;
+ 
+     const newSpace = await gZenWorkspaces.createAndSaveWorkspace(
+       folder.label,
+-      /* icon= */ icon?.getAttribute("href"),
++      /* icon= */ icon,
+       /* dontChange= */ false,
+       currentWorkspace.containerTabId,
+       {
+-        beforeChangeCallback: async newWorkspace => {
+-          await new Promise(resolve => {
++        beforeChangeCallback: async (newWorkspace) => {
++          await new Promise((resolve) => {
+             requestAnimationFrame(async () => {
+               const workspacePinnedContainer = gZenWorkspaces.workspaceElement(
+-                newWorkspace.uuid
++                newWorkspace.uuid,
+               ).pinnedTabsContainer;
+               const tabs = folder.allItems.filter(
+-                tab => !tab.hasAttribute("zen-empty-tab")
++                (tab) => !tab.hasAttribute("zen-empty-tab"),
+               );
+               workspacePinnedContainer.append(...tabs);
+               await folder.delete();
+@@ -557,7 +557,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             });
+           });
+         },
+-      }
++      },
+     );
+     // Change the ID for all tabs
+     for (const tab of gBrowser.tabs) {
+@@ -605,7 +605,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     }
+ 
+     folder.dispatchEvent(
+-      new CustomEvent("ZenFolderChangedWorkspace", { bubbles: true })
++      new CustomEvent("ZenFolderChangedWorkspace", { bubbles: true }),
+     );
+ 
+     if (!hasDndSwitch) {
+@@ -622,7 +622,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+   }
+ 
+   createFolder(tabs = [], options = {}) {
+-    const filteredTabs = tabs.map(tab => {
++    const filteredTabs = tabs.map((tab) => {
+       gBrowser.pinTab(tab);
+       if (tab?.group?.hasAttribute("split-view-group")) {
+         tab = tab.group;
+@@ -631,7 +631,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     });
+ 
+     const workspacePinned = gZenWorkspaces.workspaceElement(
+-      options.workspaceId
++      options.workspaceId,
+     )?.pinnedTabsContainer;
+     const pinnedContainer =
+       options.workspaceId && workspacePinned
+@@ -668,7 +668,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     // deliberate user action indicating the tab has importance for the user.
+     // Without this, it is not possible to save and close a tab group with
+     // a short lifetime.
+-    folder.tabs.forEach(tab => {
++    folder.tabs.forEach((tab) => {
+       gBrowser.TabStateFlusher.flush(tab.linkedBrowser);
+     });
+ 
+@@ -702,7 +702,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     folder.setAttribute(
+       "zen-workspace-id",
+-      options.workspaceId || gZenWorkspaces.activeWorkspace
++      options.workspaceId || gZenWorkspaces.activeWorkspace,
+     );
+ 
+     // note: We set if the folder is collapsed some time after creation.
+@@ -710,11 +710,11 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     //   that we want it to initially be collapsed.
+     setTimeout(
+       // eslint-disable-next-line no-shadow
+-      folder => {
++      (folder) => {
+         folder.collapsed = !!options.collapsed;
+       },
+       0,
+-      folder
++      folder,
+     );
+     return folder;
+   }
+@@ -736,7 +736,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       this._piningFolder = false;
+       gBrowser.pinnedTabsContainer.insertBefore(
+         group,
+-        gBrowser.pinnedTabsContainer.lastChild
++        gBrowser.pinnedTabsContainer.lastChild,
+       );
+       gBrowser.tabContainer._invalidateCachedTabs();
+       return true;
+@@ -777,8 +777,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     const activeGroup = event.target.parentElement;
+     if (
+-      activeGroup.tabs.filter(tab =>
+-        this.#shouldAppearOnTabSearch(tab, activeGroup)
++      activeGroup.tabs.filter((tab) =>
++        this.#shouldAppearOnTabSearch(tab, activeGroup),
+       ).length === 0
+     ) {
+       // If the group has no tabs, we don't show the popup
+@@ -808,7 +808,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     };
+     search.addEventListener("input", onSearchInput);
+ 
+-    const onKeyDown = event => {
++    const onKeyDown = (event) => {
+       // Arrow down and up to navigate through the list
+       if (
+         event.key === "ArrowDown" ||
+@@ -819,27 +819,27 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         let isUp =
+           event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey);
+         const items = Array.from(tabsList.children).filter(
+-          item => !item.hidden
++          (item) => !item.hidden,
+         );
+         if (items.length === 0) {
+           return;
+         }
+         let index = items.indexOf(
+-          tabsList.querySelector(".folders-tabs-list-item[selected]")
++          tabsList.querySelector(".folders-tabs-list-item[selected]"),
+         );
+         if (!isUp) {
+           index = (index + 1) % items.length;
+         } else {
+           index = (index - 1 + items.length) % items.length;
+         }
+-        items.forEach(item => item.removeAttribute("selected"));
++        items.forEach((item) => item.removeAttribute("selected"));
+         const targetItem = items[index];
+         targetItem.setAttribute("selected", "true");
+         targetItem.scrollIntoView({ block: "start", behavior: "smooth" });
+       } else if (event.key === "Enter") {
+         // Enter to select the currently highlighted item
+         const highlightedItem = tabsList.querySelector(
+-          ".folders-tabs-list-item[selected]"
++          ".folders-tabs-list-item[selected]",
+         );
+         if (highlightedItem) {
+           highlightedItem.click();
+@@ -851,7 +851,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     const target = event.target;
+     target.setAttribute("open", true);
+ 
+-    const handlePopupHidden = event => {
++    const handlePopupHidden = (event) => {
+       if (event.target !== this.#popup) {
+         return;
+       }
+@@ -867,7 +867,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         search.focus();
+         search.select();
+       },
+-      { once: true }
++      { once: true },
+     );
+ 
+     this.#popup.addEventListener("popuphidden", handlePopupHidden, {
+@@ -881,7 +881,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     const position = isRightSide ? "topleft topright" : "topright topleft";
+     let size = Math.min(
+       this.#popup.querySelector("#zen-folder-tabs-list").children.length,
+-      6
++      6,
+     );
+     size *= 48;
+     return {
+@@ -956,7 +956,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+       item.setAttribute(
+         "data-label",
+-        `${tabLabel.toLowerCase()} ${tabURL.toLowerCase()}`
++        `${tabLabel.toLowerCase()} ${tabURL.toLowerCase()}`,
+       );
+ 
+       item.addEventListener("click", () => {
+@@ -998,7 +998,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     tabs,
+     groupElem = undefined,
+     forCollapse = true,
+-    animate = true
++    animate = true,
+   ) {
+     if (!gZenPinnedTabManager.expandedSidebarMode) {
+       return;
+@@ -1071,13 +1071,20 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     }
+ 
+     gZenEmojiPicker.open(group.icon, {
+-      onlySvgIcons: true,
+-      allowNone: Boolean(group.iconURL),
++      onlyIcons: true,
++      allowNone: Boolean(group.userIconValue),
+       closeOnSelect: false,
+-      onSelect: icon => {
++      showFolderShape: group.showFolderShape,
++      onFolderShapeChange: (showFolderShape) => {
++        this.setFolderShowFolderShape(group, showFolderShape);
++        group.dispatchEvent(
++          new CustomEvent("TabGroupUpdate", { bubbles: true }),
++        );
++      },
++      onSelect: (icon) => {
+         this.setFolderUserIcon(group, icon);
+         group.dispatchEvent(
+-          new CustomEvent("TabGroupUpdate", { bubbles: true })
++          new CustomEvent("TabGroupUpdate", { bubbles: true }),
+         );
+       },
+     });
+@@ -1088,20 +1095,33 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     if (!svgIcon) {
+       return;
+     }
+-    svgIcon.setAttribute("href", icon ?? "");
+-    if (svgIcon.getAttribute("href") !== icon) {
++    group.userIconValue = icon ?? "";
++    const isCustomIcon = gZenEmojiPicker.isCustomIconValue(icon);
++    const source = gZenEmojiPicker.resolveIconSource(icon);
++    group.toggleAttribute("zen-custom-icon", isCustomIcon && Boolean(source));
++    group.toggleAttribute(
++      "zen-custom-icon-unavailable",
++      isCustomIcon && !source,
++    );
++    svgIcon.setAttribute("href", source);
++    if (!source) {
+       svgIcon.style.opacity = "0";
+     } else {
+       svgIcon.style.opacity = "1";
+     }
+   }
+ 
++  setFolderShowFolderShape(group, showFolderShape) {
++    group.showFolderShape = showFolderShape;
++  }
++
+   #groupInit(group, stateData) {
+     // Setup zen-folder icon to the correct position
+     this.updateFolderIcon(group, "auto");
+     if (stateData?.userIcon) {
+       this.setFolderUserIcon(group, stateData.userIcon);
+     }
++    group.showFolderShape = stateData?.showFolderShape ?? true;
+ 
+     if (group.collapsed) {
+       this.on_TabGroupCollapse({ target: group });
+@@ -1109,7 +1129,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     const labelContainer = group.querySelector(".tab-group-label-container");
+     // Setup mouseenter/mouseleave events for the folder
+-    labelContainer.addEventListener("mouseenter", event => {
++    labelContainer.addEventListener("mouseenter", (event) => {
+       if (
+         !group.collapsed ||
+         !Services.prefs.getBoolPref("zen.folders.search.enabled") ||
+@@ -1139,10 +1159,10 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+   storeDataForSessionStore() {
+     const folders = Array.from(
+-      gBrowser.tabContainer.querySelectorAll("zen-folder")
++      gBrowser.tabContainer.querySelectorAll("zen-folder"),
+     );
+     const splitGroups = Array.from(
+-      gBrowser.tabContainer.querySelectorAll("tab-group[split-view-group]")
++      gBrowser.tabContainer.querySelectorAll("tab-group[split-view-group]"),
+     );
+     const allData = [...folders, ...splitGroups];
+ 
+@@ -1167,13 +1187,11 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         continue;
+       }
+       const emptyFolderTabs = folder.tabs
+-        .filter(tab => tab.hasAttribute("zen-empty-tab"))
+-        .map(tab => tab.getAttribute("id"));
++        .filter((tab) => tab.hasAttribute("zen-empty-tab"))
++        .map((tab) => tab.getAttribute("id"));
+ 
+       let prevSiblingInfo = null;
+       const prevSibling = folder.previousElementSibling;
+-      const userIcon = folder?.icon?.querySelector("svg .icon image");
+-
+       if (prevSibling) {
+         if (gBrowser.isTabGroup(prevSibling)) {
+           prevSiblingInfo = { type: "group", id: prevSibling.id };
+@@ -1198,7 +1216,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         parentId: parentFolder ? parentFolder.id : null,
+         prevSiblingInfo,
+         emptyTabIds: emptyFolderTabs,
+-        userIcon: userIcon?.getAttribute("href"),
++        userIcon: folder.userIconValue,
++        showFolderShape: folder.showFolderShape,
+         isLiveFolder: folder.isLiveFolder,
+         // note: We shouldn't be using the workspace-id anywhere, we are just
+         //  remembering it for the pinned tabs manager to use it later.
+@@ -1227,7 +1246,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         tabFolderWorkingData.set(folderData.id, workingData);
+ 
+         const oldGroup = document.getElementById(folderData.id);
+-        folderData.emptyTabIds.forEach(id => {
++        folderData.emptyTabIds.forEach((id) => {
+           oldGroup
+             ?.querySelector(`tab[id="${id}"]`)
+             ?.setAttribute("zen-empty-tab", true);
+@@ -1283,7 +1302,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             case "tab":
+             case "group": {
+               const item = document.getElementById(
+-                stateData.prevSiblingInfo.id
++                stateData.prevSiblingInfo.id,
+               );
+               if (item) {
+                 item.after(node);
+@@ -1291,7 +1310,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+               }
+               // If we didn't find the group, we should debug it and continue to default case.
+               console.error(
+-                `Zen Folders: Could not find previous sibling with id ${stateData.prevSiblingInfo.id} while restoring session.`
++                `Zen Folders: Could not find previous sibling with id ${stateData.prevSiblingInfo.id} while restoring session.`,
+               );
+               // @eslint-disable-next-line no-fallthrough
+             }
+@@ -1304,7 +1323,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+                 parentWorkingData.node.groupStartElement;
+               if (!start) {
+                 console.error(
+-                  `Zen Folders: Could not find start element for parent folder with id ${stateData.parentId} while restoring session.`
++                  `Zen Folders: Could not find start element for parent folder with id ${stateData.parentId} while restoring session.`,
+                 );
+                 break;
+               }
+@@ -1348,7 +1367,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         !folder.hasAttribute("selected")) &&
+       !(
+         folder.level >= this.#ZEN_MAX_SUBFOLDERS &&
+-        movingTabs?.some(t => gBrowser.isTabGroupLabel(t))
++        movingTabs?.some((t) => gBrowser.isTabGroupLabel(t))
+       )
+     ) {
+       if (folder.collapsed) {
+@@ -1373,8 +1392,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+   #normalizeGroupItems(items) {
+     return items
+-      .filter(item => !item.hasAttribute("zen-empty-tab"))
+-      .map(item => {
++      .filter((item) => !item.hasAttribute("zen-empty-tab"))
++      .map((item) => {
+         if (gBrowser.isTabGroup(item)) {
+           item = item.firstChild;
+         } else if (gBrowser.isTabGroupLabel(item)) {
+@@ -1408,8 +1427,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     } = opts;
+     const folders = new Map();
+     return group.childGroupsAndTabs
+-      .filter(item => !item.hasAttribute("zen-empty-tab"))
+-      .map(item => {
++      .filter((item) => !item.hasAttribute("zen-empty-tab"))
++      .map((item) => {
+         const isSplitView = item.group?.hasAttribute?.("split-view-group");
+         const itemGroup = isSplitView ? item.group.group : item.group;
+         if (!folders.has(itemGroup?.id)) {
+@@ -1443,8 +1462,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+   #createAnimation(items, targetState, opts, callback = () => {}) {
+     items = Array.isArray(items) ? items : [items];
+-    return items.map(item =>
+-      gZenUIManager.motion.animate(item, targetState, opts).then(callback)
++    return items.map((item) =>
++      gZenUIManager.motion.animate(item, targetState, opts).then(callback),
+     );
+   }
+ 
+@@ -1457,7 +1476,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       window.windowUtils.getBoundsWithoutFlushing(tabsContainer).height;
+     if (tabsContainer.separatorElement) {
+       heightShift -= window.windowUtils.getBoundsWithoutFlushing(
+-        tabsContainer.separatorElement
++        tabsContainer.separatorElement,
+       ).height;
+     }
+ 
+@@ -1487,7 +1506,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     });
+     const collapsedHeight = this.#calculateHeightShift(
+       tabsContainer,
+-      selectedTabs
++      selectedTabs,
+     );
+ 
+     if (selectedTabs.length) {
+@@ -1524,7 +1543,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       group.setAttribute("has-active", "true");
+       group.activeTabs = selectedTabs;
+ 
+-      selectedTabs.forEach(tab => {
++      selectedTabs.forEach((tab) => {
+         this.setFolderIndentation([tab], group, /* for collapse = */ true);
+       });
+     }
+@@ -1535,7 +1554,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       ...this.#createAnimation(
+         itemsToHide,
+         { opacity: [1, 0], height: ["auto", 0] },
+-        { duration, ease: "easeInOut" }
++        { duration, ease: "easeInOut" },
+       ),
+       ...this.updateFolderIcon(group),
+       ...this.#createAnimation(
+@@ -1546,8 +1565,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             4 * (selectedTabs.length === 0 ? 1 : 0)
+           ),
+         },
+-        { duration, ease: "easeInOut" }
+-      )
++        { duration, ease: "easeInOut" },
++      ),
+     );
+ 
+     gBrowser.tabContainer._invalidateCachedVisibleTabs();
+@@ -1639,7 +1658,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             this.setFolderIndentation(
+               [tab],
+               activeGroup,
+-              /* for collapse = */ true
++              /* for collapse = */ true,
+             );
+           } else {
+             // Since the folder is now expanded, we should remove active attribute
+@@ -1664,12 +1683,12 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       ...this.#createAnimation(
+         itemsToShow,
+         { opacity: "", height: "" },
+-        { duration, ease: "easeInOut" }
++        { duration, ease: "easeInOut" },
+       ),
+       ...this.#createAnimation(
+         itemsToHide,
+         { opacity: 0, height: 0 },
+-        { duration, ease: "easeInOut" }
++        { duration, ease: "easeInOut" },
+       ),
+       ...this.updateFolderIcon(group),
+       ...this.#createAnimation(
+@@ -1678,8 +1697,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+           marginTop: 0,
+         },
+         { duration, ease: "easeInOut" },
+-        afterMarginTop
+-      )
++        afterMarginTop,
++      ),
+     );
+ 
+     this.#animationCount += 1;
+@@ -1725,8 +1744,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             marginTop: -(collapsedHeight + 4),
+           },
+           { duration: 0.12, ease: "easeInOut" },
+-          afterAnimate
+-        )
++          afterAnimate,
++        ),
+       );
+     }
+ 
+@@ -1749,7 +1768,9 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     const activeGroups = group.activeGroups;
+     for (const folder of activeGroups) {
+-      folder.activeTabs = folder.activeTabs.filter(tab => tab !== tabToUnload);
++      folder.activeTabs = folder.activeTabs.filter(
++        (tab) => tab !== tabToUnload,
++      );
+ 
+       if (folder.activeTabs.length === 0) {
+         lastTab = true;
+@@ -1768,7 +1789,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+             tabsContainer.setAttribute("hidden", true);
+             const collapsedHeight = this.#calculateHeightShift(
+               tabsContainer,
+-              []
++              [],
+             );
+             groupStart.style.marginTop = `${-(collapsedHeight + 4)}px`;
+           };
+@@ -1785,7 +1806,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+                 marginTop: -(collapsedHeight + 4),
+               },
+               { duration: 0.12, ease: "easeInOut" },
+-              afterAnimate
++              afterAnimate,
+             ),
+           ];
+           await Promise.all(folderAnimation);
+@@ -1811,7 +1832,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         {
+           duration: 0.12,
+           ease: "easeInOut",
+-        }
++        },
+       );
+     }
+ 
+@@ -1821,7 +1842,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+     // Await the tab unload animation first
+     await Promise.all(tabUnloadAnimations);
+     await Promise.all(
+-      animations.map(item => (typeof item === "function" ? item() : item))
++      animations.map((item) => (typeof item === "function" ? item() : item)),
+     );
+     this.#animationCount -= 1;
+     gBrowser.tabContainer._invalidateCachedTabs();
+@@ -1849,8 +1870,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         ? tab.group.group
+         : tab?.group;
+       while (currentGroup) {
+-        const activeTabs = selectedTabs.filter(t =>
+-          currentGroup.tabs.includes(t)
++        const activeTabs = selectedTabs.filter((t) =>
++          currentGroup.tabs.includes(t),
+         );
+         if (activeTabs.length) {
+           if (currentGroup.collapsed) {
+@@ -1884,15 +1905,15 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+                   marginTop: 0,
+                 },
+                 { duration: 0.12, ease: "easeInOut" },
+-                afterMarginTop
+-              )
++                afterMarginTop,
++              ),
+             );
+             for (const activeTab of activeTabs) {
+               this.setFolderIndentation(
+                 [activeTab],
+                 currentGroup,
+                 /* for collapse = */ true,
+-                /* animate = */ false
++                /* animate = */ false,
+               );
+             }
+           }
+@@ -1929,7 +1950,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+ 
+     // FIXME: This is a hack to fix the animations not working properly
+     this.styleCleanup(itemsToShow);
+-    itemsToHide.forEach(item => {
++    itemsToHide.forEach((item) => {
+       item.style.opacity = 0;
+       item.style.height = 0;
+     });
+@@ -1944,7 +1965,7 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         {
+           duration: 0.12,
+           ease: "easeInOut",
+-        }
++        },
+       ),
+       ...this.#createAnimation(
+         itemsToHide,
+@@ -1955,8 +1976,8 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+         {
+           duration: 0.12,
+           ease: "easeInOut",
+-        }
+-      )
++        },
++      ),
+     );
+ 
+     this.#animationCount += 1;
+@@ -1986,12 +2007,12 @@ class nsZenFolders extends nsZenDOMOperatedFeature {
+       {
+         marginTop: expand ? 0 : -(heightContainer + 4),
+       },
+-      { duration: 0.12, ease: "easeInOut" }
++      { duration: 0.12, ease: "easeInOut" },
+     );
+   }
+ 
+   styleCleanup(items) {
+-    items.forEach(item => {
++    items.forEach((item) => {
+       item.style.removeProperty("opacity");
+       item.style.removeProperty("height");
+     });
+diff --git a/src/zen/folders/zen-folders.css b/src/zen/folders/zen-folders.css
+index a413d34..4658d0e 100644
+--- a/src/zen/folders/zen-folders.css
++++ b/src/zen/folders/zen-folders.css
+@@ -109,8 +109,9 @@ zen-folder {
+ 
+         & image {
+           fill-opacity: 0.9;
+-          -moz-context-properties: fill, fill-opacity;
++          -moz-context-properties: fill, fill-opacity, stroke;
+           fill: color-mix(in srgb, var(--zen-folder-stroke) 50%, currentColor);
++          stroke: color-mix(in srgb, var(--zen-folder-stroke) 50%, currentColor);
+           transform: translate(8.5px, 10.5px);
+         }
+ 
+@@ -148,6 +149,32 @@ zen-folder {
+       }
+     }
+ 
++    zen-folder[zen-hide-folder-shape]:not([zen-custom-icon-unavailable])
++      &
++      .tab-group-folder-icon
++      svg {
++      filter: none;
++
++      & :is(.back, .front, .dots) {
++        opacity: 0 !important;
++      }
++
++      & .icon {
++        opacity: 1 !important;
++        transform: none !important;
++      }
++
++      & .icon image {
++        width: 20px;
++        height: 20px;
++        transform: translate(3.5px, 3.5px) !important;
++      }
++    }
++
++    zen-folder[zen-custom-icon] & .tab-group-folder-icon svg {
++      filter: none;
++    }
++
+     &::before {
+       content: "";
+       position: absolute;
+diff --git a/src/zen/sessionstore/ZenWindowSync.sys.mjs b/src/zen/sessionstore/ZenWindowSync.sys.mjs
+index 51816e8..fce5afd 100644
+--- a/src/zen/sessionstore/ZenWindowSync.sys.mjs
++++ b/src/zen/sessionstore/ZenWindowSync.sys.mjs
+@@ -530,7 +530,14 @@ class nsZenWindowSync {
+         } catch {}
+       } else if (aOriginalItem.isZenFolder) {
+         // Icons are a zen-only feature for tab groups.
+-        gZenFolders.setFolderUserIcon(aTargetItem, aOriginalItem.iconURL);
++        gZenFolders.setFolderUserIcon(
++          aTargetItem,
++          aOriginalItem.userIconValue
++        );
++        gZenFolders.setFolderShowFolderShape(
++          aTargetItem,
++          aOriginalItem.showFolderShape
++        );
+       }
+     }
+     if (flags & SYNC_FLAG_LABEL) {
+diff --git a/src/zen/spaces/ZenSpaceCreation.mjs b/src/zen/spaces/ZenSpaceCreation.mjs
+index 09cf6d5..a264fa6 100644
+--- a/src/zen/spaces/ZenSpaceCreation.mjs
++++ b/src/zen/spaces/ZenSpaceCreation.mjs
+@@ -11,7 +11,7 @@ ChromeUtils.defineLazyGetter(lazy, "l10n", () => {
+ class nsZenWorkspaceCreation extends MozXULElement {
+   #wasInCollapsedMode = false;
+ 
+-  promiseInitialized = new Promise(resolve => {
++  promiseInitialized = new Promise((resolve) => {
+     this.resolveInitialized = resolve;
+   });
+ 
+@@ -103,10 +103,10 @@ class nsZenWorkspaceCreation extends MozXULElement {
+     this.inputIcon = this.querySelector(".zen-workspace-creation-icon-label");
+     this.inputProfile = this.querySelector(".zen-workspace-creation-profile");
+     this.createButton = this.querySelector(
+-      ".zen-workspace-creation-create-button"
++      ".zen-workspace-creation-create-button",
+     );
+     this.cancelButton = this.querySelector(
+-      ".zen-workspace-creation-cancel-button"
++      ".zen-workspace-creation-cancel-button",
+     );
+ 
+     for (const element of this.elementsToAnimate) {
+@@ -143,18 +143,18 @@ class nsZenWorkspaceCreation extends MozXULElement {
+ 
+     this.createButton.addEventListener(
+       "command",
+-      this.onCreateButtonCommand.bind(this)
++      this.onCreateButtonCommand.bind(this),
+     );
+     this.cancelButton.addEventListener(
+       "command",
+-      this.onCancelButtonCommand.bind(this)
++      this.onCancelButtonCommand.bind(this),
+     );
+ 
+     this.inputName.addEventListener("input", () => {
+       this.createButton.disabled = !this.inputName.value.trim();
+     });
+ 
+-    this.inputName.addEventListener("keydown", event => {
++    this.inputName.addEventListener("keydown", (event) => {
+       if (event.key === "Enter") {
+         event.preventDefault();
+         event.stopPropagation();
+@@ -168,7 +168,7 @@ class nsZenWorkspaceCreation extends MozXULElement {
+     // (name input, icon picker trigger, profile button, primary button).
+     // Open popups consume Esc before it reaches us, so the emoji/profile
+     // pickers still close as expected.
+-    this.addEventListener("keydown", event => {
++    this.addEventListener("keydown", (event) => {
+       if (event.key === "Escape") {
+         event.preventDefault();
+         event.stopPropagation();
+@@ -179,21 +179,21 @@ class nsZenWorkspaceCreation extends MozXULElement {
+     this.inputIcon.addEventListener("command", this.onIconCommand.bind(this));
+ 
+     this.profilesPopup = this.querySelector(
+-      ".zen-workspace-creation-profiles-popup"
++      ".zen-workspace-creation-profiles-popup",
+     );
+ 
+     if (gZenWorkspaces.shouldShowContainers) {
+       this.inputProfile.addEventListener(
+         "command",
+-        this.onProfileCommand.bind(this)
++        this.onProfileCommand.bind(this),
+       );
+       this.profilesPopup.addEventListener(
+         "popupshowing",
+-        this.onProfilePopupShowing.bind(this)
++        this.onProfilePopupShowing.bind(this),
+       );
+       this.profilesPopup.addEventListener(
+         "command",
+-        this.onProfilePopupCommand.bind(this)
++        this.onProfilePopupCommand.bind(this),
+       );
+ 
+       this.currentProfile = {
+@@ -217,7 +217,7 @@ class nsZenWorkspaceCreation extends MozXULElement {
+           duration: 0.3,
+           type: "spring",
+           bounce: 0,
+-        }
++        },
+       )
+       .then(() => {
+         gBrowser.tabContainer.style.visibility = "collapse";
+@@ -239,7 +239,7 @@ class nsZenWorkspaceCreation extends MozXULElement {
+             type: "spring",
+             bounce: 0,
+             delay: gZenUIManager.motion.stagger(0.05, { startDelay: 0.2 }),
+-          }
++          },
+         );
+         if (gReduceMotion) {
+           animation.complete();
+@@ -254,7 +254,10 @@ class nsZenWorkspaceCreation extends MozXULElement {
+   async onCreateButtonCommand() {
+     const workspace = gZenWorkspaces.getActiveWorkspace();
+     workspace.name = this.inputName.value.trim();
+-    workspace.icon = this.inputIcon.image || this.inputIcon.label || undefined;
++    workspace.icon =
++      this.inputIcon._zenIconValue !== undefined
++        ? this.inputIcon._zenIconValue
++        : this.inputIcon.image || this.inputIcon.label || undefined;
+     workspace.containerTabId = this.currentProfile;
+     await gZenWorkspaces.saveWorkspace(workspace);
+ 
+@@ -274,11 +277,12 @@ class nsZenWorkspaceCreation extends MozXULElement {
+   onIconCommand(event) {
+     gZenEmojiPicker.open(event.target, {
+       closeOnSelect: false,
+-      onSelect: async icon => {
+-        const isSvg = icon && icon.endsWith(".svg");
+-        if (isSvg) {
++      onSelect: async (icon) => {
++        this.inputIcon._zenIconValue = icon || "";
++        const isImage = gZenEmojiPicker.isImageIconValue(icon);
++        if (isImage) {
+           this.inputIcon.label = "";
+-          this.inputIcon.image = icon;
++          this.inputIcon.image = gZenEmojiPicker.resolveIconSource(icon);
+           this.inputIcon.setAttribute("has-svg-icon", "true");
+         } else {
+           this.inputIcon.image = "";
+@@ -313,14 +317,14 @@ class nsZenWorkspaceCreation extends MozXULElement {
+     if (defaultItem) {
+       defaultItem.removeAttribute("data-l10n-id");
+       defaultItem.label = lazy.l10n.formatValueSync(
+-        "zen-workspace-default-profile"
++        "zen-workspace-default-profile",
+       );
+     }
+   }
+ 
+   onProfilePopupCommand(event) {
+     let userContextId = parseInt(
+-      event.target.getAttribute("data-usercontextid")
++      event.target.getAttribute("data-usercontextid"),
+     );
+     if (isNaN(userContextId)) {
+       return;
+@@ -356,7 +360,7 @@ class nsZenWorkspaceCreation extends MozXULElement {
+           type: "spring",
+           bounce: 0,
+           delay: gZenUIManager.motion.stagger(0.05),
+-        }
++        },
+       );
+     }
+ 
+@@ -399,7 +403,7 @@ class nsZenWorkspaceCreation extends MozXULElement {
+         duration: 0.3,
+         type: "spring",
+         bounce: 0,
+-      }
++      },
+     );
+ 
+     gBrowser.tabContainer.style.opacity = "";
+diff --git a/src/zen/spaces/ZenSpaceIcons.mjs b/src/zen/spaces/ZenSpaceIcons.mjs
+index b8bfb67..ce31e6a 100644
+--- a/src/zen/spaces/ZenSpaceIcons.mjs
++++ b/src/zen/spaces/ZenSpaceIcons.mjs
+@@ -14,7 +14,7 @@ class nsZenWorkspaceIcons extends MozXULElement {
+     window.addEventListener("ZenWorkspacesUIUpdate", this, true);
+ 
+     this.initDragAndDrop();
+-    this.addEventListener("mouseover", e => {
++    this.addEventListener("mouseover", (e) => {
+       if (e.shiftKey || this.isReorderMode) {
+         return;
+       }
+@@ -29,7 +29,7 @@ class nsZenWorkspaceIcons extends MozXULElement {
+     let dragStart = 0;
+     let draggedTab = null;
+ 
+-    this.addEventListener("mousedown", e => {
++    this.addEventListener("mousedown", (e) => {
+       const target = e.target.closest("toolbarbutton[zen-workspace-id]");
+       if (!target || e.button != 0 || e.ctrlKey || e.shiftKey || e.altKey) {
+         return;
+@@ -46,7 +46,7 @@ class nsZenWorkspaceIcons extends MozXULElement {
+ 
+       e.stopPropagation();
+ 
+-      const mouseMoveHandler = moveEvent => {
++      const mouseMoveHandler = (moveEvent) => {
+         if (Math.abs(moveEvent[clientPos] - dragStart) > 5) {
+           this.isReorderMode = true;
+         }
+@@ -91,7 +91,7 @@ class nsZenWorkspaceIcons extends MozXULElement {
+ 
+         this.reorderWorkspaceToIndex(
+           draggedTab,
+-          Array.from(this.children).indexOf(draggedTab)
++          Array.from(this.children).indexOf(draggedTab),
+         );
+ 
+         draggedTab = null;
+@@ -111,20 +111,32 @@ class nsZenWorkspaceIcons extends MozXULElement {
+     button.setAttribute("context", "zenWorkspaceMoreActions");
+     const icon = document.createXULElement("label");
+     icon.setAttribute("class", "zen-workspace-icon");
+-    const isSvgIcon = workspace.icon && workspace.icon.endsWith(".svg");
++    const configuredImageIcon = gZenEmojiPicker.isImageIconValue(
++      workspace.icon,
++    );
++    const iconSource = configuredImageIcon
++      ? gZenEmojiPicker.resolveIconSource(workspace.icon)
++      : "";
++    const isImageIcon = Boolean(iconSource);
+     if (gZenWorkspaces.workspaceHasIcon(workspace)) {
+-      if (isSvgIcon) {
++      if (isImageIcon) {
+         const image = document.createElement("img");
+-        image.src = workspace.icon;
++        image.src = iconSource;
+         image.classList.add("zen-workspace-icon");
++        if (gZenEmojiPicker.isCustomIconValue(workspace.icon)) {
++          image.classList.add("zen-custom-icon");
++          button.classList.add("zen-workspace-has-color-icon");
++        }
+         button.appendChild(image);
++      } else if (configuredImageIcon) {
++        icon.textContent = gZenWorkspaces.getWorkspaceIcon(workspace);
+       } else {
+         icon.textContent = workspace.icon;
+       }
+     } else {
+       icon.setAttribute("no-icon", true);
+     }
+-    if (!isSvgIcon) {
++    if (!isImageIcon) {
+       button.appendChild(icon);
+     }
+     button.addEventListener("command", this);
+diff --git a/src/zen/spaces/ZenSpaceManager.mjs b/src/zen/spaces/ZenSpaceManager.mjs
+index df6fe45..05e5792 100644
+--- a/src/zen/spaces/ZenSpaceManager.mjs
++++ b/src/zen/spaces/ZenSpaceManager.mjs
+@@ -61,11 +61,11 @@ class nsZenWorkspaces {
+     "BMB_mobileBookmarks",
+   ];
+ 
+-  promisePinnedInitialized = new Promise(resolve => {
++  promisePinnedInitialized = new Promise((resolve) => {
+     this._resolvePinnedInitialized = resolve;
+   });
+ 
+-  promiseInitialized = new Promise(resolve => {
++  promiseInitialized = new Promise((resolve) => {
+     this._resolveInitialized = resolve;
+   });
+ 
+@@ -86,7 +86,7 @@ class nsZenWorkspaces {
+     if (!this.shouldHaveWorkspaces) {
+       this._resolveInitialized();
+       console.warn(
+-        "gZenWorkspaces: !!! gZenWorkspaces is disabled in hidden windows !!!"
++        "gZenWorkspaces: !!! gZenWorkspaces is disabled in hidden windows !!!",
+       );
+       return; // We are in a hidden window, don't initialize gZenWorkspaces
+     }
+@@ -96,45 +96,45 @@ class nsZenWorkspaces {
+       this,
+       "activationMethod",
+       "zen.workspaces.scroll-modifier-key",
+-      "ctrl"
++      "ctrl",
+     );
+     XPCOMUtils.defineLazyPreferenceGetter(
+       this,
+       "naturalScroll",
+       "zen.workspaces.natural-scroll",
+-      true
++      true,
+     );
+     XPCOMUtils.defineLazyPreferenceGetter(
+       this,
+       "shouldWrapAroundNavigation",
+       "zen.workspaces.wrap-around-navigation",
+-      true
++      true,
+     );
+     XPCOMUtils.defineLazyPreferenceGetter(
+       this,
+       "shouldForceContainerTabsToWorkspace",
+       "zen.workspaces.force-container-workspace",
+-      true
++      true,
+     );
+     XPCOMUtils.defineLazyPreferenceGetter(
+       this,
+       "shouldOpenNewTabIfLastUnpinnedTabIsClosed",
+       "zen.workspaces.open-new-tab-if-last-unpinned-tab-is-closed",
+-      false
++      false,
+     );
+     this.containerSpecificEssentials = Services.prefs.getBoolPref(
+       "zen.workspaces.separate-essentials",
+-      false
++      false,
+     );
+     ChromeUtils.defineLazyGetter(this, "tabContainer", () =>
+-      document.getElementById("tabbrowser-tabs")
++      document.getElementById("tabbrowser-tabs"),
+     );
+     ChromeUtils.defineLazyGetter(this, "workspaceIcons", () =>
+-      document.getElementById("zen-workspaces-button")
++      document.getElementById("zen-workspaces-button"),
+     );
+     this.#activeWorkspace ||= Services.prefs.getStringPref(
+       "zen.workspaces.active",
+-      ""
++      "",
+     );
+ 
+     if (this.isPrivateWindow) {
+@@ -159,7 +159,7 @@ class nsZenWorkspaces {
+       window.addEventListener("unload", () => {
+         Services.obs.removeObserver(
+           observerFunction,
+-          "workspace-bookmarks-updated"
++          "workspace-bookmarks-updated",
+         );
+       });
+     }
+@@ -323,7 +323,7 @@ class nsZenWorkspaces {
+ 
+   get tabboxChildrenWithoutEmpty() {
+     return this.tabboxChildren.filter(
+-      child => !child.hasAttribute("zen-empty-tab")
++      (child) => !child.hasAttribute("zen-empty-tab"),
+     );
+   }
+ 
+@@ -347,7 +347,7 @@ class nsZenWorkspaces {
+ 
+   #initializeTabsStripSections() {
+     const perifery = document.getElementById(
+-      "tabbrowser-arrowscrollbox-periphery"
++      "tabbrowser-arrowscrollbox-periphery",
+     );
+     perifery.setAttribute("hidden", "true");
+     const tabs = gBrowser.tabContainer.allTabs;
+@@ -357,10 +357,10 @@ class nsZenWorkspaces {
+     }
+     if (tabs.length) {
+       const defaultSelectedContainer = this.workspaceElement(
+-        this.activeWorkspace
++        this.activeWorkspace,
+       )?.querySelector(".zen-workspace-normal-tabs-section");
+       const pinnedContainer = this.workspaceElement(
+-        this.activeWorkspace
++        this.activeWorkspace,
+       )?.querySelector(".zen-workspace-pinned-tabs-section");
+       // New profile with no workspaces does not have a default selected container
+       if (defaultSelectedContainer) {
+@@ -375,7 +375,7 @@ class nsZenWorkspaces {
+           // before to the last child (perifery)
+           defaultSelectedContainer.insertBefore(
+             tab,
+-            defaultSelectedContainer.lastChild
++            defaultSelectedContainer.lastChild,
+           );
+         }
+       }
+@@ -395,7 +395,7 @@ class nsZenWorkspaces {
+       container = 0;
+     }
+     let essentialsContainer = document.querySelector(
+-      `.zen-essentials-container[container="${container}"]`
++      `.zen-essentials-container[container="${container}"]`,
+     );
+     if (!essentialsContainer) {
+       essentialsContainer = document.createXULElement("hbox");
+@@ -453,12 +453,12 @@ class nsZenWorkspaces {
+     let section = spaceElement.tabsContainer;
+     let pinnedSection = spaceElement.pinnedTabsContainer;
+     const workspaceTabs = Array.from(tabs).filter(
+-      tab =>
++      (tab) =>
+         tab.getAttribute("zen-workspace-id") === workspace.uuid &&
+-        !tab.hasAttribute("zen-essential")
++        !tab.hasAttribute("zen-essential"),
+     );
+     let folders = new Set();
+-    const getFolderRoot = tab => {
++    const getFolderRoot = (tab) => {
+       let root = tab?.group;
+       while (root?.group) {
+         root = root?.group;
+@@ -506,7 +506,7 @@ class nsZenWorkspaces {
+     window.addEventListener(
+       "AppCommand",
+       this._handleAppCommand.bind(this),
+-      true
++      true,
+     );
+ 
+     // Re-add original handler
+@@ -552,7 +552,7 @@ class nsZenWorkspaces {
+ 
+     toolbox.addEventListener(
+       "wheel",
+-      event => {
++      (event) => {
+         if (this.privateWindowOrDisabled) {
+           return;
+         }
+@@ -601,7 +601,7 @@ class nsZenWorkspaces {
+ 
+         this.#lastScrollTime = currentTime;
+       },
+-      { passive: true, capture: true }
++      { passive: true, capture: true },
+     );
+   }
+ 
+@@ -611,7 +611,7 @@ class nsZenWorkspaces {
+ 
+   set activeWorkspace(value) {
+     const spaces = this.getWorkspaces();
+-    if (!spaces.some(ws => ws.uuid === value)) {
++    if (!spaces.some((ws) => ws.uuid === value)) {
+       value = spaces[0]?.uuid || "";
+     }
+     if (value === this.#activeWorkspace) {
+@@ -669,7 +669,7 @@ class nsZenWorkspaces {
+ 
+   getWorkspaceFromId(id) {
+     try {
+-      return this.getWorkspaces().find(workspace => workspace.uuid === id);
++      return this.getWorkspaces().find((workspace) => workspace.uuid === id);
+     } catch {
+       return null;
+     }
+@@ -678,7 +678,7 @@ class nsZenWorkspaces {
+   getWorkspaces(lieToMe = false) {
+     if (lieToMe) {
+       const { ZenSessionStore } = ChromeUtils.importESModule(
+-        "resource:///modules/zen/ZenSessionManager.sys.mjs"
++        "resource:///modules/zen/ZenSessionManager.sys.mjs",
+       );
+       return ZenSessionStore.getClonedSpaces();
+     }
+@@ -797,7 +797,7 @@ class nsZenWorkspaces {
+       window.addEventListener("TabSelect", this.onLocationChange.bind(this));
+       window.addEventListener(
+         "TabBrowserInserted",
+-        this.onTabBrowserInserted.bind(this)
++        this.onTabBrowserInserted.bind(this),
+       );
+ 
+       this.updateWorkspacesChangeContextMenu();
+@@ -810,7 +810,7 @@ class nsZenWorkspaces {
+     }
+     await this.promiseInitialized;
+     let resolveSelectPromise;
+-    let selectPromise = new Promise(resolve => {
++    let selectPromise = new Promise((resolve) => {
+       resolveSelectPromise = resolve;
+     });
+ 
+@@ -842,19 +842,19 @@ class nsZenWorkspaces {
+       !removedEmptyTab &&
+       !this._shouldOverrideTabs
+     ) {
+-      const tabs = gBrowser.tabs.filter(tab => !tab.collapsed);
++      const tabs = gBrowser.tabs.filter((tab) => !tab.collapsed);
+       if (
+         typeof this._tabToSelect === "number" &&
+         this._tabToSelect >= 0 &&
+         tabs[this._tabToSelect] &&
+         (await this.#shouldShowTabInCurrentWorkspace(
+-          tabs[this._tabToSelect]
++          tabs[this._tabToSelect],
+         )) &&
+         tabs[this._tabToSelect] !== this._tabToRemoveForEmpty
+       ) {
+         this.log(`Found tab to select: ${this._tabToSelect}, ${tabs.length}`);
+         let tabToUse = gZenGlanceManager.getTabOrGlanceParent(
+-          tabs[this._tabToSelect + 1] || this._emptyTab
++          tabs[this._tabToSelect + 1] || this._emptyTab,
+         );
+         gBrowser.selectedTab = tabToUse;
+         this._removedByStartupPage = true;
+@@ -865,7 +865,7 @@ class nsZenWorkspaces {
+       } else {
+         if (gBrowser.selectedTab === this._tabToRemoveForEmpty) {
+           this.log(
+-            "Selecting empty tab because startup page didnt select a valid tab"
++            "Selecting empty tab because startup page didnt select a valid tab",
+           );
+           this.selectEmptyTab();
+           initialTabWasEmpty = true;
+@@ -885,7 +885,7 @@ class nsZenWorkspaces {
+     await selectPromise;
+     const openOnStartup = Services.prefs.getBoolPref(
+       "zen.urlbar.open-on-startup",
+-      true
++      true,
+     );
+     let shownEmptyTab =
+       gBrowser.selectedTab.hasAttribute("zen-empty-tab") && openOnStartup;
+@@ -910,11 +910,11 @@ class nsZenWorkspaces {
+       // Go through each tab and see if there's another tab with the same startup URL.
+       // If we do find one, remove it.
+       const newTabUrl = Services.prefs.getStringPref(
+-        "browser.startup.homepage"
++        "browser.startup.homepage",
+       );
+       const tabs = gBrowser.tabs.filter(
+-        tab =>
+-          !tab.collapsed && !tab.hasAttribute("zen-empty-tab") && !tab.pinned
++        (tab) =>
++          !tab.collapsed && !tab.hasAttribute("zen-empty-tab") && !tab.pinned,
+       );
+       for (const tab of tabs) {
+         if (tab._originalUrl === newTabUrl && tab !== gBrowser.selectedTab) {
+@@ -926,7 +926,7 @@ class nsZenWorkspaces {
+     }
+ 
+     window.dispatchEvent(
+-      new CustomEvent("AfterWorkspacesSessionRestore", { bubbles: true })
++      new CustomEvent("AfterWorkspacesSessionRestore", { bubbles: true }),
+     );
+   }
+ 
+@@ -945,7 +945,7 @@ class nsZenWorkspaces {
+ 
+   changeWorkspaceIcon() {
+     let anchor = this.activeWorkspaceIndicator?.querySelector(
+-      ".zen-current-workspace-indicator-icon"
++      ".zen-current-workspace-indicator-icon",
+     );
+     if (this.#contextMenuData?.workspaceId) {
+       anchor = this.#contextMenuData.originalTarget;
+@@ -963,7 +963,7 @@ class nsZenWorkspaces {
+     gZenEmojiPicker.open(anchor, {
+       closeOnSelect: false,
+       allowNone: !hasNoIcon,
+-      onSelect: async icon => {
++      onSelect: async (icon) => {
+         const workspace = this.getWorkspaceFromId(workspaceId);
+         if (!workspace) {
+           console.warn("No active workspace found to change icon");
+@@ -991,7 +991,7 @@ class nsZenWorkspaces {
+       if (
+         (workspaceID &&
+           !tab.hasAttribute("zen-essential") &&
+-          !workspaces.find(workspace => workspace.uuid === workspaceID)) ||
++          !workspaces.find((workspace) => workspace.uuid === workspaceID)) ||
+         // Also remove empty tabs that are supposed to be from parent folders but
+         // they dont exist anymore
+         (tab.pinned && tab.hasAttribute("zen-empty-tab") && !tab.group)
+@@ -1032,7 +1032,7 @@ class nsZenWorkspaces {
+ 
+     let tabs = gBrowser.visibleTabs;
+     let tabsPinned = tabs.filter(
+-      t => !this.shouldOpenNewTabIfLastUnpinnedTabIsClosed || !t.pinned
++      (t) => !this.shouldOpenNewTabIfLastUnpinnedTabIsClosed || !t.pinned,
+     );
+     const shouldCloseWindow =
+       closeWindowWithLastTab != null
+@@ -1078,7 +1078,7 @@ class nsZenWorkspaces {
+     const workspaceActions = document.getElementById("zenWorkspaceMoreActions");
+     workspaceActions.addEventListener(
+       "popupshowing",
+-      this.updateWorkspaceActionsMenu.bind(this)
++      this.updateWorkspaceActionsMenu.bind(this),
+     );
+     workspaceActions.addEventListener("popuphidden", () => {
+       setTimeout(() => {
+@@ -1089,15 +1089,15 @@ class nsZenWorkspaces {
+     });
+ 
+     const contextChangeContainerTabMenu = document.getElementById(
+-      "context_zenWorkspacesOpenInContainerTab"
++      "context_zenWorkspacesOpenInContainerTab",
+     );
+     contextChangeContainerTabMenu.addEventListener(
+       "popupshowing",
+-      this.updateWorkspaceActionsMenuContainer.bind(this)
++      this.updateWorkspaceActionsMenuContainer.bind(this),
+     );
+     contextChangeContainerTabMenu.addEventListener(
+       "command",
+-      this.contextChangeContainerTab.bind(this)
++      this.contextChangeContainerTab.bind(this),
+     );
+   }
+ 
+@@ -1115,13 +1115,18 @@ class nsZenWorkspaces {
+       item.setAttribute(disableCurrent ? "disabled" : "checked", true);
+     }
+     let name = workspace.name;
+-    const iconIsSvg = workspace.icon && workspace.icon.endsWith(".svg");
+-    if (workspace.icon && workspace.icon !== "" && !iconIsSvg) {
++    const configuredImageIcon = gZenEmojiPicker.isImageIconValue(
++      workspace.icon,
++    );
++    const iconSource = configuredImageIcon
++      ? gZenEmojiPicker.resolveIconSource(workspace.icon)
++      : "";
++    if (workspace.icon && workspace.icon !== "" && !configuredImageIcon) {
+       name = `${workspace.icon}  ${name}`;
+     }
+     item.setAttribute("label", name);
+-    if (iconIsSvg) {
+-      item.setAttribute("image", workspace.icon);
++    if (iconSource) {
++      item.setAttribute("image", iconSource);
+       item.classList.add("zen-workspace-context-icon");
+     }
+     return item;
+@@ -1133,7 +1138,7 @@ class nsZenWorkspaces {
+       return;
+     }
+     const openInContainerMenuItem = document.getElementById(
+-      "context_zenWorkspacesOpenInContainerTab"
++      "context_zenWorkspacesOpenInContainerTab",
+     );
+     if (this.shouldShowContainers) {
+       openInContainerMenuItem.removeAttribute("hidden");
+@@ -1153,12 +1158,12 @@ class nsZenWorkspaces {
+     };
+     const workspaceName = document.getElementById("context_zenEditWorkspace");
+     const themePicker = document.getElementById(
+-      "context_zenChangeWorkspaceTheme"
++      "context_zenChangeWorkspaceTheme",
+     );
+     /* We can't show the rename input properly in collapsed state,
+     so hide the workspace edit input */
+     const isCollapsed = !Services.prefs.getBoolPref(
+-      "zen.view.sidebar-expanded"
++      "zen.view.sidebar-expanded",
+     );
+     workspaceName.hidden =
+       isCollapsed ||
+@@ -1169,7 +1174,7 @@ class nsZenWorkspaces {
+       this.#contextMenuData.workspaceId !== this.activeWorkspace;
+     const separator = document.getElementById("context_zenWorkspacesSeparator");
+     for (const item of event.target.querySelectorAll(
+-      ".zen-workspace-context-menu-item"
++      ".zen-workspace-context-menu-item",
+     )) {
+       item.remove();
+     }
+@@ -1177,9 +1182,9 @@ class nsZenWorkspaces {
+       separator.hidden = false;
+       for (const workspace of this.getWorkspaces().reverse()) {
+         const item = this.generateMenuItemForWorkspace(workspace);
+-        item.addEventListener("command", e => {
++        item.addEventListener("command", (e) => {
+           this.changeWorkspaceWithID(
+-            e.target.closest("menuitem").getAttribute("zen-workspace-id")
++            e.target.closest("menuitem").getAttribute("zen-workspace-id"),
+           );
+         });
+         separator.after(item);
+@@ -1192,7 +1197,7 @@ class nsZenWorkspaces {
+       () => {
+         this.#contextMenuData = null;
+       },
+-      { once: true }
++      { once: true },
+     );
+   }
+ 
+@@ -1214,7 +1219,7 @@ class nsZenWorkspaces {
+     if (defaultItem) {
+       defaultItem.removeAttribute("data-l10n-id");
+       defaultItem.label = lazy.l10n.formatValueSync(
+-        "zen-workspace-default-profile"
++        "zen-workspace-default-profile",
+       );
+     }
+   }
+@@ -1225,7 +1230,7 @@ class nsZenWorkspaces {
+     }
+     const workspacesData = this._workspaceCache;
+     const index = workspacesData.findIndex(
+-      ws => ws.uuid === workspaceData.uuid
++      (ws) => ws.uuid === workspaceData.uuid,
+     );
+     if (index !== -1) {
+       workspacesData[index] = workspaceData;
+@@ -1243,14 +1248,14 @@ class nsZenWorkspaces {
+     let workspacesData = this.getWorkspaces();
+     // Remove the workspace from the cache
+     workspacesData = workspacesData.filter(
+-      workspace => workspace.uuid !== windowID
++      (workspace) => workspace.uuid !== windowID,
+     );
+     window.addEventListener(
+       "ZenWorkspacesUIUpdate",
+       () => {
+         resolve();
+       },
+-      { once: true }
++      { once: true },
+     );
+     this.#propagateWorkspaceData(workspacesData);
+     gBrowser.tabContainer._invalidateCachedVisibleTabs();
+@@ -1271,7 +1276,10 @@ class nsZenWorkspaces {
+ 
+   getWorkspaceIcon(workspace) {
+     if (this.workspaceHasIcon(workspace)) {
+-      return workspace.icon;
++      const source = gZenEmojiPicker.resolveIconSource(workspace.icon);
++      if (source) {
++        return source;
++      }
+     }
+     try {
+       return new Intl.Segmenter()
+@@ -1298,7 +1306,7 @@ class nsZenWorkspaces {
+       bubbles: true,
+     });
+     window.gZenWindowSync.propagateWorkspacesToAllWindows(
+-      aSpaceData ?? this._workspaceCache
++      aSpaceData ?? this._workspaceCache,
+     );
+   }
+ 
+@@ -1310,13 +1318,13 @@ class nsZenWorkspaces {
+     for (const previousWorkspace of previousWorkspaces) {
+       if (
+         this.workspaceElement(previousWorkspace.uuid) &&
+-        !aWorkspaces.find(w => w.uuid === previousWorkspace.uuid)
++        !aWorkspaces.find((w) => w.uuid === previousWorkspace.uuid)
+       ) {
+         let promise = Promise.resolve();
+         if (this.isWorkspaceActive(previousWorkspace)) {
+           // If the removed workspace was active, switch to another one
+           const newActiveWorkspace =
+-            aWorkspaces.find(w => w.uuid !== previousWorkspace.uuid) || null;
++            aWorkspaces.find((w) => w.uuid !== previousWorkspace.uuid) || null;
+           promise = this.changeWorkspace(newActiveWorkspace);
+         }
+         promise = promise.then(() => {
+@@ -1343,13 +1351,13 @@ class nsZenWorkspaces {
+         if (previousElement === null) {
+           arrowScrollbox.moveBefore(
+             workspaceElement,
+-            arrowScrollbox.firstChild
++            arrowScrollbox.firstChild,
+           );
+           hasChanged = true;
+         } else if (previousElement.nextSibling !== workspaceElement) {
+           arrowScrollbox.moveBefore(
+             workspaceElement,
+-            previousElement.nextSibling
++            previousElement.nextSibling,
+           );
+           hasChanged = true;
+         }
+@@ -1373,7 +1381,7 @@ class nsZenWorkspaces {
+     }
+     const workspaces = this.getWorkspaces();
+ 
+-    const workspace = workspaces.find(w => w.uuid === id);
++    const workspace = workspaces.find((w) => w.uuid === id);
+     if (!workspace) {
+       console.warn(`Workspace with ID ${id} not found for reordering.`);
+       return;
+@@ -1389,7 +1397,7 @@ class nsZenWorkspaces {
+     // Insert the workspace at the new position
+     if (newPosition < 0 || newPosition >= workspaces.length) {
+       console.warn(
+-        `Invalid position ${newPosition} for reordering workspace with ID ${id}.`
++        `Invalid position ${newPosition} for reordering workspace with ID ${id}.`,
+       );
+       return;
+     }
+@@ -1409,12 +1417,12 @@ class nsZenWorkspaces {
+     const previousWorkspace = this.getActiveWorkspace();
+     document.documentElement.setAttribute("zen-creating-workspace", "true");
+     await this.createAndSaveWorkspace("Space", undefined, false, 0, {
+-      beforeChangeCallback: async workspace => {
++      beforeChangeCallback: async (workspace) => {
+         createForm = document.createXULElement("zen-workspace-creation");
+         createForm.setAttribute("workspace-id", workspace.uuid);
+         createForm.setAttribute(
+           "previous-workspace-id",
+-          previousWorkspace?.uuid || ""
++          previousWorkspace?.uuid || "",
+         );
+         gBrowser.tabContainer.after(createForm);
+         await createForm.promiseInitialized;
+@@ -1425,15 +1433,15 @@ class nsZenWorkspaces {
+ 
+   #unpinnedTabsInWorkspace(workspaceID) {
+     return Array.from(this.allStoredTabs).filter(
+-      tab =>
++      (tab) =>
+         tab.getAttribute("zen-workspace-id") === workspaceID &&
+         tab.visible &&
+-        !tab.pinned
++        !tab.pinned,
+     );
+   }
+ 
+   #getClosableTabs(tabs) {
+-    const remainingTabs = tabs.filter(tab => {
++    const remainingTabs = tabs.filter((tab) => {
+       const attributes = [
+         "selected",
+         "multiselected",
+@@ -1468,10 +1476,10 @@ class nsZenWorkspaces {
+ 
+   #deleteWorkspaceOwnedTabs(workspaceID) {
+     const tabs = this.allStoredTabs.filter(
+-      tab =>
++      (tab) =>
+         tab.getAttribute("zen-workspace-id") === workspaceID &&
+         !tab.hasAttribute("zen-essential") &&
+-        !(tab.hasAttribute("zen-empty-tab") && !tab.group)
++        !(tab.hasAttribute("zen-empty-tab") && !tab.group),
+     );
+     gBrowser.removeTabs(tabs, {
+       closeWindowWithLastTab: false,
+@@ -1483,11 +1491,11 @@ class nsZenWorkspaces {
+       this.#contextMenuData?.workspaceId || this.activeWorkspace;
+ 
+     const tabsToUnload = this.allStoredTabs.filter(
+-      tab =>
++      (tab) =>
+         tab.getAttribute("zen-workspace-id") === workspaceId &&
+         !tab.hasAttribute("zen-empty-tab") &&
+         !tab.hasAttribute("zen-essential") &&
+-        !tab.hasAttribute("pending")
++        !tab.hasAttribute("pending"),
+     );
+ 
+     if (tabsToUnload.length === 0) {
+@@ -1504,11 +1512,11 @@ class nsZenWorkspaces {
+       this.#contextMenuData?.workspaceId || this.activeWorkspace;
+ 
+     const tabsToUnload = this.allStoredTabs.filter(
+-      tab =>
++      (tab) =>
+         tab.getAttribute("zen-workspace-id") !== workspaceId &&
+         !tab.hasAttribute("zen-empty-tab") &&
+         !tab.hasAttribute("zen-essential") &&
+-        !tab.hasAttribute("pending")
++        !tab.hasAttribute("pending"),
+     );
+ 
+     await gBrowser.explicitUnloadTabs(tabsToUnload);
+@@ -1521,7 +1529,7 @@ class nsZenWorkspaces {
+   moveTabsToWorkspace(tabs, workspaceID) {
+     const newTabPlacement = Services.prefs.getBoolPref(
+       "zen.view.show-newtab-button-top",
+-      false
++      false,
+     );
+     tabs = newTabPlacement ? tabs.reverse() : tabs;
+     for (let tab of tabs) {
+@@ -1595,7 +1603,7 @@ class nsZenWorkspaces {
+     func,
+     opts = {
+       once: false,
+-    }
++    },
+   ) {
+     if (!this._changeListeners) {
+       this._changeListeners = [];
+@@ -1608,7 +1616,7 @@ class nsZenWorkspaces {
+       return;
+     }
+     this._changeListeners = this._changeListeners.filter(
+-      listener => listener.func !== func
++      (listener) => listener.func !== func,
+     );
+   }
+ 
+@@ -1621,7 +1629,7 @@ class nsZenWorkspaces {
+     if (!this.workspaceEnabled) {
+       return workspace;
+     }
+-    this.#currentSpaceSwitchContext.animations.forEach(animation => {
++    this.#currentSpaceSwitchContext.animations.forEach((animation) => {
+       animation.complete();
+     });
+     await this.#currentSpaceSwitchContext.promise;
+@@ -1649,7 +1657,7 @@ class nsZenWorkspaces {
+ 
+   async #performWorkspaceChange(
+     workspace,
+-    { onInit = false, alwaysChange = false, whileScrolling = false } = {}
++    { onInit = false, alwaysChange = false, whileScrolling = false } = {},
+   ) {
+     const previousWorkspace = this.getActiveWorkspace();
+     alwaysChange = alwaysChange || onInit;
+@@ -1689,7 +1697,7 @@ class nsZenWorkspaces {
+     const tabToSelect = await this._handleTabSelection(
+       workspace,
+       onInit,
+-      previousWorkspace.uuid
++      previousWorkspace.uuid,
+     );
+     if (tabToSelect?.linkedBrowser) {
+       gBrowser.warmupTab(tabToSelect);
+@@ -1697,7 +1705,7 @@ class nsZenWorkspaces {
+ 
+     // Update UI and state
+     const previousWorkspaceIndex = workspaces.findIndex(
+-      w => w.uuid === previousWorkspace.uuid
++      (w) => w.uuid === previousWorkspace.uuid,
+     );
+     await this.#updateWorkspaceState(workspace, onInit, tabToSelect, {
+       previousWorkspaceIndex,
+@@ -1730,7 +1738,7 @@ class nsZenWorkspaces {
+     const usedGroups = new Set();
+     let tPos = 0; // _tPos is used for the session store, not needed for folders
+     let pPos = 0; // _pPos is used for the pinned tabs manager
+-    const recurseFolder = tab => {
++    const recurseFolder = (tab) => {
+       if (tab.group) {
+         recurseFolder(tab.group);
+         if (!usedGroups.has(tab.group.id)) {
+@@ -1751,7 +1759,7 @@ class nsZenWorkspaces {
+   #updatePaddingTopOnTabs(
+     workspaceElement,
+     essentialContainer,
+-    forAnimation = false
++    forAnimation = false,
+   ) {
+     if (
+       workspaceElement &&
+@@ -1764,7 +1772,7 @@ class nsZenWorkspaces {
+       delete this._alwaysAnimatePaddingTop;
+       const essentialsHeight = Math.max(
+         2,
+-        window.windowUtils.getBoundsWithoutFlushing(essentialContainer).height
++        window.windowUtils.getBoundsWithoutFlushing(essentialContainer).height,
+       );
+       requestAnimationFrame(() => {
+         workspaceElement.style.paddingTop = essentialsHeight + "px";
+@@ -1775,7 +1783,7 @@ class nsZenWorkspaces {
+   _organizeWorkspaceStripLocations(
+     workspace,
+     justMove = false,
+-    offsetPixels = 0
++    offsetPixels = 0,
+   ) {
+     if (document.documentElement.hasAttribute("zen-creating-workspace")) {
+       // If we are creating a workspace, we don't want to animate the strip
+@@ -1783,12 +1791,12 @@ class nsZenWorkspaces {
+     }
+     this._organizingWorkspaceStrip = true;
+     const workspaces = this.getWorkspaces();
+-    let workspaceIndex = workspaces.findIndex(w => w.uuid === workspace.uuid);
++    let workspaceIndex = workspaces.findIndex((w) => w.uuid === workspace.uuid);
+     if (!justMove) {
+       this._fixIndicatorsNames(workspaces);
+     }
+     const otherContainersEssentials = document.querySelectorAll(
+-      `#zen-essentials .zen-workspace-tabs-section`
++      `#zen-essentials .zen-workspace-tabs-section`,
+     );
+     let nextSpaceIdx;
+     const spaceLen = workspaces.length;
+@@ -1854,22 +1862,22 @@ class nsZenWorkspaces {
+           gZenThemePicker.getGradientForWorkspace(workspace).grain;
+         const percentage = Math.abs(offsetPixels) / 200;
+         [lazy.browserBackgroundElement, lazy.toolbarBackgroundElement].forEach(
+-          element => {
++          (element) => {
+             element.style.setProperty(
+               "--zen-background-opacity",
+-              1 - percentage
++              1 - percentage,
+             );
+-          }
++          },
+         );
+         if (!this._hasAnimatedBackgrounds) {
+           this._hasAnimatedBackgrounds = true;
+           lazy.browserBackgroundElement.style.setProperty(
+             "--zen-main-browser-background-old",
+-            nextGradient
++            nextGradient,
+           );
+           lazy.toolbarBackgroundElement.style.setProperty(
+             "--zen-main-browser-background-toolbar-old",
+-            nextToolbarGradient
++            nextToolbarGradient,
+           );
+           document.documentElement.setAttribute("animating-background", "true");
+         }
+@@ -1898,13 +1906,13 @@ class nsZenWorkspaces {
+       return;
+     }
+     const indicatorName = workspaceIndicator.querySelector(
+-      ".zen-current-workspace-indicator-name"
++      ".zen-current-workspace-indicator-name",
+     );
+     const indicatorIcon = workspaceIndicator.querySelector(
+-      ".zen-current-workspace-indicator-icon"
++      ".zen-current-workspace-indicator-icon",
+     );
+     const iconStack = workspaceIndicator.querySelector(
+-      ".zen-current-workspace-indicator-stack"
++      ".zen-current-workspace-indicator-stack",
+     );
+ 
+     if (this.workspaceHasIcon(currentWorkspace)) {
+@@ -1916,9 +1924,15 @@ class nsZenWorkspaces {
+     }
+     const icon = this.getWorkspaceIcon(currentWorkspace);
+     indicatorIcon.innerHTML = "";
+-    if (icon?.endsWith(".svg")) {
++    if (
++      gZenEmojiPicker.isImageIconValue(currentWorkspace.icon) &&
++      gZenEmojiPicker.resolveIconSource(currentWorkspace.icon)
++    ) {
+       const img = document.createElement("img");
+       img.src = icon;
++      if (gZenEmojiPicker.isCustomIconValue(currentWorkspace.icon)) {
++        img.classList.add("zen-custom-icon");
++      }
+       indicatorIcon.appendChild(img);
+     } else {
+       indicatorIcon.textContent = icon;
+@@ -1929,7 +1943,7 @@ class nsZenWorkspaces {
+   _fixIndicatorsNames(workspaces) {
+     for (const workspace of workspaces) {
+       const workspaceIndicator = this.workspaceElement(
+-        workspace.uuid
++        workspace.uuid,
+       )?.indicator;
+       this.updateWorkspaceIndicator(workspace, workspaceIndicator);
+     }
+@@ -1944,7 +1958,7 @@ class nsZenWorkspaces {
+       previousWorkspaceIndex = null,
+       previousWorkspace = null,
+       onInit = false,
+-    } = {}
++    } = {},
+   ) {
+     gZenUIManager.tabsWrapper.style.scrollbarWidth = "none";
+     const kGlobalAnimationDuration =
+@@ -1955,7 +1969,7 @@ class nsZenWorkspaces {
+     const workspaces = this.getWorkspaces();
+     const spaceLen = workspaces.length;
+     const newWorkspaceIndex = workspaces.findIndex(
+-      w => w.uuid === newWorkspace.uuid
++      (w) => w.uuid === newWorkspace.uuid,
+     );
+     let diff = newWorkspaceIndex - previousWorkspaceIndex;
+     if (diff > Math.floor(spaceLen / 2)) {
+@@ -1985,7 +1999,7 @@ class nsZenWorkspaces {
+     if (shouldAnimate && previousWorkspace) {
+       let previousBackgroundOpacity =
+         lazy.browserBackgroundElement.style.getPropertyValue(
+-          "--zen-background-opacity"
++          "--zen-background-opacity",
+         );
+       try {
+         // Prevent NaN from being set
+@@ -2005,10 +2019,10 @@ class nsZenWorkspaces {
+         lazy.browserBackgroundElement,
+         lazy.toolbarBackgroundElement,
+       ];
+-      elements.forEach(element => {
++      elements.forEach((element) => {
+         element.style.setProperty(
+           "--zen-background-opacity",
+-          previousBackgroundOpacity
++          previousBackgroundOpacity,
+         );
+       });
+       animations.push(
+@@ -2021,8 +2035,8 @@ class nsZenWorkspaces {
+             type: "spring",
+             bounce: 0,
+             duration: kGlobalAnimationDuration,
+-          }
+-        )
++          },
++        ),
+       );
+     }
+     for (const element of document.querySelectorAll("zen-workspace")) {
+@@ -2032,7 +2046,7 @@ class nsZenWorkspaces {
+       const existingTransform = element.style.transform;
+       const elementWorkspaceId = element.id;
+       const elementWorkspaceIndex = workspaces.findIndex(
+-        w => w.uuid === elementWorkspaceId
++        (w) => w.uuid === elementWorkspaceId,
+       );
+       let offset = elementWorkspaceIndex - newWorkspaceIndex;
+       if (offset > Math.floor(spaceLen / 2)) {
+@@ -2071,8 +2085,8 @@ class nsZenWorkspaces {
+                 type: "spring",
+                 bounce: 0,
+                 duration: kGlobalAnimationDuration,
+-              }
+-            )
++              },
++            ),
+           );
+         }
+       }
+@@ -2089,10 +2103,10 @@ class nsZenWorkspaces {
+         const essentialsWorkspaces = data.workspaces;
+ 
+         const containsPrev = essentialsWorkspaces.some(
+-          w => w.uuid === previousWorkspace.uuid
++          (w) => w.uuid === previousWorkspace.uuid,
+         );
+         const containsNew = essentialsWorkspaces.some(
+-          w => w.uuid === newWorkspace.uuid
++          (w) => w.uuid === newWorkspace.uuid,
+         );
+ 
+         if (!containsPrev && !containsNew) {
+@@ -2131,8 +2145,8 @@ class nsZenWorkspaces {
+                 type: "spring",
+                 bounce: 0,
+                 duration: kGlobalAnimationDuration,
+-              }
+-            )
++              },
++            ),
+           );
+         }
+       }
+@@ -2141,15 +2155,15 @@ class nsZenWorkspaces {
+       gZenUIManager._preventToolbarRebuild = true;
+       gZenUIManager.updateTabsToolbar();
+     }
+-    let promiseTimeout = new Promise(resolve =>
+-      setTimeout(resolve, kGlobalAnimationDuration * 1000 + 50)
++    let promiseTimeout = new Promise((resolve) =>
++      setTimeout(resolve, kGlobalAnimationDuration * 1000 + 50),
+     );
+     this.#currentSpaceSwitchContext.animations = animations;
+     // See issue https://github.com/zen-browser/desktop/issues/9334, we need to add
+     // some sort of timeout to the animation promise, just in case it gets stuck.
+     // We are doing a race between the timeout and the animations finishing.
+     await Promise.race([Promise.all(animations), promiseTimeout]).catch(
+-      console.error
++      console.error,
+     );
+     this.#currentSpaceSwitchContext.animations = [];
+     document.documentElement.removeAttribute("animating-background");
+@@ -2175,7 +2189,7 @@ class nsZenWorkspaces {
+       tab,
+       currentWorkspace.uuid,
+       currentWorkspace.containerTabId,
+-      this.getWorkspaces()
++      this.getWorkspaces(),
+     );
+   }
+ 
+@@ -2232,7 +2246,8 @@ class nsZenWorkspaces {
+         !tabContextId ||
+         tabContextId === "0" ||
+         !workspaces.some(
+-          workspace => workspace.containerTabId === parseInt(tabContextId, 10)
++          (workspace) =>
++            workspace.containerTabId === parseInt(tabContextId, 10),
+         )
+       );
+     }
+@@ -2270,14 +2285,14 @@ class nsZenWorkspaces {
+         lastSelectedTab,
+         workspace.uuid,
+         containerId,
+-        workspaces
++        workspaces,
+       )
+     ) {
+       tabToSelect = lastSelectedTab;
+     }
+     // Find first suitable tab
+     else {
+-      tabToSelect = gBrowser.visibleTabs.find(tab => !tab.pinned);
++      tabToSelect = gBrowser.visibleTabs.find((tab) => !tab.pinned);
+       if (!tabToSelect && gBrowser.visibleTabs.length) {
+         tabToSelect = gBrowser.visibleTabs[gBrowser.visibleTabs.length - 1];
+       }
+@@ -2308,13 +2323,13 @@ class nsZenWorkspaces {
+     workspace,
+     onInit,
+     tabToSelect,
+-    { previousWorkspaceIndex, previousWorkspace } = {}
++    { previousWorkspaceIndex, previousWorkspace } = {},
+   ) {
+     // Recalculate new tab observers
+     gBrowser.tabContainer.observe(
+       null,
+       "nsPref:changed",
+-      "privacy.userContext.enabled"
++      "privacy.userContext.enabled",
+     );
+ 
+     gBrowser.tabContainer.arrowScrollbox = this.activeScrollbox;
+@@ -2334,7 +2349,7 @@ class nsZenWorkspaces {
+         previousWorkspaceIndex,
+         previousWorkspace,
+         onInit,
+-      }
++      },
+     );
+     this._organizeWorkspaceStripLocations(workspace, true);
+     gZenUIManager.tabsWrapper.style.scrollbarWidth = "";
+@@ -2353,7 +2368,7 @@ class nsZenWorkspaces {
+     // Avoid forcing a startup toolbar rebuild when there are no
+     // workspace-specific bookmark assignments to apply.
+     const hasWorkspaceBookmarks = !!Object.keys(
+-      this._workspaceBookmarksCache?.bookmarks || {}
++      this._workspaceBookmarksCache?.bookmarks || {},
+     ).length;
+     if (!onInit || hasWorkspaceBookmarks) {
+       this._invalidateBookmarkContainers();
+@@ -2389,7 +2404,7 @@ class nsZenWorkspaces {
+       new CustomEvent("ZenWorkspacesUIUpdate", {
+         bubbles: true,
+         detail: { activeIndex: this.activeWorkspace },
+-      })
++      }),
+     );
+   }
+ 
+@@ -2415,7 +2430,7 @@ class nsZenWorkspaces {
+       return;
+     }
+     const workspaces = this.getWorkspaces().filter(
+-      w => w.uuid !== this.activeWorkspace
++      (w) => w.uuid !== this.activeWorkspace,
+     );
+     const ctxCommand = document.getElementById("cmd_zenCtxDeleteWorkspace");
+     const hasMultipleWorkspaces = !!workspaces.length;
+@@ -2435,7 +2450,7 @@ class nsZenWorkspaces {
+     for (const popup of itemsToFill) {
+       let isMoveTabPopup = popup.id === menuPopupID;
+       for (const item of popup.querySelectorAll(
+-        ".zen-workspace-context-menu-item"
++        ".zen-workspace-context-menu-item",
+       )) {
+         item.remove();
+       }
+@@ -2455,7 +2470,7 @@ class nsZenWorkspaces {
+         : workspaces) {
+         const menuItem = this.generateMenuItemForWorkspace(
+           workspace,
+-          /* disableCurrent = */ isMoveTabPopup
++          /* disableCurrent = */ isMoveTabPopup,
+         );
+         if (isMoveTabPopup) {
+           popup.prepend(menuItem);
+@@ -2501,20 +2516,20 @@ class nsZenWorkspaces {
+     icon = undefined,
+     dontChange = false,
+     containerTabId = 0,
+-    { beforeChangeCallback } = { beforeChangeCallback: null } // Callback to run before changing workspace
++    { beforeChangeCallback } = { beforeChangeCallback: null }, // Callback to run before changing workspace
+   ) {
+     if (!this.workspaceEnabled) {
+       return null;
+     }
+     // get extra tabs remaning (e.g. on new profiles) and just move them to the new workspace
+     const extraTabs = Array.from(
+-      gBrowser.tabContainer.arrowScrollbox.children
++      gBrowser.tabContainer.arrowScrollbox.children,
+     ).filter(
+-      child =>
++      (child) =>
+         gBrowser.isTab(child) &&
+         !child.hasAttribute("zen-workspace-id") &&
+         !child.hasAttribute("zen-empty-tab") &&
+-        !child.hasAttribute("zen-essential")
++        !child.hasAttribute("zen-essential"),
+     );
+     let workspaceData = this.#createWorkspaceData(name, icon, containerTabId);
+     if (!dontChange) {
+@@ -2561,14 +2576,14 @@ class nsZenWorkspaces {
+             this.pinnedTabsContainer,
+         },
+       ],
+-      forAnimation
++      forAnimation,
+     );
+   }
+ 
+   updateShouldHideSeparator(
+     arrowScrollbox,
+     pinnedContainer,
+-    fromTabSelection = false
++    fromTabSelection = false,
+   ) {
+     const visibleTabsFound = () => {
+       let count = 0;
+@@ -2599,7 +2614,7 @@ class nsZenWorkspaces {
+       const tabs = this.#unpinnedTabsInWorkspace(workspaceID);
+       const closableTabs = this.#getClosableTabs(tabs);
+       const button = pinnedContainer.querySelector(
+-        ".zen-workspace-close-unpinned-tabs-button"
++        ".zen-workspace-close-unpinned-tabs-button",
+       );
+       if (tabs.length === closableTabs.length) {
+         button.setAttribute("can-close", "true");
+@@ -2634,12 +2649,12 @@ class nsZenWorkspaces {
+       if (entry.target.closest("#zen-essentials")) {
+         // Get all workspaces that have the same userContextId
+         const userContextId = parseInt(
+-          entry.target.getAttribute("container") || "0"
++          entry.target.getAttribute("container") || "0",
+         );
+         const workspaces = this.getWorkspaces().filter(
+-          w => w.containerTabId === userContextId
++          (w) => w.containerTabId === userContextId,
+         );
+-        workspacesIds.push(...workspaces.map(w => w.uuid));
++        workspacesIds.push(...workspaces.map((w) => w.uuid));
+       } else {
+         workspacesIds.push(originalWorkspaceId);
+       }
+@@ -2649,14 +2664,14 @@ class nsZenWorkspaces {
+         if (!workspaceElement || !workspaceObject) {
+           console.warn(
+             "Workspace element or object not found for id",
+-            workspaceId
++            workspaceId,
+           );
+           continue;
+         }
+         const arrowScrollbox = workspaceElement.tabsContainer;
+         const pinnedContainer = workspaceElement.pinnedTabsContainer;
+         const essentialContainer = this.getEssentialsSection(
+-          workspaceObject.containerTabId
++          workspaceObject.containerTabId,
+         );
+         const essentialNumChildren = essentialContainer.children.length;
+         let essentialHackType = 0;
+@@ -2675,7 +2690,7 @@ class nsZenWorkspaces {
+         this.#updatePaddingTopOnTabs(
+           workspaceElement,
+           essentialContainer,
+-          forAnimation
++          forAnimation,
+         );
+         this.updateShouldHideSeparator(arrowScrollbox, pinnedContainer);
+       }
+@@ -2724,7 +2739,7 @@ class nsZenWorkspaces {
+     const isEmpty = gBrowser.selectedTab.hasAttribute("zen-empty-tab");
+     gZenCompactModeManager.sidebar.toggleAttribute(
+       "zen-has-empty-tab",
+-      isEmpty
++      isEmpty,
+     );
+     document.documentElement.setAttribute("zen-has-empty-tab", isEmpty);
+   }
+@@ -2783,11 +2798,11 @@ class nsZenWorkspaces {
+     this._organizingWorkspaceStrip = true;
+     let workspaces = this.getWorkspaces();
+     let workspace = workspaces.find(
+-      w =>
+-        w.uuid === (this.#contextMenuData?.workspaceId || this.activeWorkspace)
++      (w) =>
++        w.uuid === (this.#contextMenuData?.workspaceId || this.activeWorkspace),
+     );
+     let userContextId = parseInt(
+-      event.target.getAttribute("data-usercontextid")
++      event.target.getAttribute("data-usercontextid"),
+     );
+     workspace.containerTabId = userContextId + 0; // +0 to convert to number
+     this.saveWorkspace(workspace);
+@@ -2806,7 +2821,7 @@ class nsZenWorkspaces {
+ 
+     const restoreClosedTabsShortcut =
+       gZenKeyboardShortcutsManager.getShortcutDisplayFromCommand(
+-        "History:RestoreLastClosedTabOrWindowOrSession"
++        "History:RestoreLastClosedTabOrWindowOrSession",
+       );
+ 
+     gZenUIManager.showToast("zen-workspaces-close-all-unpinned-tabs-toast", {
+@@ -2841,7 +2856,7 @@ class nsZenWorkspaces {
+   async changeWorkspaceShortcut(
+     offset = 1,
+     whileScrolling = false,
+-    disableWrap = false
++    disableWrap = false,
+   ) {
+     // Cycle through workspaces
+     let workspaces = this.getWorkspaces();
+@@ -2869,7 +2884,7 @@ class nsZenWorkspaces {
+         "cmd_zenOpenWorkspaceCreation",
+         "zen-context-menu-new-folder-toolbar",
+       ];
+-      commandsToDisable.forEach(cmd => {
++      commandsToDisable.forEach((cmd) => {
+         const element = document.getElementById(cmd);
+         if (element) {
+           element.setAttribute("disabled", true);
+@@ -2889,7 +2904,7 @@ class nsZenWorkspaces {
+       gZenGlanceManager.getTabOrGlanceParent(tabs[tabs.length - 1]);
+     const workspaces = this.getWorkspaces();
+     await this.changeWorkspace(
+-      workspaces.find(workspace => workspace.uuid === workspaceID)
++      workspaces.find((workspace) => workspace.uuid === workspaceID),
+     );
+   }
+ 
+@@ -2916,7 +2931,7 @@ class nsZenWorkspaces {
+     ) {
+       // Find all workspaces that match the given userContextId
+       const matchingWorkspaces = this._workspaceCache.filter(
+-        workspace => workspace.containerTabId === userContextId
++        (workspace) => workspace.containerTabId === userContextId,
+       );
+ 
+       // Check if exactly one workspace matches
+@@ -2946,13 +2961,13 @@ class nsZenWorkspaces {
+     const containerId = aTab.getAttribute("usercontextid") ?? "0";
+     // Return all tabs that are not on the same workspace
+     return gBrowser.tabs.filter(
+-      tab =>
++      (tab) =>
+         !this._shouldShowTab(
+           tab,
+           tabWorkspaceId,
+           containerId,
+-          this._workspaceCache
+-        ) && !tab.hasAttribute("zen-empty-tab")
++          this._workspaceCache,
++        ) && !tab.hasAttribute("zen-empty-tab"),
+     );
+   }
+ 
+@@ -2976,7 +2991,7 @@ class nsZenWorkspaces {
+     let isInOtherWorkspace = false;
+ 
+     for (const [workspaceUuid, bookmarkGuids] of Object.entries(
+-      this._workspaceBookmarksCache.bookmarks
++      this._workspaceBookmarksCache.bookmarks,
+     )) {
+       if (bookmarkGuids.includes(bookmarkGuid)) {
+         if (workspaceUuid === activeWorkspaceUuid) {
+@@ -3000,7 +3015,7 @@ class nsZenWorkspaces {
+     const tabs = [];
+     // we need to go through each tab in each container
+     const essentialsContainer = document.querySelectorAll(
+-      "#zen-essentials .zen-workspace-tabs-section"
++      "#zen-essentials .zen-workspace-tabs-section",
+     );
+     let pinnedContainers = [];
+     let normalContainers = [];
+@@ -3016,7 +3031,7 @@ class nsZenWorkspaces {
+           ? -1
+           : b.uuid === this.activeWorkspace
+             ? 1
+-            : 0
++            : 0,
+       );
+       for (const workspace of workspaces) {
+         const container = this.workspaceElement(workspace.uuid);
+@@ -3056,7 +3071,7 @@ class nsZenWorkspaces {
+   get allTabGroups() {
+     if (!this._hasInitializedTabsStrip) {
+       let children = this.tabboxChildren;
+-      return children.filter(node => gBrowser.isTabGroup(node));
++      return children.filter((node) => gBrowser.isTabGroup(node));
+     }
+     const pinnedContainers = [];
+     const normalContainers = [];
+@@ -3100,8 +3115,8 @@ class nsZenWorkspaces {
+ 
+   reorganizeTabsAfterWelcome() {
+     const children = gBrowser.tabContainer.arrowScrollbox.children;
+-    const remainingTabs = Array.from(children).filter(child =>
+-      gBrowser.isTab(child)
++    const remainingTabs = Array.from(children).filter((child) =>
++      gBrowser.isTab(child),
+     );
+     for (const tab of remainingTabs) {
+       this.moveTabToWorkspace(tab, this.activeWorkspace);
+@@ -3149,7 +3164,7 @@ class nsZenWorkspaces {
+         // Use a mutex-like approach to prevent concurrent workspace changes
+         if (this._workspaceChangeInProgress) {
+           console.warn(
+-            "Workspace change already in progress, deferring tab switch"
++            "Workspace change already in progress, deferring tab switch",
+           );
+           return;
+         }
+@@ -3158,15 +3173,15 @@ class nsZenWorkspaces {
+         if (tab.hasAttribute("zen-essential")) {
+           // Find first workspace with the same container
+           const containerTabId = parseInt(
+-            tab.parentNode.getAttribute("container")
++            tab.parentNode.getAttribute("container"),
+           );
+           // +0 to convert to number
+           workspaceToSwitch = this._workspaceCache.find(
+-            workspace => workspace.containerTabId + 0 === containerTabId
++            (workspace) => workspace.containerTabId + 0 === containerTabId,
+           );
+         } else {
+           workspaceToSwitch = this.getWorkspaceFromId(
+-            tab.getAttribute("zen-workspace-id")
++            tab.getAttribute("zen-workspace-id"),
+           );
+         }
+         if (!workspaceToSwitch) {
+@@ -3201,7 +3216,7 @@ class nsZenWorkspaces {
+       return 0;
+     }
+     const activeWorkspace = this.activeWorkspace;
+-    const workspace = workspaces.find(w => w.uuid === activeWorkspace);
++    const workspace = workspaces.find((w) => w.uuid === activeWorkspace);
+     return workspace.containerTabId;
+   }
+ 
+@@ -3247,7 +3262,7 @@ class nsZenWorkspaces {
+     const widthPerButton = Math.max(
+       (parent.clientWidth - separation * (parent.children.length - 1)) /
+         parent.children.length,
+-      minButtonSize
++      minButtonSize,
+     );
+     for (const icon of parent.children) {
+       if (icon.tagName === "toolbarbutton") {
+diff --git a/src/zen/spaces/create-workspace-form.css b/src/zen/spaces/create-workspace-form.css
+index 2a96165..4027219 100644
+--- a/src/zen/spaces/create-workspace-form.css
++++ b/src/zen/spaces/create-workspace-form.css
+@@ -75,8 +75,10 @@ zen-workspace-creation {
+             position: absolute;
+             width: var(--size-item-small);
+             height: var(--size-item-small);
+-            -moz-context-properties: fill-opacity, fill;
++            -moz-context-properties: fill-opacity, fill, stroke;
+             fill: currentColor;
++            stroke: currentColor;
++            object-fit: contain;
+           }
+ 
+           &:not([has-svg-icon="true"]) image {
+diff --git a/src/zen/spaces/zen-workspaces.css b/src/zen/spaces/zen-workspaces.css
+index be30c7f..64c4854 100644
+--- a/src/zen/spaces/zen-workspaces.css
++++ b/src/zen/spaces/zen-workspaces.css
+@@ -38,8 +38,9 @@
+     align-items: center;
+     position: relative;
+     fill-opacity: 0.6;
+-    -moz-context-properties: fill-opacity, fill;
++    -moz-context-properties: fill-opacity, fill, stroke;
+     fill: currentColor;
++    stroke: currentColor;
+     scroll-margin: 0 20px;
+ 
+     & .zen-workspace-icon {
+@@ -54,6 +55,8 @@
+ 
+       &:is(img) {
+         width: 14px;
++        height: 14px;
++        object-fit: contain;
+       }
+ 
+       &[no-icon='true'] {
+@@ -72,6 +75,10 @@
+       width 0.1s,
+       transform 0.2s;
+ 
++    &.zen-workspace-has-color-icon {
++      filter: none;
++    }
++
+     &[active='true'] .zen-workspace-icon {
+       fill: var(--zen-sidebar-themed-icon-fill);
+       fill-opacity: 1;
+@@ -217,13 +224,17 @@
+     justify-content: center;
+     align-items: center;
+     fill-opacity: 1;
+-    -moz-context-properties: fill-opacity, fill;
++    -moz-context-properties: fill-opacity, fill, stroke;
+     fill: var(--zen-sidebar-themed-icon-fill);
++    stroke: var(--zen-sidebar-themed-icon-fill);
+     font-size: 16px;
+     padding-top: 2px;
+     color: light-dark(rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0.8));
+ 
+     & img {
++      width: 16px;
++      height: 16px;
++      object-fit: contain;
+       transform: translateY(-1px);
+     }
+ 
+diff --git a/src/zen/sync/ZenSpacesSyncApplier.sys.mjs b/src/zen/sync/ZenSpacesSyncApplier.sys.mjs
+index 3fab95a..71577b0 100644
+--- a/src/zen/sync/ZenSpacesSyncApplier.sys.mjs
++++ b/src/zen/sync/ZenSpacesSyncApplier.sys.mjs
+@@ -139,7 +139,7 @@ class nsZenSpacesSyncApplier {
+       }
+       ZenSpacesSyncModel.noteApplied(
+         record.id,
+-        record.deleted ? null : record.cleartext
++        record.deleted ? null : record.cleartext,
+       );
+     }
+     return [...failed];
+@@ -178,7 +178,7 @@ class nsZenSpacesSyncApplier {
+         routed.folders.push(entry);
+       } else if (el?.hasAttribute?.("split-view-group")) {
+         routed.splits.push(entry);
+-      } else if (spaces.some(s => s.uuid === entry.key)) {
++      } else if (spaces.some((s) => s.uuid === entry.key)) {
+         routed.spaces.push(entry);
+       }
+     }
+@@ -203,17 +203,17 @@ class nsZenSpacesSyncApplier {
+             mapped,
+             data.name,
+             data.icon,
+-            data.color
++            data.color,
+           );
+         } else {
+           const identity = lazy.ContextualIdentityService.create(
+             data.name,
+             data.icon,
+-            data.color
++            data.color,
+           );
+           ZenSpacesSyncModel.registerContainerGuid(
+             guid,
+-            identity.userContextId
++            identity.userContextId,
+           );
+         }
+       } catch (e) {
+@@ -264,7 +264,7 @@ class nsZenSpacesSyncApplier {
+         };
+         // A space record re-syncs whenever its child ordering changes, so
+         // only propagate (and especially repaint) when its own fields did.
+-        const index = list.findIndex(s => s.uuid === data.uuid);
++        const index = list.findIndex((s) => s.uuid === data.uuid);
+         const current = index === -1 ? null : list[index];
+         const visualChanged =
+           !current ||
+@@ -292,7 +292,7 @@ class nsZenSpacesSyncApplier {
+       await win.gZenWorkspaces.propagateWorkspaces(list);
+       win.gZenWindowSync.propagateWorkspacesToAllWindows(list);
+       for (const uuid of repaint) {
+-        const updated = list.find(s => s.uuid === uuid);
++        const updated = list.find((s) => s.uuid === uuid);
+         if (updated) {
+           win.gZenThemePicker.onWorkspaceChange(updated);
+         }
+@@ -304,7 +304,7 @@ class nsZenSpacesSyncApplier {
+     for (const { key: uuid, record } of removals) {
+       try {
+         const spaces = win.gZenWorkspaces.getWorkspaces();
+-        if (!spaces.some(s => s.uuid === uuid)) {
++        if (!spaces.some((s) => s.uuid === uuid)) {
+           continue;
+         }
+         if (spaces.length <= 1) {
+@@ -342,7 +342,7 @@ class nsZenSpacesSyncApplier {
+       null,
+       null,
+       null,
+-      false
++      false,
+     );
+     return result.get("buttonNumClicked") === 0;
+   }
+@@ -351,8 +351,8 @@ class nsZenSpacesSyncApplier {
+ 
+   async #applyFolders(win, folders, fail) {
+     // Parents before children so nesting targets exist.
+-    const depths = new Map(folders.map(f => [f.key, f.data.parentFolderId]));
+-    const depthOf = key => {
++    const depths = new Map(folders.map((f) => [f.key, f.data.parentFolderId]));
++    const depthOf = (key) => {
+       let depth = 0;
+       let parent = depths.get(key);
+       while (parent && depths.has(parent) && depth < 10) {
+@@ -362,7 +362,7 @@ class nsZenSpacesSyncApplier {
+       return depth;
+     };
+     const ordered = [...folders].sort(
+-      (a, b) => depthOf(a.key) - depthOf(b.key)
++      (a, b) => depthOf(a.key) - depthOf(b.key),
+     );
+ 
+     for (const { key: folderId, data, record } of ordered) {
+@@ -387,11 +387,18 @@ class nsZenSpacesSyncApplier {
+           folder.isLiveFolder = true;
+         }
+ 
+-        if ((folder.iconURL || null) !== (data.icon || null)) {
++        if ((folder.userIconValue || null) !== (data.icon || null)) {
+           win.gZenFolders.setFolderUserIcon(folder, data.icon || null);
+           // Window sync picks this up and mirrors the icon everywhere else.
+           folder.dispatchEvent(
+-            new win.CustomEvent("TabGroupUpdate", { bubbles: true })
++            new win.CustomEvent("TabGroupUpdate", { bubbles: true }),
++          );
++        }
++        const showFolderShape = data.showFolderShape ?? true;
++        if (folder.showFolderShape !== showFolderShape) {
++          win.gZenFolders.setFolderShowFolderShape(folder, showFolderShape);
++          folder.dispatchEvent(
++            new win.CustomEvent("TabGroupUpdate", { bubbles: true }),
+           );
+         }
+ 
+@@ -416,7 +423,7 @@ class nsZenSpacesSyncApplier {
+               win.gBrowser.zenHandleTabMove(folder, () => {
+                 container.insertBefore(
+                   folder,
+-                  container.querySelector(".pinned-tabs-container-separator")
++                  container.querySelector(".pinned-tabs-container-separator"),
+                 );
+               });
+             }
+@@ -435,7 +442,7 @@ class nsZenSpacesSyncApplier {
+         if (data.live) {
+           await lazy.ZenLiveFoldersManager.adoptSyncedFolder(
+             folderId,
+-            data.live
++            data.live,
+           );
+         }
+       } catch (e) {
+@@ -516,7 +523,7 @@ class nsZenSpacesSyncApplier {
+     lazy.ZenWindowSync.setPinnedInitialState(
+       tab,
+       { url: data.url, title: data.title || "" },
+-      syncableIconUrl(data.icon) || undefined
++      syncableIconUrl(data.icon) || undefined,
+     );
+   }
+ 
+@@ -567,7 +574,7 @@ class nsZenSpacesSyncApplier {
+       lazy.ZenWindowSync.setPinnedInitialState(
+         tab,
+         { url: data.url, title: data.title || "" },
+-        icon || undefined
++        icon || undefined,
+       );
+     }
+     if (identityChanged && !tab.linkedPanel) {
+@@ -632,8 +639,8 @@ class nsZenSpacesSyncApplier {
+           triggeringPrincipal_base64: lazy.E10SUtils.serializePrincipal(
+             Services.scriptSecurityManager.createContentPrincipal(
+               Services.io.newURI(data.url),
+-              {}
+-            )
++              {},
++            ),
+           ),
+         },
+       ];
+@@ -721,8 +728,8 @@ class nsZenSpacesSyncApplier {
+     for (const { key: splitId, data, record } of splits) {
+       try {
+         const members = (data.tabs || [])
+-          .map(id => this.#itemIn(win, id))
+-          .filter(tab => win.gBrowser.isTab(tab));
++          .map((id) => this.#itemIn(win, id))
++          .filter((tab) => win.gBrowser.isTab(tab));
+         const existing = this.#itemIn(win, splitId);
+         const hasGroup = existing?.hasAttribute?.("split-view-group");
+         if (hasGroup) {
+@@ -773,7 +780,7 @@ class nsZenSpacesSyncApplier {
+     for (const { key: splitId, record } of removals) {
+       try {
+         const index = win.gZenViewSplitter._data.findIndex(
+-          group => group.groupId === splitId
++          (group) => group.groupId === splitId,
+         );
+         if (index >= 0) {
+           win.gZenViewSplitter.removeGroup(index);
+@@ -824,11 +831,11 @@ class nsZenSpacesSyncApplier {
+           // it, relative ordering could never move anything to the start.
+           const folder = data.folderId ? this.#itemIn(win, key) : null;
+           const start = folder?.isZenFolder
+-            ? folder.tabs.find(t => t.hasAttribute("zen-empty-tab"))
++            ? folder.tabs.find((t) => t.hasAttribute("zen-empty-tab"))
+             : null;
+           this.#applyRelativeOrder(win, [
+             start ?? null,
+-            ...data.children.map(id => this.#itemIn(win, id)),
++            ...data.children.map((id) => this.#itemIn(win, id)),
+           ]);
+         }
+       } catch (e) {
+@@ -844,15 +851,15 @@ class nsZenSpacesSyncApplier {
+         if (Array.isArray(tabIds) && tabIds.length > 1) {
+           this.#applyRelativeOrder(
+             win,
+-            tabIds.map(id => this.#itemIn(win, id))
++            tabIds.map((id) => this.#itemIn(win, id)),
+           );
+         }
+       }
+       if (Array.isArray(data.spaces) && data.spaces.length > 1) {
+         const current = win.gZenWorkspaces.getWorkspaces();
+-        const byUuid = new Map(current.map(s => [s.uuid, s]));
++        const byUuid = new Map(current.map((s) => [s.uuid, s]));
+         const ordered = data.spaces
+-          .map(uuid => byUuid.get(uuid))
++          .map((uuid) => byUuid.get(uuid))
+           .filter(Boolean);
+         for (const space of current) {
+           if (!data.spaces.includes(space.uuid)) {
+@@ -860,7 +867,7 @@ class nsZenSpacesSyncApplier {
+           }
+         }
+         const changedOrder = ordered.some(
+-          (space, i) => current[i]?.uuid !== space.uuid
++          (space, i) => current[i]?.uuid !== space.uuid,
+         );
+         if (changedOrder && ordered.length === current.length) {
+           win.gZenWindowSync.propagateWorkspacesToAllWindows(ordered);
+diff --git a/src/zen/sync/ZenSpacesSyncModel.sys.mjs b/src/zen/sync/ZenSpacesSyncModel.sys.mjs
+index 1314840..9213289 100644
+--- a/src/zen/sync/ZenSpacesSyncModel.sys.mjs
++++ b/src/zen/sync/ZenSpacesSyncModel.sys.mjs
+@@ -61,7 +61,7 @@ export function syncableIconUrl(icon) {
+       return "";
+     }
+   }
+-  return LOCAL_ICON_PROTOCOLS.some(protocol => icon.startsWith(protocol))
++  return LOCAL_ICON_PROTOCOLS.some((protocol) => icon.startsWith(protocol))
+     ? icon
+     : "";
+ }
+@@ -103,7 +103,7 @@ const textEncoder = new TextEncoder();
+ 
+ export function recordDigest(kind, data) {
+   const hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+-    Ci.nsICryptoHash
++    Ci.nsICryptoHash,
+   );
+   hasher.init(Ci.nsICryptoHash.SHA256);
+   const bytes = textEncoder.encode(canonicalJSON({ kind, data }));
+@@ -122,7 +122,7 @@ class nsZenSpacesSyncModel {
+     if (!this.#file) {
+       this.#file = new JSONFile({
+         path: PathUtils.join(PathUtils.profileDir, STORE_FILE_NAME),
+-        dataPostProcessor: data => {
++        dataPostProcessor: (data) => {
+           if (data.version !== STORE_VERSION) {
+             // Drop the uploaded snapshot so everything re-diffs against
+             // the (also wiped) server, but keep the container identity mappings.
+@@ -219,7 +219,7 @@ class nsZenSpacesSyncModel {
+       if (entries.length) {
+         let index = Math.min(
+           Math.max((tabData.index || entries.length) - 1, 0),
+-          entries.length - 1
++          entries.length - 1,
+         );
+         const entry = entries[index] || entries[0];
+         if (entry?.url && entry.url !== "about:blank") {
+@@ -259,7 +259,7 @@ class nsZenSpacesSyncModel {
+           !seenSplits.has(groupId) &&
+           scope.matchSplit(
+             splitParents.get(groupId) ?? null,
+-            splitWs.get(groupId) ?? null
++            splitWs.get(groupId) ?? null,
+           )
+         ) {
+           seenSplits.add(groupId);
+@@ -305,12 +305,12 @@ class nsZenSpacesSyncModel {
+    * @param {object} sidebar
+    */
+   #projectionContext(sidebar) {
+-    const tabs = (sidebar.tabs || []).filter(t => this.#isSyncableTab(t));
++    const tabs = (sidebar.tabs || []).filter((t) => this.#isSyncableTab(t));
+     const folders = (sidebar.folders || []).filter(
+-      f => f?.id && !f.splitViewGroup
++      (f) => f?.id && !f.splitViewGroup,
+     );
+-    const folderIds = new Set(folders.map(f => f.id));
+-    const allSplits = (sidebar.splitViewData || []).filter(g => g?.groupId);
++    const folderIds = new Set(folders.map((f) => f.id));
++    const allSplits = (sidebar.splitViewData || []).filter((g) => g?.groupId);
+     const splitParents = new Map();
+     for (const entry of sidebar.folders || []) {
+       if (entry?.splitViewGroup && entry.id) {
+@@ -319,14 +319,14 @@ class nsZenSpacesSyncModel {
+     }
+ 
+     // Only splits whose members are all synced tabs are synced themselves.
+-    const syncableTabIds = new Set(tabs.map(t => t.zenSyncId));
++    const syncableTabIds = new Set(tabs.map((t) => t.zenSyncId));
+     const splits = allSplits.filter(
+-      g =>
++      (g) =>
+         Array.isArray(g.tabs) &&
+         g.tabs.length >= 2 &&
+-        g.tabs.every(id => syncableTabIds.has(id))
++        g.tabs.every((id) => syncableTabIds.has(id)),
+     );
+-    const splitIds = new Set(splits.map(g => g.groupId));
++    const splitIds = new Set(splits.map((g) => g.groupId));
+     const splitWs = new Map();
+     for (const tab of tabs) {
+       const groupId = tab.groupId || null;
+@@ -334,7 +334,7 @@ class nsZenSpacesSyncModel {
+         splitWs.set(groupId, tab.zenWorkspace || null);
+       }
+     }
+-    const folderOf = groupId => {
++    const folderOf = (groupId) => {
+       if (!groupId) {
+         return null;
+       }
+@@ -440,7 +440,8 @@ class nsZenSpacesSyncModel {
+                 !t.zenEssential &&
+                 (t.zenWorkspace || null) === uuid,
+               matchSplit: (parent, ws) => !parent && ws === uuid,
+-              matchFolder: f => !f.parentId && (f.workspaceId || null) === uuid,
++              matchFolder: (f) =>
++                !f.parentId && (f.workspaceId || null) === uuid,
+             },
+           }),
+         },
+@@ -467,6 +468,7 @@ class nsZenSpacesSyncModel {
+           folderId: fid,
+           name: folder.name ?? "",
+           icon: folder.userIcon || null,
++          showFolderShape: folder.showFolderShape ?? true,
+           workspaceUuid: folder.workspaceId || null,
+           parentFolderId: folder.parentId || null,
+           live,
+@@ -478,8 +480,8 @@ class nsZenSpacesSyncModel {
+             splitWs,
+             scope: {
+               matchTab: (t, groupId) => groupId === fid,
+-              matchSplit: parent => parent === fid,
+-              matchFolder: f => f.parentId === fid,
++              matchSplit: (parent) => parent === fid,
++              matchFolder: (f) => f.parentId === fid,
+             },
+           }),
+         },
+@@ -515,7 +517,7 @@ class nsZenSpacesSyncModel {
+       map.set(LAYOUT_RECORD_ID, {
+         kind: RECORD_KINDS.LAYOUT,
+         data: {
+-          spaces: spaces.map(s => s.uuid).filter(Boolean),
++          spaces: spaces.map((s) => s.uuid).filter(Boolean),
+           essentials,
+         },
+       });
+diff --git a/src/zen/tabs/ZenPinnedTabManager.mjs b/src/zen/tabs/ZenPinnedTabManager.mjs
+index 7f4c48c..440bfc0 100644
+--- a/src/zen/tabs/ZenPinnedTabManager.mjs
++++ b/src/zen/tabs/ZenPinnedTabManager.mjs
+@@ -666,7 +666,7 @@ class nsZenPinnedTabManager extends nsZenDOMOperatedFeature {
+             } else {
+               delete tab.zenStaticIcon;
+             }
+-            gBrowser.setIcon(tab, icon);
++            gBrowser.setIcon(tab, gZenEmojiPicker.resolveIconSource(icon));
+             lazy.TabStateCache.update(tab.permanentKey, {
+               image: null,
+             });
+diff --git a/src/zen/tests/folders/browser.toml b/src/zen/tests/folders/browser.toml
+index 8c09afc..618942d 100644
+--- a/src/zen/tests/folders/browser.toml
++++ b/src/zen/tests/folders/browser.toml
+@@ -20,6 +20,8 @@ support-files = [
+ 
+ ["browser_folder_issue_9981.js"]
+ 
++["browser_folder_icon_shape.js"]
++
+ ["browser_folder_level_checks.js"]
+ 
+ ["browser_folder_max_subfolders.js"]

@@ -1,0 +1,14 @@
+{
+  "name": "zen-icons-sine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate:icons": "node scripts/generate_zen_icon_catalog.mjs",
+    "build:sine": "node scripts/build_sine_mod.mjs",
+    "test:icons": "node --experimental-vm-modules --test \"tests/icons/*.test.mjs\"",
+    "check:sine": "node scripts/build_sine_mod.mjs && node --experimental-vm-modules --test \"tests/icons/*.test.mjs\""
+  },
+  "devDependencies": {
+    "lucide-static": "1.33.0"
+  }
+}

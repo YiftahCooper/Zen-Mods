@@ -1,0 +1,26 @@
+const done=arguments[arguments.length-1],checks=[];
+(async()=>{
+  const w=Services.wm.getMostRecentWindow('navigator:browser'),d=w.document;
+  const pause=ms=>new Promise(r=>w.setTimeout(r,ms));
+  const wait=async(fn,label)=>{for(let i=0;i<300;i++){if(await fn())return;await pause(50);}throw Error('Timeout '+label);};
+  const check=(name,ok,detail)=>{checks.push({name,passed:Boolean(ok),detail});if(!ok)throw Error(name+': '+JSON.stringify(detail));};
+  await wait(()=>d.getElementById('PanelUI-zen-emojis-picker')?.hasAttribute('zen-icons-enhanced'),'startup');
+  const root=PathUtils.join(PathUtils.profileDir,'zen-icon-packs'),legacy=PathUtils.join(PathUtils.profileDir,'chrome','sine-mods','zen-icons-local','custom');
+  await wait(()=>IOUtils.exists(PathUtils.join(root,'.zen-icons-migrated-v1.json')),'prepared root');
+  check('manual pre-copy works with legacy directory already absent',!await IOUtils.exists(legacy)&&await IOUtils.exists(PathUtils.join(root,'Native Pack','Animals','fish.png')));
+  const tab=w.gBrowser.addTrustedTab('about:preferences');w.gBrowser.selectedTab=tab;await wait(()=>tab.iconImage.src,'native favicon');
+  const old='chrome://sine/content/zen-icons-local/custom/Native%20Pack/Animals/fish.png#zen-icon.svg',next='chrome://zen-icons-custom/content/Native%20Pack/Animals/fish.png#zen-icon.svg';
+  tab.zenStaticIcon=old;w.gBrowser.setIcon(tab,old);await wait(()=>tab.zenStaticIcon===next,'old tab choice');await tab.iconImage.decode();
+  check('pre-copied artwork restores legacy native tab choice',tab.iconImage.naturalWidth===6);
+  const space=w.gZenWorkspaces.getWorkspaceFromId(w.gZenWorkspaces.activeWorkspace);space.icon=old;await w.gZenWorkspaces.saveWorkspace(space);await wait(()=>space.icon===next,'old Space choice');
+  const image=w.gZenWorkspaces.activeWorkspaceIndicator.querySelector('img');await wait(()=>image.src===next,'Space repaint');await image.decode();
+  check('pre-copied artwork restores legacy Space choice',image.naturalWidth===6);
+  const folder=await w.gZenFolders.createFolder([tab],{renameFolder:false,label:'Pre-copied Artwork',insertBefore:tab});
+  const f=Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);f.initWithPath(PathUtils.join(legacy,'Native Pack','Animals','fish.png'));
+  w.gZenFolders.setFolderUserIcon(folder,Services.io.newFileURI(f).spec);await wait(()=>folder.iconURL?.includes('/zen-icon-packs/'),'old folder choice');
+  const glyph=new w.Image();glyph.src=folder.iconURL;await glyph.decode();check('pre-copied artwork restores legacy folder choice',glyph.naturalWidth===6);
+  w.gZenEmojiPicker.open(tab.iconImage,{closeOnSelect:false,onSelect:()=>{}}).catch(()=>{});await wait(()=>d.getElementById('zen-icons-sine-root'),'picker');await pause(250);
+  const search=d.querySelector('.zen-icons-search');search.value='nativeaquacheck';search.dispatchEvent(new w.Event('input',{bubbles:true}));await pause(100);
+  check('manual pre-copy preserves optional JSON-only search tags',d.querySelectorAll('#zen-icons-sine-root [data-icon-id]').length===1);
+  d.getElementById('PanelUI-zen-emojis-picker').hidePopup();return {passed:true,checks};
+})().then(done,error=>done({passed:false,checks,error:String(error),stack:error.stack}));

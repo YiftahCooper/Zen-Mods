@@ -1,0 +1,28 @@
+const done=arguments[arguments.length-1],checks=[];
+(async()=>{
+  const w=Services.wm.getMostRecentWindow('navigator:browser'),d=w.document;
+  const pause=ms=>new Promise(r=>w.setTimeout(r,ms));
+  const wait=async(fn,label)=>{for(let i=0;i<200;i++){if(fn())return;await pause(50);}throw Error('Timeout '+label);};
+  const check=(name,ok,detail)=>{checks.push({name,passed:Boolean(ok),detail});if(!ok)throw Error(name+': '+JSON.stringify(detail));};
+  await wait(()=>d.getElementById('PanelUI-zen-emojis-picker')?.hasAttribute('zen-icons-enhanced'),'Icons');
+  const tab=w.gBrowser.addTrustedTab('about:blank');w.gBrowser.selectedTab=tab;
+  const folder=await w.gZenFolders.createFolder([tab],{renameFolder:false,label:'Image Recovery',insertBefore:tab}),panel=d.getElementById('PanelUI-zen-emojis-picker');
+  const open=async()=>{w.gZenFolders.changeFolderUserIcon(folder);await wait(()=>panel.state==='open','picker');await pause(200);return d.getElementById('zen-icons-sine-root');};
+  const close=async()=>{panel.hidePopup();await pause(30);};
+  let root=await open(),search=root.querySelector('.zen-icons-search');search.value='nativeaquacheck';search.dispatchEvent(new w.Event('input',{bubbles:true}));await pause(80);
+  root.querySelector('[data-icon-id]').click();await pause(80);
+  const shape=d.querySelector('.zen-icons-folder-shape input');shape.checked=false;shape.dispatchEvent(new w.Event('change',{bubbles:true}));await close();
+  const image=folder.querySelector(':scope > .tab-group-label-container > .tab-group-folder-icon svg .icon image'),source=image.getAttribute('href');
+  check('healthy custom folder glyph is enlarged without outline',folder.hasAttribute('zen-icons-enlarge-inner-icon')&&folder.hasAttribute('zen-icons-hide-folder-shape'));
+  const file=PathUtils.join(PathUtils.profileDir,'zen-icon-packs','Native Pack','Animals','fish.png'),bytes=await IOUtils.read(file);
+  await IOUtils.remove(file);root=await open();
+  check('missing folder artwork marked unavailable',folder.hasAttribute('zen-icons-custom-unavailable'));
+  check('missing artwork reveals safe folder shape instead of blank icon',!folder.hasAttribute('zen-icons-hide-folder-shape')&&!folder.hasAttribute('zen-icons-enlarge-inner-icon'));
+  check('missing artwork does not overwrite stored folder identity',image.getAttribute('href')===source&&folder.getAttribute('data-zen-icons-icon-source')===source);
+  await close();await IOUtils.write(file,bytes);root=await open();
+  check('restored folder artwork clears temporary fallback',!folder.hasAttribute('zen-icons-custom-unavailable')&&folder.hasAttribute('zen-icons-enlarge-inner-icon')&&folder.hasAttribute('zen-icons-hide-folder-shape'));
+  check('restoration preserves chosen folder source',image.getAttribute('href')===source);
+  const decoder=new w.Image();decoder.src=source;await decoder.decode();
+  check('restored folder file decodes through its native file URL',decoder.naturalWidth===6&&decoder.naturalHeight===2);
+  await close();return {passed:true,checks};
+})().then(done,error=>done({passed:false,checks,error:String(error),stack:error.stack}));

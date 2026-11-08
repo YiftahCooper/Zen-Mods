@@ -1,0 +1,89 @@
+# Define Word
+
+Look up selected English and Hebrew words in a compact popup. Select a word, right-click **Define**, or press **Ctrl+Alt+D**. Edit the search field and press Enter to look up another word; the language is detected automatically. Change dictionaries with the top-right selector. Hebrew definitions use right-to-left text.
+
+## Install or update
+
+With [Sine](https://github.com/CosmoCreeper/Sine) installed, paste this folder URL into its GitHub installation field:
+
+```text
+https://github.com/YiftahCooper/Zen-Mods/tree/main/define-word
+```
+
+Allow JavaScript mods in Sine. Update an existing installation with Sine's update check. For the old standalone repository, update or switch its source to this folder. **Saved settings and dictionary keys survive mod updates.** Keys are stored in Firefox's credential manager, outside the mod files. Saved keys remain visible as masked text. The inline eye button reveals or hides the value. Edits save when you leave the field; clearing it removes that key.
+
+## New in 0.3.5
+
+- Each release now loads its own selection and actor modules. Module URLs and the selection actor name come from one build-time version, so an in-session Sine update no longer reuses cached 0.3.1-era modules. Older actor registrations stay available to windows that have not reloaded yet and are removed once no window runs older code.
+- A Merriam-Webster lookup makes one keyed request and reads the stored key once. Its definition, matching headwords and spelling suggestions come from the same response. Typing in the search field still requests suggestions after a short pause.
+- With the popup closed, window resizes and tab switches no longer do popup work.
+- The popup stays open for same-page address changes, such as single-page-app navigation and `#` links, and for unrelated frame loads. Real page navigation still closes it.
+- Only shortcut, menu-icon and text-size changes refresh open windows. Saving the popup size or a dictionary choice no longer rescans browser shortcuts in every window.
+
+These changes have automated source tests only; native Zen verification of 0.3.5 is pending. Until the in-session update has been checked natively, restart Zen once after updating.
+
+## New in 0.3.4
+
+- Restore selected-word capture on Gecko 157 by declaring the bounded selection actor safe for web content processes.
+- Preserve popup clearance after shrinking a window, using current content dimensions while the native popup widget catches up.
+- Keep headings visibly larger than definitions under Zen’s chrome styles, and remove Sine’s extra checkbox margin from this mod’s Configure dialog.
+
+Update through Sine, then restart Zen once to load the updated selection module. Settings, popup dimensions and credential identities are unchanged.
+
+## Dictionaries
+
+| Language | Dictionary | Setup |
+| --- | --- | --- |
+| English | Wiktionary (default) | No key |
+| English | Free Dictionary API | No key |
+| English | Merriam-Webster Collegiate | Personal API key |
+| English | Merriam-Webster Learner's | Separate personal API key |
+| Hebrew | האקדמיה ללשון העברית (default for new settings) | No key |
+| Hebrew | מילוג | No key; public-page adapter |
+| Hebrew | ויקימילון | No key |
+| Hebrew | Lexicala Hebrew (test) | Approved API access and RapidAPI key |
+
+Set defaults in **Sine → Define Word → Configure**. A failed lookup does not switch providers. Dictionary coverage varies, especially for Hebrew inflections. Wiktionary can retry without niqqud; English searches can retry lowercase. The popup labels a different dictionary headword. Requests time out after ten seconds and show an error instead of loading indefinitely. If a provider is unavailable, retry or choose another dictionary; the mod does not silently substitute a different source.
+
+**Merriam-Webster:** [register for API keys](https://dictionaryapi.com/register/index), request Collegiate Dictionary and Learner’s Dictionary, and complete the required verification. Paste each key into its matching masked field under **Configure → Dictionary API keys**. Then select that dictionary. The two products use separate keys.
+
+**Lexicala test:** obtain access through [Lexicala on RapidAPI](https://rapidapi.com/kdictionaries/api/lexicala1); provider approval may be required. Save its **X-RapidAPI-Key** in the Lexicala field, then select **Lexicala Hebrew (test)**. Try familiar words such as `מדריך`, `הבית`, `מחשב` and `טלפון` and check the displayed headword and meaning. These examples are test inputs, not verified coverage claims.
+
+Lexicala uses its Global Hebrew monolingual resource. Each explicit lookup makes one request; typing makes none. Matching words come from that response, and selecting one costs another request. The candidate examines the first ten returned entries and shows up to eight alternatives. Broad morphology/stem matching may return related words or phrases; the displayed headword identifies the result. Definitions are not cached. [The advertised free plan](https://api.lexicala.com/plans/) allows 200 requests/month; confirm current limits and terms before subscribing. Published terms require prior consent for dictionary-product use or entry display. A free subscription alone does not establish that permission.
+
+The Academy adapter uses its public keyless dictionary interface, preserves vocalized headwords and explicit inflection mappings, and displays alternative entries. It does not silently treat a prefix suggestion as an exact definition. Academy content is based on Milon HaHoveh; its [terms](https://hebrew-academy.org.il/תנאי-שימוש/) permit study/research with attribution and restrict commercial use. The endpoint has no published third-party quota or stability guarantee.
+
+Milog lookups read the requested public word page without executing site scripts. Definitions and examples remain separate; no remote autocomplete requests are made. This adapter depends on the site's HTML structure. Milog's [terms](https://milog.co.il/ראשי/a/תנאי_השימוש_של_מילוג) restrict copying and reorganization without written consent; inclusion of this local test adapter does not claim provider approval. Source attribution and entry links are preserved.
+
+Existing valid default dictionary preferences are preserved on update. Select the Academy or Milog in Configure or in the popup to try them.
+
+## Settings and popup
+
+- **Search:** edit the prefilled word and press Enter or Search. Wiktionary and the Academy offer autocomplete; Merriam-Webster offers matching headwords and spelling suggestions. English Wiktionary suggestions are checked for English entries and can propose spelling corrections. Milog, Free Dictionary API and this Lexicala test do not request suggestions while typing. Use arrow keys and Enter to select a match.
+- **Text size:** type a base size from 10–32 px in Configure. Headings, definitions and controls scale proportionally.
+- **Resize:** drag any edge or corner. There is no triangle icon; the resize cursor appears on hover. Width and height are remembered across sessions. On opening, the displayed size is limited to the available space so it does not cover the selected word. With the corner focused, arrow keys resize, Shift makes larger steps, and Home or double-click resets.
+- **Position:** opens near the selected word, below or above it as space allows. Drag the top header to move it, or focus the header and use arrow keys. Definition text can be selected and copied. Each new selection gets a fresh position. When selection geometry is unavailable for a context-menu lookup, its click location is used. Keyboard invocation without geometry falls back beside the content area.
+- **Shortcut:** Record shortcut, press your combination, then Save shortcut. Disable shortcut followed by Save disables it. Some browser or OS shortcuts may conflict.
+- **Menu icon:** toggle the outlined open-book icon in Configure.
+- **Settings:** open **Sine → Define Word → Configure**. There is no settings link in the popup. Configure is capped at 800 CSS pixels and fits narrower windows.
+- **Close:** Escape, Close, changing tabs or navigating to another page cancels pending lookups. Same-page address changes and unrelated frame loads keep the popup open; if the frame that held the selection is replaced, the popup closes. Colors follow the browser theme.
+
+Version **0.3.3** uses lowercase request URLs for Free Dictionary API, matching the provider's own case-insensitive lookup. This avoids separate capitalized cache misses: the live `Account` request timed out while `account` worked, and the repaired adapter resolved `Account` successfully. Original search/display text and other dictionaries' capitalization rules are preserved.
+
+The preceding popup repairs preserve selection clearance after window resizing or size reset, a short popup's height during horizontal resizing, and automatic sizing after a stationary resize click. Unrelated pointer releases cannot terminate an active drag. Firefox's own password reveal control is hidden in the key fields to prevent a second eye button.
+
+Academy requests remove niqqud from the search parameter while retaining the original pointed word when choosing a headword. Merriam-Webster keeps different returned headwords separate, prioritizes the requested capitalization, and retains divided senses, substitute senses, examples and cross-reference text. Unedited search text preserves its original spelling beneath title-cased display, so repeating `may` cannot change its meaning to the month `May`.
+
+Verification: **168 automated tests** pass, including release-version consistency, one Merriam-Webster request per lookup, request deadlines and successful retry after a stalled request, provider parsing, credentials, controller cancellation, repeat-opening geometry, all eight resize boundaries and settings behavior. A disposable Chromium run passed **36 production-HTML/CSS input/layout checks**, including 30 stable reopens, real header dragging and eight resize directions, text selection, 10–32 px scaling, RTL/niqqud, keyboard suggestions and masked-key settings with synthetic credentials. Its native XUL panel and Firefox credential manager were simulated, so this does not establish native Zen acceptance.
+
+Live keyless checks on 2026-10-15 resolved words through Wiktionary, the Academy and Milog; the English spelling query `snese` suggested `sense` first. Hebrew Wiktionary lacks some tested words. The Academy and Milog can return ambiguous readings of unpointed spelling; the pointed headword and alternative matches identify the available meanings. Explicitly pointed Milog searches preserved the intended reading. Free Dictionary API previously resolved `Hello` and `Account` after URL normalization, but a later Windows check resolved only `Hello` while `Account`, `Browser`, `Computer` and `Define` hit the ten-second deadline. Separate earlier diagnostics received Cloudflare HTTP 522, an origin timeout. Requests remain bounded, failures are not presented as missing words, and retry can recover without reopening the popup; the mod cannot guarantee the external service's availability. The provider's [lookup implementation](https://github.com/meetDeveloper/freeDictionaryAPI/blob/master/app.js) and [outage reports](https://github.com/meetDeveloper/freeDictionaryAPI/issues/253) document the relevant behavior. Actual Merriam-Webster and Lexicala authentication were not tested with personal keys.
+
+Disposable headless Linux and Windows 11 Zen **1.23.2b / Gecko 157.0.1**, with pinned real Sine, verify the selection actor and trusted shortcut/context command, zoom and frame coordinates, popup drag/resize/text selection, window-shrink clearance, heading scaling, actual credential-manager save/replace/clear and process-restart persistence. Windows also passed the native password-eye paint check, with one visible custom eye and the synthetic key masked for capture. Synthetic provider transport verifies cancellation, retries, real ten-second stalled-header/body deadlines, MW capitalization and Hebrew rendering without personal keys. The supplied compatibility set did not move the visible New Tab button during the tested DW lifecycle. These controlled results do not establish universal compatibility, personal-key authentication or ordinary-profile acceptance. The everyday profile and desktop were not accessed.
+
+## Privacy
+
+Define and explicit searches send the word to the selected dictionary. Providers with autocomplete also receive edited queries after a short pause. Requests omit cookies and page URL/context, reject redirects, and time out. Password selections are excluded. No persistent lookup history or telemetry is added.
+
+Keys remain in Firefox credential storage. Merriam-Webster keys go only to its API; the Lexicala key goes in a header only to its RapidAPI search endpoint. Clearing a key field in Configure deletes that dictionary's saved credential. Uninstalling the mod does not automatically erase keys.
+
+Definitions render as text. **View dictionary entry** opens the original page when a safe entry URL is available; Lexicala currently provides an attribution link only. Dictionary content and trademarks retain their owners' rights. [Merriam-Webster attribution](assets/README.md). [All mods](../README.md).

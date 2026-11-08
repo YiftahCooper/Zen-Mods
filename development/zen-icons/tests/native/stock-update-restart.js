@@ -1,0 +1,26 @@
+const done=arguments[arguments.length-1],checks=[];
+(async()=>{
+  const w=Services.wm.getMostRecentWindow('navigator:browser');
+  const pause=ms=>new Promise(r=>w.setTimeout(r,ms));
+  const wait=async(fn,label)=>{for(let i=0;i<300;i++){if(await fn())return;await pause(50);}throw Error('Timeout '+label);};
+  const check=(name,ok,detail)=>{checks.push({name,passed:Boolean(ok),detail});if(!ok)throw Error(name+': '+JSON.stringify(detail));};
+  await wait(()=>w.document.getElementById('PanelUI-zen-emojis-picker')?.hasAttribute('zen-icons-enhanced'),'restart activation');
+  const source='chrome://zen-icons-custom/content/Added%20Later/Travel/after.png#zen-icon.svg';
+  const tab=[...w.gBrowser.tabs].find(t=>w.SessionStore.getCustomTabValue(t,'zen-icons-update-marker')==='updated');
+  check('stock-updated native tab session survives restart',Boolean(tab)&&tab.zenStaticIcon===source);
+  await tab.iconImage.decode();check('restored tab custom artwork decodes after update and restart',tab.iconImage.naturalWidth===6);
+  const folder=w.document.getElementById(Services.prefs.getStringPref('zen-icons.test.update-folder'));
+  const glyph=folder?.querySelector(':scope > .tab-group-label-container > .tab-group-folder-icon svg .icon image');
+  check('restored folder choice still references external artwork',glyph?.getAttribute('href')?.includes('/zen-icon-packs/Added%20Later/Travel/after.png'));
+  const space=w.gZenWorkspaces.getWorkspaceFromId(Services.prefs.getStringPref('zen-icons.test.update-space'));
+  check('restored Space custom choice remains stable',space?.icon===source);
+  const image=w.gZenWorkspaces.activeWorkspaceIndicator.querySelector('img');await image.decode();check('restored Space artwork decodes after update and restart',image.naturalWidth===6);
+  const root=PathUtils.join(PathUtils.profileDir,'zen-icon-packs');
+  check('deleted artwork remains deleted after process restart',!await IOUtils.exists(PathUtils.join(root,'Other Pack','animals','bird.png')));
+  const manager=ChromeUtils.importESModule('chrome://userscripts/content/core/manager.sys.mjs').default;
+  await manager.removeMod('zen-icons-local');
+  await wait(()=>!w.document.getElementById('PanelUI-zen-emojis-picker')?.hasAttribute('zen-icons-enhanced'),'native uninstall');
+  check('stock uninstall removes only the installed code',!await IOUtils.exists(PathUtils.join(PathUtils.profileDir,'chrome','sine-mods','zen-icons-local')));
+  check('stock uninstall retains user artwork, metadata and migration marker',await IOUtils.exists(PathUtils.join(root,'Added Later','Travel','after.png'))&&await IOUtils.exists(PathUtils.join(root,'Added Later','icons.json'))&&await IOUtils.exists(PathUtils.join(root,'.zen-icons-migrated-v1.json')));
+  return {passed:true,checks};
+})().then(done,error=>done({passed:false,checks,error:String(error),stack:error.stack}));
