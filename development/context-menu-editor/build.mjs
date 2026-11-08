@@ -12,8 +12,8 @@ const require = createRequire(new URL('.backup-scratch/deps/package.json', root)
 const {build} = require('esbuild');
 
 // Hand-edited runtime files, copied unchanged. Directories are copied recursively.
-const STATIC_FILES = ['theme.json', 'preferences.json', 'style.css', 'README.md', 'LICENSE', 'THIRD_PARTY.md',
-  'assets/catalog.json', 'assets/zen-browser-icons.json'];
+// The icon catalog is bundled (see below); its JSON sources are not shipped.
+const STATIC_FILES = ['theme.json', 'preferences.json', 'style.css', 'README.md', 'LICENSE', 'THIRD_PARTY.md'];
 const STATIC_DIRECTORIES = ['licenses', 'assets/packs'];
 const BUNDLE = 'context-menu-editor.uc.js';
 
@@ -48,16 +48,29 @@ const sources = {name: 'local-sources', setup(builder) {
     if (!allowed) throw new Error('Unexpected bundle input: ' + path);
     return {path, namespace: 'project'};
   });
-  builder.onLoad({filter: /.*/, namespace: 'project'}, async args => ({
-    contents: await readFile(new URL(args.path, root), 'utf8'),
-    loader: args.path.endsWith('.json') ? 'json' : 'js',
-  }));
+  builder.onLoad({filter: /.*/, namespace: 'project'}, async args => {
+    const contents = await readFile(new URL(args.path, root), 'utf8');
+    if (args.path === 'assets/catalog.json') return {contents: runtimeCatalog(contents), loader: 'json'};
+    return {contents, loader: 'js'};
+  });
 }};
+
+// The bundle needs only what src/icon-catalog.mjs reads. Import provenance
+// (revision, hashes, unresolved references) stays in assets/catalog.json.
+function runtimeCatalog(text) {
+  const data = JSON.parse(text);
+  const icon = ({id, label, tags, path, browserPath}) => ({id, label, tags, ...path ? {path} : {}, ...browserPath ? {browserPath} : {}});
+  return JSON.stringify({
+    packs: data.packs.map(({id, label, icons}) => ({id, label, icons: icons.map(icon)})),
+    mappings: data.mappings,
+  });
+}
 
 const result = await build({
   entryPoints: ['src/entry.mjs'], absWorkingDir: fileURLToPath(root), plugins: [sources],
   tsconfigRaw: {compilerOptions: {}}, bundle: true, format: 'iife', platform: 'browser',
   target: 'firefox128', write: false, charset: 'utf8',
+  define: {__CME_VERSION__: JSON.stringify(manifest.version)},
   banner: {js: '// Context Menu Editor ' + manifest.version + ' — generated from src/entry.mjs.\n' +
     '// Run node build.mjs; native qualification is reported separately.'},
 });

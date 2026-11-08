@@ -1,5 +1,5 @@
 import {
-  createState, mergeInventory, moveItem, updateItem, addSubmenu, addSeparator,
+  createState, mergeInventory, pruneUnsavedAbsentRows, moveItem, updateItem, addSubmenu, addSeparator,
   removeItem, restoreItem, resetRoot, restoreOriginalOrder, validatePlacement,
 } from './model.mjs';
 import {textIcon} from './icons.mjs';
@@ -163,6 +163,9 @@ export function createSettingsUI(window, {store, registry, icons}) {
       // Every save includes the discovered view; guard all inventoried roots,
       // including structural additions which do not go through moveItem.
       for (const root of inventory) next = validatePlacement(next, root.id, root.items);
+      // Remembered rows that are absent now are shown for editing, but saved
+      // only once they carry an edit (B4).
+      next = pruneUnsavedAbsentRows(next, store.read().state, merged, inventory);
       store.save(next, raw);
       refresh(true);if(reopen){openTopPanel(reopen);const more=popover?.element.querySelector('.cme-appearance-more');if(more)more.open=Boolean(moreOpen);positionPopover();}announce(message); restoreFocus(focus, fallbackKey);
       return true;

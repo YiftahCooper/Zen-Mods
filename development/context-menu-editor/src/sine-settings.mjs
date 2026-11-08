@@ -20,10 +20,6 @@ export function createSineSettingsBridge(window,{store,registry,icons,createUI=c
   container=next;controls=createUI(window,{store,registry,icons});container.append(controls.element);
   dialog=container.closest('dialog');dialog?.addEventListener('close',reset);
   button=container.closest('[mod-id]')?.querySelector('.sineItemConfigureButton');button?.addEventListener('click',reset);
-  const params=new URL(window.location.href).searchParams;
-  if(params.get('contextMenuEditorSettings')==='1'&&!document.documentElement.hasAttribute('data-cme-settings-opened')){
-   document.documentElement.setAttribute('data-cme-settings-opened','true');button?.click();
-  }
  }
  const observer=new window.MutationObserver(mount);
  observer.observe(document.documentElement,{childList:true,subtree:true});mount();

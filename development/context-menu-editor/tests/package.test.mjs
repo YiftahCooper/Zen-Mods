@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {JSDOM} from './dom.mjs';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+test('the Sine package selects only this mod and the generated runtime matches tested source',async()=>{
+ const manifestText=await readFile(new URL('../theme.json',import.meta.url),'utf8').catch(()=>null);
+ assert.ok(manifestText,'The Sine package manifest must exist.');
+ const manifest=JSON.parse(manifestText);
+ assert.equal(manifest.id,'context-menu-editor');assert.equal(manifest.supportsUnload,true);
+ assert.deepEqual(Object.keys(manifest.scripts),['context-menu-editor.uc.js']);
+ assert.deepEqual(manifest.scripts['context-menu-editor.uc.js'].include,['chrome://browser/content/browser.xhtml','about:preferences*','about:settings*']);
+ const check=spawnSync(process.execPath,['build.mjs','--check'],{cwd:root,encoding:'utf8'});
+ assert.equal(check.status,0,check.stdout+check.stderr);
+ const runtime=await readFile(new URL('../../../context-menu-editor/context-menu-editor.uc.js',import.meta.url),'utf8');
+ const dom=new JSDOM('<menupopup id="contentAreaContextMenu"><menuitem id="context-copy" label="Copy"></menuitem></menupopup>',{url:'chrome://browser/content/browser.xhtml',runScripts:'outside-only',pretendToBeVisual:true});
+ dom.window.document.createXULElement=name=>dom.window.document.createElement(name);
+ const listeners=new Set(),values=new Map();
+ dom.window.Services={prefs:{getStringPref:(key,fallback='')=>values.get(key)??fallback,setStringPref(key,value){values.set(key,value);for(const observer of listeners)observer.observe(null,'nsPref:changed',key);},addObserver(_key,observer){listeners.add(observer);},removeObserver(_key,observer){listeners.delete(observer);}}};
+ dom.window.eval(runtime);
+ dom.window.dispatchEvent(new dom.window.Event('load'));
+ const popup=dom.window.document.getElementById('contentAreaContextMenu');
+ popup.dispatchEvent(new dom.window.Event('popupshowing',{bubbles:true,cancelable:true}));
+ await new Promise(resolve=>setTimeout(resolve,0));
+ assert.ok(dom.window.__contextMenuEditor);assert.equal(popup.querySelectorAll('#context-copy').length,1);
+ dom.window.__contextMenuEditor.unload();assert.equal(listeners.size,0);
+ assert.equal(popup.querySelectorAll('[data-cme-owned]').length,0);dom.window.close();
+});

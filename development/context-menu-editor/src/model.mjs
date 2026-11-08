@@ -1,6 +1,9 @@
 // Durable customization only. Live labels, eligibility and owner nodes stay in inventory.
-const MAX_STATE_BYTES = 512 * 1024;
-const MAX_RECORDS = 10000;
+// Saved settings up to READ_LIMITS always load, so a large existing state never
+// disables customization. Writes aim for WRITE_LIMITS: when a save would exceed
+// them, unedited remembered mod rows are dropped first, oldest first (B4).
+const READ_LIMITS = Object.freeze({ bytes: 1024 * 1024, records: 40000 });
+const WRITE_LIMITS = Object.freeze({ bytes: 512 * 1024, records: 10000 });
 const MAX_DEPTH = 64;
 const KINDS = new Set(['command', 'native-menu', 'submenu', 'separator']);
 const CONTAINERS = new Set(['native-menu', 'submenu']);
@@ -63,7 +66,7 @@ function validateIcon(icon) {
 
 export function createState() { return { version: 1, options: { ...DEFAULT_OPTIONS }, roots: {} }; }
 
-export function validateState(value) {
+export function validateState(value, limits = READ_LIMITS) {
   if (!object(value) || value.version !== 1) fail('Unsupported settings version.');
   const state = jsonCopy(value);
   if (!object(state.options) || !object(state.roots)) fail('Invalid menu settings.');
@@ -89,7 +92,7 @@ export function validateState(value) {
       root.legacyHiddenIds.some(id => !validKey(id) || !/^[a-zA-Z][a-zA-Z0-9_-]{0,127}$/u.test(id)))) fail('Invalid legacy menu identities.');
     for (const [key, record] of Object.entries(root.records)) {
       keyCheck(key);
-      if (++count > MAX_RECORDS) fail('Too many saved menu items.');
+      if (++count > limits.records) fail('Too many saved menu items.');
       if (!object(record) || !KINDS.has(record.kind)) fail('Invalid menu item.');
       for (const field of LIVE_FIELDS) if (Object.hasOwn(record, field)) fail('Live menu details cannot be saved.');
       for (const field of ['hidden', 'removed', 'showIcon']) if (typeof record[field] !== 'boolean') fail('Invalid menu item option.');
@@ -119,19 +122,103 @@ export function validateState(value) {
     visit(root.children, 0);
     if (placed.size !== Object.keys(root.records).length) fail('Every saved item needs a hierarchy placement.');
   }
-  if (bytes(JSON.stringify(state)) > MAX_STATE_BYTES) fail('Saved settings are too large.');
+  if (bytes(JSON.stringify(state)) > limits.bytes) fail('Saved settings are too large.');
   return state;
+}
+
+/** Whether a saved record holds anything the user (or an owner) chose. Its
+ * position is judged separately; this covers the record's own fields. */
+export function recordHasEdits(record) {
+  if (!object(record)) return false;
+  if (record.kind === 'submenu' || (record.kind === 'separator' && record.owned)) return true;
+  if (record.hidden || record.removed || record.showIcon === false || record.iconOwner) return true;
+  if ('name' in record || 'icon' in record) return true;
+  return Array.isArray(record.children) && record.children.length > 0;
+}
+
+function recordCount(state) {
+  let count = 0;
+  for (const root of Object.values(state.roots)) count += Object.keys(root.records).length;
+  return count;
+}
+function withinWriteLimits(state) {
+  return recordCount(state) <= WRITE_LIMITS.records && bytes(JSON.stringify(state)) <= WRITE_LIMITS.bytes;
+}
+function detach(root, key) {
+  const { list } = location(root, key);
+  list.splice(list.indexOf(key), 1);
+  delete root.records[key];
+}
+
+/** Bring a state within the write limits without deleting any user edit. Only
+ * ID-less mod rows (`mod:` keys) with no edits are dropped, in saved order
+ * (oldest first). Such a row reappears at its owner's position when it returns. */
+export function fitWriteLimits(value) {
+  const state = validateState(value);
+  if (withinWriteLimits(state)) return state;
+  const candidates = [];
+  for (const [rootId, root] of Object.entries(state.roots)) {
+    for (const [key, record] of Object.entries(root.records)) {
+      if (key.startsWith('mod:') && !recordHasEdits(record)) candidates.push([rootId, key]);
+    }
+  }
+  const total = bytes(JSON.stringify(state)), count = recordCount(state);
+  // Drop enough rows by estimate, then measure; repeat until within the limits.
+  let index = 0;
+  while (!withinWriteLimits(state)) {
+    if (index >= candidates.length) fail('Saved settings are too large. Remove some custom icons or submenus.');
+    const overBytes = bytes(JSON.stringify(state)) - WRITE_LIMITS.bytes;
+    const overRecords = recordCount(state) - WRITE_LIMITS.records;
+    const average = Math.max(1, total / Math.max(1, count));
+    const batch = Math.max(1, overRecords, Math.ceil(overBytes / average));
+    for (const end = Math.min(candidates.length, index + batch); index < end; index++) {
+      const [rootId, key] = candidates[index];
+      detach(state.roots[rootId], key);
+    }
+  }
+  return validateState(state, WRITE_LIMITS);
+}
+
+/** Drop rows that a save would persist only because they are remembered but
+ * currently absent: not in the saved state before, no edits, and not moved by
+ * this change. Present rows (including hidden native ones) keep their record. */
+export function pruneUnsavedAbsentRows(state, saved, before, inventory) {
+  const next = validateState(state);
+  // Moved: another parent, or its former neighbours are no longer on the same sides.
+  const moved = (rootId, key) => {
+    const old = before?.roots?.[rootId];
+    if (!old || !Object.hasOwn(old.records, key)) return false;
+    const was = location(old, key), now = location(next.roots[rootId], key);
+    if (was.parentKey !== now.parentKey) return true;
+    const index = now.list.indexOf(key), oldIndex = was.list.indexOf(key);
+    const previous = was.list[oldIndex - 1], following = was.list[oldIndex + 1];
+    if (previous !== undefined && now.list.includes(previous) && now.list.indexOf(previous) > index) return true;
+    return following !== undefined && now.list.includes(following) && now.list.indexOf(following) < index;
+  };
+  for (const { id, items } of inventory || []) {
+    const root = next.roots[id];
+    if (!root) continue;
+    for (const item of items || []) {
+      if (!item?.remembered || item.available !== false) continue;
+      if (Object.hasOwn(saved?.roots?.[id]?.records || {}, item.key)) continue;
+      const record = root.records[item.key];
+      if (!record || recordHasEdits(record)) continue;
+      if (moved(id, item.key)) continue;
+      detach(root, item.key);
+    }
+  }
+  return validateState(next);
 }
 
 export function parseState(raw) {
   if (raw === null || raw === undefined || raw === '') return createState();
   if (typeof raw !== 'string') fail('Could not read saved settings.');
-  if (bytes(raw) > MAX_STATE_BYTES) fail('Saved settings are too large.');
+  if (bytes(raw) > READ_LIMITS.bytes) fail('Saved settings are too large.');
   let value;
   try { value = JSON.parse(raw); } catch { fail('Saved settings are not valid JSON.'); }
   return validateState(value);
 }
-export function serializeState(state) { return JSON.stringify(validateState(state)); }
+export function serializeState(state) { return JSON.stringify(fitWriteLimits(state)); }
 function editable(state, rootId) {
   const next = validateState(state); keyCheck(rootId);
   if (!Object.hasOwn(next.roots, rootId)) fail('This menu is not currently available.');

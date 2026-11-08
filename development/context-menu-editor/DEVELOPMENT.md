@@ -11,7 +11,15 @@ source of truth. `npm run build` produces the published Sine folder
 `context-menu-editor/` at the repository root: it bundles `src/` into
 `context-menu-editor.uc.js` and copies the runtime files (`theme.json`,
 `preferences.json`, `style.css`, `README.md`, `LICENSE`, `THIRD_PARTY.md`,
-`licenses/`, `assets/packs/`). Never edit `context-menu-editor/` by hand.
+`licenses/`, `assets/packs/`). The icon catalog is bundled without its import
+provenance fields; `assets/catalog.json` keeps them here, and
+`assets/zen-browser-icons.json` is an importer input only. Never edit
+`context-menu-editor/` by hand. The build takes the version from `theme.json`
+(the bundle header and the `style.css?v=` cache-buster). Each page keeps one
+`<link>` to `style.css` although Sine's `chrome.css` also imports it: Sine adds
+that copy as a user sheet, which Zen's author rules outrank. Without the link,
+row spacing and decoration layout were lost in the native settings-integrity
+stage (0.2.0 development run).
 `npm run check` fails unless that folder holds exactly the built files, byte for
 byte. Scratch output, dependencies and native-test profiles stay in the ignored
 `.backup-scratch/` folder here. Keep every repository path at 100 characters or
@@ -77,10 +85,10 @@ lockfile and puts dependencies under `.backup-scratch/deps`. `npm run check`
 verifies generated runtime parity without writing it. Sine loads
 `context-menu-editor.uc.js`; the retained source modules reproduce that file.
 
-Run the current source, harness and native suites before selecting a release.
-The RC3 baseline passed 195 source tests, six harness tests, 486 native assertions
-and eight headed Windows file-picker checks. Version 0.1.3 adds a dedicated
-legacy-import/restart stage; selected current results are recorded separately. `python -B
+Run the current source, harness and native suites before selecting a release:
+`npm test`, `npm run test:harness` and `npm run test:native` (add
+`-- --keep-going` to run every stage, `--only a,b` for some, `--source DIR` to
+test another runtime folder). `python -B
 tests/native-harness.test.py` checks profile identity, foreign runtime copy/load
 order, shutdown boundaries and rejection of incomplete or failed reports.
 `python -B tools/run-native-tests.py` runs the complete native suite. Each stage
@@ -88,11 +96,19 @@ starts with its own fresh profile; the restart stage deliberately reuses only
 its own newly created profile across two processes. The harness verifies exact
 profile identity before mutating it and only closes its own Zen.
 
-Native tests use Zen 1.23.2b / Gecko 157.0.1, build 20261009073723, with Sine
-revision `fb0bd4ca6af888f10648e126947f7d1f82228433`. Development uses Node
-24.18.0, Python 3.14.3, jsdom 26.1.0 and esbuild 0.25.10. Selected results,
-assertion counts, source hashes and screenshots are in
-`evidence/native-qualification.json`.
+Version 0.2.0 was qualified with Zen 1.24.1b / Gecko 159 and Sine revision
+`fb0bd4ca6af888f10648e126947f7d1f82228433`. Development uses Node 24.18.0,
+Python 3.14.3, jsdom 26.1.0 and esbuild 0.25.10. Native stages use Marionette
+ports 2875-2879 and need `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` on Gecko 159 (the
+tools set it). Reports stay under `.backup-scratch/native/`; they are not kept
+in the repository.
+
+A fresh Zen 1.24 profile starts on a hidden placeholder tab (`zen-empty-tab`,
+`display: none`) that has no bounds to right-click. The menu-behavior, restart
+and legacy-import stages failed on 0.1.6 for that reason only; their scripts now
+open a real tab first. Headless runs cannot prove physical input, the OS file
+picker, the Windows clipboard or popup placement on a real display: use the
+headed checks below for those.
 
 The local-mod test copies unchanged runtime files from explicit local candidates
 and verifies their bytes. It tests page, tab, folder and standalone mod menus,
@@ -154,9 +170,9 @@ clipboard items and image Blob normalization. Windows system clipboard contents
 are never accessed by these tests.
 
 This is broad isolated-native coverage, not a guarantee for every future mod,
-locale, external theme, input device or everyday-profile configuration. Native test launchers never modify an everyday profile. Routine profiles and logs stay under
-`.backup-scratch`. `evidence/native-startup-blocker.json` retains a superseded
-historical failure.
+locale, external theme, input device or everyday-profile configuration. Native
+test launchers never modify an everyday profile. Routine profiles and logs stay
+under `.backup-scratch`.
 
 RC3 fixes native HTTPS imports from Sine settings, ordinary text-field paste,
 dedicated image-area paste, stale validation feedback, insertion-line and
@@ -166,12 +182,42 @@ The pinned Sine scratch input can be regenerated from its exact source commit
 ZIP. Automatic updates are disabled in every disposable profile. No foreign mod
 source is vendored into this package.
 
-`npm run package` checks generated parity and adopted asset hashes and atomically
-creates the runtime ZIP under `releases`. It excludes development dependencies,
-source, test launchers, profiles and caches. State uses
+`npm run package` checks generated parity and atomically zips the built runtime
+folder under `.backup-scratch/releases`. State uses
 `extension.context-menu-editor.settings`. Invalid saved data disables
 customization and offers an explicit reset with recovery. Unload restores
 original nodes and removes the editor's owned containers and styles.
+
+## Behavior rules that 0.2.0 settled
+
+- **Owner settings (B1).** A mod owns only the exact preference names in its own
+  `preferences.json`, each observed with its own observer (no `''` observer).
+  Browser namespaces (`zen.`, `browser.`, `layout.`, `extensions.`, `ui.`,
+  `widget.`, `network.`, `privacy.`, `toolkit.`, `devtools.` and the others in
+  `src/owner-settings.mjs`) are never a mod's. No preference families are
+  inferred. Field hints come only from explicit words (icon, name/label, order,
+  hidden/visible).
+- **Provenance (B2).** A created row names a mod only when that mod's file is the
+  innermost frame outside this editor and Sine's helpers. One creation hook per
+  document survives Sine reloads and is reused, never stacked.
+- **Share (B3).** Share is identified by its class, root and localization ID. If
+  two exist, the one directly after SharingUtils' anchor (`context_moveTabOptions`
+  or `context_shareSelectedTabs`) keeps the edits. Both icon packs map
+  `tab-context-share-url` to `share`. The cause of the reported Share loss was not
+  reproduced in disposable profiles; `tests/native/submenu-geometry.js` records a
+  diagnostic for each case.
+- **Saved-state size (B4).** Settings up to 1 MiB / 40,000 records load. Saves aim
+  for 512 KiB / 10,000 records: unedited remembered `mod:` rows go first, oldest
+  first; edits are never dropped. Absent remembered rows are saved only once
+  edited or moved, and each menu remembers at most 200 absent ID-less mod rows.
+  Rows that are present but natively hidden keep their records, so native order
+  is kept.
+- **Owner writes across windows (B5).** A window announces the exact settings
+  value it saves for an owner change (`context-menu-editor-owner-write`). Other
+  windows treat that write as an owner change, not a user edit.
+- **Browser popups (B6).** A popup from `browser.xhtml` is adopted only for rows a
+  mod added to it; listeners do not count. Decisions wait until that markup has
+  loaded. Popups the browser markup does not contain keep the earlier rule.
 
 The runtime is published to `YiftahCooper/Zen-Mods` under `context-menu-editor`.
 The repository keeps normal defaults. User preferences belong to each Zen profile. See

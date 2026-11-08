@@ -97,7 +97,7 @@ export function createIconService(window, {baseURL = DEFAULT_ICON_BASE, fetch:fe
       try { return {type:'text',text:textIcon(icon.text,window).text,source:'custom'}; } catch { /* Invalid saved choices fall back safely. */ }
     }
     const pack = options.iconPack === 'zen' ? 'zen' : 'fluent';
-    const exact = catalog.mapped(pack,descriptor.nativeId,descriptor.l10nId || descriptor.l10n);
+    const exact = catalog.mapped(pack,descriptor.nativeId,descriptor.l10nId);
     if (exact) return asset(exact,'builtin');
     if (typeof descriptor.iconURL === 'string' && descriptor.iconURL.length <= LOCAL_LIMIT && IMAGE_SCHEMES.test(descriptor.iconURL)) {
       return {type:'image',src:descriptor.iconURL,monochrome:options.monochromeExtensions === true,source:'owner'};

@@ -9,6 +9,8 @@ export const isHidden = node => Boolean(node && ((node.hasAttribute('hidden') ? 
 const owned = node => node.closest?.('[data-cme-owned]');
 const transient = node => node.matches?.('.spell-suggestion, .spell-suggestion-item, .bookmark-item, [data-cme-transient]') || /^(?:spell-suggestion-|spell-add-to-dictionary-|webext-context-menu-(?:.*-)?\d+$)/.test(node.id) || /-menuitem-\d+$/.test(node.id);
 const AI_IDS = new Set(['context_askChat','context-ask-chat','context-ask-chatgpt','context-genai']);
+// The rows SharingUtils inserts Share after (classic and alternative tab menu layouts).
+const SHARE_ANCHORS = ['context_moveTabOptions','context_shareSelectedTabs'];
 const digest=value=>{
  let a=2166136261,b=5381;for(const char of value){const code=char.codePointAt(0);a=Math.imul(a^code,16777619);b=Math.imul(b,33)^code;}
  return (a>>>0).toString(36)+(b>>>0).toString(36);
@@ -40,8 +42,17 @@ export function discoverRoot(root,{resolveSource=()=>null}={}) {
   const source=sources.get(node);
   return !node.id&&!transient(node)&&node.parentElement===root&&node.localName==='menu'&&node.classList.contains('share-tab-url-item')&&node.getAttribute('data-l10n-id')==='tab-context-share-url'&&(!source||['unknown','browser'].includes(source.kind));
  }):[];
- if(nativeShares.length===1&&!counts.has(nativeShareKey)){
-  const node=nativeShares[0];identities.set(node,nativeShareKey);sources.set(node,{kind:'browser',name:'Zen Browser',via:'browser'});
+ // SharingUtils reuses its menu only when it directly follows the layout anchor;
+ // otherwise it inserts another one there. With duplicates, that anchored menu
+ // is the one the browser keeps updating, so it carries the user's edits (B3).
+ const anchoredShare=()=>{
+  const anchored=nativeShares.filter(node=>SHARE_ANCHORS.includes(node.previousElementSibling?.id));
+  return anchored.length===1?anchored[0]:null;
+ };
+ const nativeShare=nativeShares.length===1?nativeShares[0]:nativeShares.length>1?anchoredShare():null;
+ if(nativeShare&&!counts.has(nativeShareKey)){
+  identities.set(nativeShare,nativeShareKey);
+  sources.set(nativeShare,{kind:'browser',name:'Zen Browser',via:'browser'});
  }
  function identity(node){
   if(identities.has(node))return identities.get(node);
@@ -81,5 +92,7 @@ export function discoverRoot(root,{resolveSource=()=>null}={}) {
    if(kind==='native-menu') walk(node,key,key,inherited,locked);
   }
  }
- walk(root);return {items,nodes,meta,protectedNodes,dependencyGroups};
+ walk(root);
+ const byNode=new Map(items.map(item=>[nodes.get(item.key),item]));
+ return {items,nodes,byNode,meta,protectedNodes,dependencyGroups};
 }
