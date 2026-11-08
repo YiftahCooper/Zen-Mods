@@ -1,0 +1,19 @@
+{
+  "name": "zen-context-menu-editor",
+  "version": "0.1.6",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node tools/setup.mjs",
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "test": "node --test tests/*.test.mjs",
+    "package": "python tools/package.py",
+    "test:harness": "python -B tests/native-harness.test.py",
+    "test:native": "python -B tools/run-native-tests.py"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "esbuild": "0.25.10"
+  }
+}
