@@ -93,6 +93,8 @@ def build(archive):
                           "context-reload":"reload","context-stop":"close",
                           "context_zenMoveToFolder":"folder-open" if pack_id=="fluent" else "folder",
                           "better-zen-folders-move-space":"move-tab"})
+            # SharingUtils' Share submenu has no ID; its localization ID is stable.
+            by_l10n.setdefault("tab-context-share-url","share")
             output["packs"].append(pack)
             output["mappings"][pack_id]={"byId":by_id,"byL10n":by_l10n}
     output["transformation"]="Fluent SVG context-fill/context-stroke replaced by #667b91; contextual opacity replaced by 1. Zen artwork referenced from the installed browser, not copied."

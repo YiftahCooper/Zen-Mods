@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Disposable native page-context matrix</title>
+<style>
+  body{font:18px/1.6 system-ui;margin:25px;color:#111;background:#fff;max-width:820px}
+  section{padding:18px;margin:14px 0;border:1px solid #999;min-height:65px}
+  a, input, textarea, [contenteditable]{display:block;min-height:40px;margin:8px 0}
+  input,textarea{width:600px;font:18px system-ui}
+  img,canvas{display:block;width:140px;height:90px;background:#b7e7ef}
+  video{display:block;width:300px;height:150px;background:#24415e}
+  audio{display:block;width:350px;height:55px}
+</style>
+<h1>Native context fixtures</h1>
+<section id="plain">Ordinary page content for page commands.</section>
+<section><p id="selection">Native selection fixture with meaningful copied text.</p></section>
+<section><a id="link" href="/sample-page.html#opened=page-link">Native page link command target</a></section>
+<section><a id="mailto" href="mailto:fixture@example.invalid">Disposable mail address</a></section>
+<section><a id="telephone" href="tel:+15550101234">Disposable phone number</a></section>
+<section><img id="image" alt="Native standalone image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg=="></section>
+<section><a href="/sample-page.html#opened=linked-image"><img id="linked-image" alt="Native linked image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg=="></a></section>
+<section><canvas id="canvas" width="140" height="90"></canvas></section>
+<section><label>Editable input<input id="text-input" value="Native editable input fixture"></label></section>
+<section><label>Editable textarea<textarea id="textarea">Native textarea fixture selected text</textarea></label></section>
+<section><label>Readonly input<input id="readonly-input" readonly value="Native readonly fixture"></label></section>
+<section><label>Password fixture<input id="password" type="password" autocomplete="off" value="Disposable-Context-Fixture"></label></section>
+<section><div id="contenteditable" contenteditable="true">Native rich text fixture selected text</div></section>
+<section><audio id="audio" controls preload="auto"></audio></section>
+<section><video id="video" preload="none"></video></section>
+<script>
+  const canvas=document.getElementById('canvas'),paint=canvas.getContext('2d');
+  paint.fillStyle='#26758d';paint.fillRect(0,0,140,90);paint.fillStyle='white';paint.fillText('Context fixture',10,40);
+  // Recoverable deterministic PCM source: 8 kHz, mono, 16-bit, one second of
+  // silence. It permits native media commands without network/media providers.
+  const bytes=new Uint8Array(16044),view=new DataView(bytes.buffer);
+  const ascii=(at,value)=>[...value].forEach((char,index)=>bytes[at+index]=char.charCodeAt(0));
+  ascii(0,'RIFF');view.setUint32(4,bytes.length-8,true);ascii(8,'WAVE');ascii(12,'fmt ');
+  view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);
+  view.setUint32(24,8000,true);view.setUint32(28,16000,true);view.setUint16(32,2,true);view.setUint16(34,16,true);
+  ascii(36,'data');view.setUint32(40,16000,true);
+  document.getElementById('audio').src=URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));
+</script>

@@ -1,0 +1,1 @@
+This is an owned, deliberately invalid image fixture for the disposable native icon-input probe.
