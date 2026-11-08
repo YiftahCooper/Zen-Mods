@@ -11,14 +11,14 @@ const BASE='https://preview.invalid/mod/';
 const ROWS=[['share-copy-link','menu-share-copy-links','Copy Link'],['share-qrcode-item','menu-file-share-qrcode3','Create QR Code'],
  ['share-windows-item','menu-share-windows','More Options']];
 
-function fixture(t,options={}){
+function fixture(t,options={},{resolveSource}={}){
  const dom=makeDOM('<menupopup id="tabContextMenu"><menuitem id="context_reloadTab" label="Reload"></menuitem>'+
   '<menu id="context_moveTabOptions" label="Move"><menupopup></menupopup></menu>'+
   '<menu class="share-tab-url-item" data-l10n-id="tab-context-share-url" label="Share"><menupopup></menupopup></menu></menupopup>');
  const w=dom.window,doc=w.document,root=doc.getElementById('tabContextMenu'),share=root.querySelector('.share-tab-url-item'),popup=share.querySelector('menupopup');
  const icons=createIconService(w,{baseURL:BASE});
  let state=createState();state={...state,options:{...state.options,...options}};
- const controller=createMenuController(w,{getState:()=>state,resolveIcon:(...args)=>icons.resolve(...args)});
+ const controller=createMenuController(w,{getState:()=>state,resolveIcon:(...args)=>icons.resolve(...args),...resolveSource?{resolveSource}:{}});
  // SharingUtils.populateSharePopup: drop the previous rows and rebuild them.
  const populate=()=>{
   popup.replaceChildren();
@@ -73,28 +73,35 @@ test('Share service rows follow the icon pack and icon visibility options',async
  off.close();assert.equal(off.root.querySelector('[data-cme-icons]'),null);
 });
 
-test('only the exact anonymous SharingUtils rows inside the native Share menu are decorated',async t=>{
- const f=fixture(t);await f.show();
+test('only ID-less browser rows with an exact localization mapping are decorated',async t=>{
+ const isMod=node=>node.getAttribute('data-test-mod')==='true';
+ const f=fixture(t,{},{resolveSource:node=>isMod(node)?{kind:'mod',id:'some-mod',name:'Some mod'}:null});await f.show();
  const doc=f.w.document,item=(attrs)=>{const n=doc.createXULElement('menuitem');for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);return n;};
- f.popup.append(
-  item({class:'share-copy-link',label:'Wrong l10n','data-l10n-id':'menu-share-something-else'}),
-  item({class:'share-mac-picker-item',label:'Mac','data-l10n-id':'menu-share-mac'}),
-  item({'data-l10n-id':'menu-share-copy-links',label:'No class'}));
+ const unmapped=[item({class:'share-copy-link',label:'Wrong l10n','data-l10n-id':'menu-share-something-else'}),item({label:'No l10n'}),
+  item({class:'spell-suggestion','data-l10n-id':'menu-share-copy-links',label:'Transient'})];
+ const mapped=item({'data-l10n-id':'menu-share-copy-links',label:'No class'});
+ const modRow=item({'data-test-mod':'true','data-l10n-id':'menu-share-copy-links',label:'A mod row'});
+ f.popup.append(...unmapped,mapped,modRow);
  await tick();await tick();
- assert.equal(f.popup.querySelector('.cme-decoration,[data-cme-item]'),null);
- // The same classes outside the Share menu belong to someone else.
- const move=f.root.querySelector('#context_moveTabOptions menupopup');
- move.append(item({class:'share-copy-link','data-l10n-id':'menu-share-copy-links',label:'Elsewhere'}));await tick();await tick();
- assert.equal(move.querySelector('.cme-decoration'),null);
+ for(const row of unmapped)assert.equal(row.hasAttribute('data-cme-item'),false,row.getAttribute('label'));
+ // A mod's labelled row has its own editor identity and is decorated through the inventory instead.
+ assert.equal(f.controller.getInventory()[0].items.find(row=>row.label==='A mod row')?.identity,'mod-label');
+ assert.equal(mapped.querySelector(':scope > .cme-decoration img')?.getAttribute('src'),`${BASE}assets/packs/fluent/link.svg`);
+ // The mapping is by localization ID in any managed native submenu, not only Share.
+ const move=f.root.querySelector('#context_moveTabOptions menupopup'),elsewhere=item({'data-l10n-id':'menu-file-share-qrcode3',label:'Elsewhere'});
+ move.append(elsewhere);await tick();await tick();
+ assert.equal(elsewhere.querySelector(':scope > .cme-decoration img')?.getAttribute('src'),`${BASE}assets/packs/fluent/qr-code.svg`);
+ assert.equal(f.controller.getInventory()[0].items.some(row=>row.label==='No class'||row.label==='Elsewhere'),false,'no editor identity');
  f.close();
+ assert.equal(f.root.querySelector('.cme-decoration,[data-cme-item]'),null);
 });
 
-test('a hidden Share menu leaves its rows undecorated',async t=>{
- const f=fixture(t);f.populate();
- const state=f.state;
- f.state={...state,roots:{...state.roots,tabContextMenu:{children:[],records:{'native:tab-context-share-url':{hidden:true}}}}};
+test('a stale duplicate Share stays plain; only the identified Share is decorated',async t=>{
+ const f=fixture(t);const doc=f.w.document;
+ const stale=doc.createXULElement('menu');stale.classList.add('share-tab-url-item');stale.setAttribute('data-l10n-id','tab-context-share-url');stale.setAttribute('label','Share');
+ stale.append(doc.createXULElement('menupopup'));f.root.prepend(stale);
  await f.show();
- assert.equal(f.share.getAttribute('hidden'),'true');
- assert.equal(f.popup.querySelector('.cme-decoration'),null);
+ assert.equal(f.share.querySelector(':scope > .cme-decoration img')?.getAttribute('src'),`${BASE}assets/packs/fluent/share.svg`);
+ assert.equal(stale.querySelector('.cme-decoration'),null);assert.equal(stale.hasAttribute('data-cme-item'),false);
  f.close();
 });

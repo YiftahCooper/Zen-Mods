@@ -210,10 +210,22 @@ original nodes and removes the editor's owned containers and styles.
   Link and QR rows (Firefox bug 2009747). Those rows, and More Options, have no
   ID and are rebuilt on every Share opening, so they get no editor identity. The
   controller decorates only the exact class plus localization ID pairs in
-  `SHARE_SERVICE_ROWS` (`src/registry.mjs`) inside the identified native Share
-  menu, with exact `byL10n` mappings only. It does this in the normal pass and in
-  the owner-only submenu path, paused and recorded so closing restores the rows.
+  `SHARE_SERVICE_ROWS` inside the identified native Share menu, with exact
+  `byL10n` mappings only (0.2.2 replaces that list with the general rule
+  below). It does this in the normal pass and in the owner-only submenu path,
+  paused and recorded so closing restores the rows.
   `tools/import-cmi.py` adds these mappings and the local `qr-code` entries.
+- **Icon coverage (0.2.2).** `toolbar-context-menu` and `zenWorkspaceMoreActions`
+  are built-in roots (`ROOTS` and `BUILT_IN_ROOTS`); their markup rows are the
+  browser's, never a mod's. The 0.2.1 Share-only rule is generalised:
+  `decorateAnonymousRows` decorates any ID-less browser `menu`/`menuitem` in a
+  managed menu that has an exact `byL10n` mapping, skipping transient rows, mod
+  rows, rows CME already identified and CME-owned submenus. It is
+  presentation-only, recorded and restored on close. A check or radio row gets
+  no generic `fallback` placeholder; a real glyph or user choice still shows.
+  Local glyph mappings live in `LOCAL_BY_ID`/`LOCAL_BY_L10N` in
+  `tools/import-cmi.py`; new Fluent glyphs are adopted with
+  `tools/adopt-fluent.py` and pinned by hash in `FLUENT_GLYPHS`.
 - **Saved-state size (B4).** Settings up to 1 MiB / 40,000 records load. Saves aim
   for 512 KiB / 10,000 records: unedited remembered `mod:` rows go first, oldest
   first; edits are never dropped. Absent remembered rows are saved only once

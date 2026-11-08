@@ -34,14 +34,14 @@ function asset(result,id,pack='fluent') {
 
 test('gallery exposes bundled Fluent and browser-provided Zen sources with search tags',()=>{
   const p=platform(), icons=createIconService(p.window,{baseURL:'https://preview.invalid/mod/'}), catalog=icons.catalog();
-  assert.equal(catalog.length,287);assert.deepEqual([...new Set(catalog.map(i=>i.pack))],['fluent','zen']);
+  assert.equal(catalog.length,295);assert.deepEqual([...new Set(catalog.map(i=>i.pack))],['fluent','zen']);
   const copy=catalog.find(i=>i.pack==='fluent'&&i.id==='edit-copy');
   assert.equal(copy.src,'https://preview.invalid/mod/assets/packs/fluent/edit-copy.svg');assert.ok(copy.tags.includes('copy'));
   const zenCopy=catalog.find(i=>i.pack==='zen'&&i.id==='edit-copy');
   assert.equal(zenCopy.src,'chrome://browser/skin/zen-icons/edit-copy.svg');assert.equal(zenCopy.fallbackSrc,copy.src);
   const zenOnly=catalog.find(i=>i.pack==='zen'&&i.id==='dart-down');
   assert.equal(zenOnly.fallbackSrc,'https://preview.invalid/mod/assets/packs/fluent/info.svg');
-  assert.equal(catalog.filter(i=>i.pack==='zen'&&i.src.startsWith('chrome://browser/skin/')).length,147);
+  assert.equal(catalog.filter(i=>i.pack==='zen'&&i.src.startsWith('chrome://browser/skin/')).length,153,'147 CMI references plus 6 local Zen skin references');
   const zenQR=catalog.find(i=>i.pack==='zen'&&i.id==='qr-code');
   assert.equal(zenQR.src,'chrome://browser/content/sharing/qr-code.svg');
   assert.equal(zenQR.fallbackSrc,'https://preview.invalid/mod/assets/packs/fluent/qr-code.svg');
@@ -229,4 +229,25 @@ test('a response arriving after cancellation cannot start image decoding',async(
   const pending=icons.importURL('https://images.invalid/i.png',abort.signal);await Promise.resolve();abort.abort();
   await assert.rejects(pending,{name:'AbortError'});deliver(new Response(PNG));await Promise.resolve();await Promise.resolve();
   assert.equal(p.created,0);p.dom.window.close();
+});
+test('toolbar, page, bookmark, folder and space rows that had only a placeholder get exact glyphs in both packs',()=>{
+ const p=platform(),icons=createIconService(p.window,{baseURL:'https://preview.invalid/mod/'});
+ const rows={'toolbar-context-customize':['customize','customize'],'zen-toolbar-context-tabs-right':['tab-right','sidebar-right'],
+  'toolbar-context-move-to-panel':['pin','pin'],'toolbar-context-manage-extension':['extension','extension'],
+  'context_unloadTab':['unloadTab','unloadTab'],'context_zenUnloadWorkspace':['unloadTab','unloadTab'],
+  'context_moveToStart':['arrow-up','arrow-up'],'context-reveal-password':['passwords','passwords'],
+  'context-pdfjs-highlight-selection':['highlight','highlight'],'placesContext_new:folder':['folder-add','folder'],
+  'placesContext_sortBy:name':['sort','sort'],'context_zenLiveFolderOptions':['settings','settings'],
+  'context_zenManageWorkspaces':['manage','manage']};
+ for(const [nativeId,[fluent,zen]]of Object.entries(rows)){
+  const a=icons.resolve({nativeId,label:'Localized'},{},{iconPack:'fluent'}),b=icons.resolve({nativeId,label:'Localized'},{},{iconPack:'zen'});
+  assert.equal(a.source,'builtin',nativeId);assert.ok(a.src.endsWith(`/fluent/${fluent}.svg`),nativeId+' '+a.src);
+  assert.equal(b.source,'builtin',nativeId);
+  assert.equal(b.src,icons.catalog().find(entry=>entry.pack==='zen'&&entry.id===zen).src,nativeId);
+ }
+ // Zen references fall back to the local Fluent glyph with the same ID when a browser resource moves.
+ const unload=icons.resolve({nativeId:'context_unloadTab'},{},{iconPack:'zen'});
+ assert.equal(unload.src,'chrome://browser/skin/zen-icons/selectable/moon.svg');
+ assert.equal(unload.fallbackSrc,'https://preview.invalid/mod/assets/packs/fluent/unloadTab.svg');
+ p.dom.window.close();
 });

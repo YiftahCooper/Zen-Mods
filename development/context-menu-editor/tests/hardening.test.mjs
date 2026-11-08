@@ -157,10 +157,10 @@ test('B6: a browser popup is adopted only for rows a mod added, not for its list
  const ctl=createMenuController(w,{getState:()=>({version:1,options:{enabled:true},roots:{}}),
   resolveSource:node=>modRoots.has(node)||modRows.has(node)?{kind:'mod',id:'beta',name:'Beta'}:null,
   classifyPopup:()=>kind,isNativeRow:id=>id==='native-row'});
- const popup=document.createXULElement('menupopup');popup.id='toolbar-context-menu';
+ const popup=document.createXULElement('menupopup');popup.id='downloadsContextMenu';
  const native=document.createXULElement('menuitem');native.id='native-row';native.setAttribute('label','Native');popup.append(native);
  document.getElementById('set').append(popup);
- const tracked=()=>ctl.getInventory().some(root=>root.id==='toolbar-context-menu');
+ const tracked=()=>ctl.getInventory().some(root=>root.id==='downloadsContextMenu');
  const open=async()=>{popup.dispatchEvent(new w.Event('popupshowing',{bubbles:true,cancelable:true}));await wait();popup.dispatchEvent(new w.Event('popuphidden',{bubbles:true}));await wait();};
  // A mod listening on the popup and on a native row (seen as their source).
  modRoots.add(popup);modRows.add(native);
@@ -174,6 +174,15 @@ test('B6: a browser popup is adopted only for rows a mod added, not for its list
  kind='foreign';
  foreign.dispatchEvent(new w.Event('popupshowing',{bubbles:true,cancelable:true}));await wait();
  assert.ok(ctl.getInventory().some(root=>root.id==='beta-popup'));
+ ctl.destroy();w.close();
+});
+
+test('the toolbar context menu is a built-in menu, never credited to a mod',async()=>{
+ const dom=makeDOM('<menupopup id="toolbar-context-menu"><menuitem id="toolbar-context-customize" label="Customize Toolbar"></menuitem><menuitem id="toggle_toolbar-menubar" label="Menu Bar" type="checkbox"></menuitem></menupopup>'),w=dom.window;
+ const ctl=createMenuController(w,{getState:()=>({version:1,options:{enabled:true},roots:{}}),classifyPopup:()=>'native',isNativeRow:()=>true});
+ const root=ctl.getInventory().find(menu=>menu.id==='toolbar-context-menu');
+ assert.equal(root?.label,'Toolbar menu','tracked without any mod row (no Better Zen Folders adoption)');
+ assert.deepEqual(root.items.map(item=>item.key),['toolbar-context-customize','toggle_toolbar-menubar']);
  ctl.destroy();w.close();
 });
 

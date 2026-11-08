@@ -96,6 +96,24 @@ try{
  checks.duplicateShareKeepsIcon=shareIcon(live);
  checks.duplicateShareKeepsPosition=Boolean(live)&&visibleRows()[0]===live;
  await close();
+ // 0.2.2: the toolbar and space menus are built-in CME menus. Every visible
+ // action row shows a loaded glyph; rows with their own artwork keep it.
+ details.builtInMenus={};
+ for(const [id,selector] of [['toolbar-context-menu','#tabbrowser-arrowscrollbox-periphery, .zen-workspace-empty-space, #zen-tabs-wrapper'],['zenWorkspaceMoreActions','.zen-current-workspace-indicator']]){
+  const popup=w.document.getElementById(id),target=w.document.querySelector(selector),b=target?.getBoundingClientRect();
+  if(!popup||!b?.width){checks[id+'_rowsHaveIcons']=false;details.builtInMenus[id]={error:'target absent'};continue;}
+  await nativeEvent.synthesizeMouseAtPoint(b.x+b.width/2,b.bottom-6,{type:'contextmenu',button:2},w);
+  try{
+   await waitFor(()=>popup.state==='open',id);await pause(350);
+   const rows=[...popup.children].filter(node=>['menu','menuitem'].includes(node.localName)&&node.getBoundingClientRect().height>0).map(node=>{
+    const image=node.querySelector(':scope > .cme-decoration img'),box=image?.getBoundingClientRect();
+    return {id:node.id||node.getAttribute('data-l10n-id'),own:node.hasAttribute('image'),type:node.getAttribute('type'),src:image?.getAttribute('src')||null,loaded:Boolean(image?.complete&&image.naturalWidth>0),width:box?.width||0};
+   });
+   details.builtInMenus[id]={root:popup.getAttribute('data-cme-root'),rows};
+   checks[id+'_isManagedRoot']=popup.getAttribute('data-cme-root')===id;
+   checks[id+'_rowsHaveIcons']=rows.length>0&&rows.every(row=>row.own||(row.src&&row.loaded&&row.width>0)||(id==='zenWorkspaceMoreActions'&&row.type==='radio'));
+  }finally{popup.hidePopup();await pause(80);}
+ }
  return {checks,details,inputEvidence:'Real native SharingUtils, folder and space menus in a fresh profile; reordered Share; real popup population; screen-coordinate adjacency at two scales and vertical positions before and after actual Sine unload/reload. No Share command, clipboard or external sharing service is invoked.'};
 }catch(error){checks.completed=false;details.error=String(error);details.stack=error.stack;return {checks,details};}
 finally{await close();resource.setSubstitution('cme-geometry',null);}

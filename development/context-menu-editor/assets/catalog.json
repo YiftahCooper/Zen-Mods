@@ -1502,6 +1502,36 @@
             "revision": "e15fc0de25fab983e3e42bac8798be69a85c23bf",
             "file": "assets/QR Code/SVG/ic_fluent_qr_code_20_regular.svg"
           }
+        },
+        {
+          "id": "comment",
+          "label": "Comment",
+          "tags": [
+            "comment"
+          ],
+          "path": "assets/packs/fluent/comment.svg",
+          "sha256": "92f83c395b99f6f8bb2d7beaef78bedc827e568dcafabb59451fdfafc5f972c5",
+          "originalSha256": "553257ec69c1337652f6627c7901dec1cd263483c9f04ae669f074353c65bccb",
+          "source": {
+            "repository": "https://github.com/microsoft/fluentui-system-icons",
+            "revision": "e15fc0de25fab983e3e42bac8798be69a85c23bf",
+            "file": "assets/Comment/SVG/ic_fluent_comment_20_regular.svg"
+          }
+        },
+        {
+          "id": "highlight",
+          "label": "Highlight",
+          "tags": [
+            "highlight"
+          ],
+          "path": "assets/packs/fluent/highlight.svg",
+          "sha256": "f5131100958ffe9ce8dff44f0222c425cd1639b8050813091b14d6dee0c67a60",
+          "originalSha256": "32a83b8b6ecfc870fd1b633dfaa0a997128f7d3fe168affec723045a29f71d0d",
+          "source": {
+            "repository": "https://github.com/microsoft/fluentui-system-icons",
+            "revision": "e15fc0de25fab983e3e42bac8798be69a85c23bf",
+            "file": "assets/Highlight/SVG/ic_fluent_highlight_20_regular.svg"
+          }
         }
       ]
     },
@@ -2808,6 +2838,56 @@
             "code"
           ],
           "browserPath": "chrome://browser/content/sharing/qr-code.svg"
+        },
+        {
+          "id": "comment",
+          "label": "Comment",
+          "tags": [
+            "comment"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/chat.svg"
+        },
+        {
+          "id": "highlight",
+          "label": "Highlight",
+          "tags": [
+            "highlight"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/paintbrush.svg"
+        },
+        {
+          "id": "unloadTab",
+          "label": "Unloadtab",
+          "tags": [
+            "unloadTab"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/selectable/moon.svg"
+        },
+        {
+          "id": "AI-chat",
+          "label": "Ai chat",
+          "tags": [
+            "AI",
+            "chat"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/sparkles.svg"
+        },
+        {
+          "id": "AI-summarize",
+          "label": "Ai summarize",
+          "tags": [
+            "AI",
+            "summarize"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/sparkles.svg"
+        },
+        {
+          "id": "sort",
+          "label": "Sort",
+          "tags": [
+            "sort"
+          ],
+          "browserPath": "chrome://browser/skin/zen-icons/circle-bars-filter.svg"
         }
       ]
     }
@@ -2927,7 +3007,6 @@
         "context_moveSplitViewToNewGroup": "TabGroup-add",
         "context_ungroupTab": "TabGroup-remove",
         "context_zenMoveToFolder": "folder-open",
-        "better-zen-folders-move-space": "move-tab",
         "context-openlinkinusercontext-menu": "container-tab",
         "context_reopenInContainer": "container-tab",
         "context-openlink": "window",
@@ -3048,7 +3127,51 @@
         "context-back": "arrow-left",
         "context-forward": "arrow-right",
         "context-reload": "reload",
-        "context-stop": "close"
+        "context-stop": "close",
+        "better-zen-folders-move-space": "move-tab",
+        "context_moveTabToGroupNewGroup": "TabGroup-add",
+        "context_moveTabToSavedGroup": "history",
+        "context_ungroupSplitView": "TabGroup-remove",
+        "context_askChatSummarize": "AI-summarize",
+        "context_createAITab": "AI-chat",
+        "context_moveToStart": "arrow-up",
+        "context_moveToEnd": "arrow-down",
+        "context_fullscreenAutohide": "fullscreen",
+        "context_fullscreenExit": "fullscreen-exit",
+        "context-bookmarkpage": "bookmark-hollow",
+        "context-viewsource-goToLine": "search-page",
+        "spell-undo-add-to-dictionary": "edit-undo",
+        "context-viewimagedesc": "info",
+        "use-relay-mask": "mail",
+        "context-pdfjs-comment-selection": "comment",
+        "context-pdfjs-highlight-selection": "highlight",
+        "context-reveal-password": "passwords",
+        "context-use-mini-window": "popup",
+        "context-create-aitab": "AI-chat",
+        "context-showonlythisframe": "window",
+        "context-viewframeinfo": "info",
+        "context-media-eme-learnmore": "help",
+        "placesContext_openBookmarkContainer:tabs": "tab",
+        "placesContext_openBookmarkLinks:tabs": "tab",
+        "placesContext_show_bookmark:info": "edit",
+        "placesContext_deleteBookmark": "edit-delete",
+        "placesContext_sortBy:name": "sort",
+        "placesContext_new:folder": "folder-add",
+        "placesContext_showAllBookmarks": "library",
+        "context_zenLiveFolderOptions": "settings",
+        "better-zen-folders-sticky-folder": "pin",
+        "context_zenManageWorkspaces": "manage",
+        "toolbar-context-manage-extension": "extension",
+        "toolbar-context-report-extension": "report",
+        "toolbar-context-toggle-vertical-tabs": "sidebar",
+        "toolbar-context-move-to-panel": "pin",
+        "toolbar-context-autohide-downloads-button": "downloads",
+        "toolbar-context-always-open-downloads-panel": "downloads",
+        "toolbar-context-always-show-extensions-button": "extension",
+        "toolbar-context-pin-to-toolbar": "pin",
+        "toolbar-context-full-screen-autohide": "fullscreen",
+        "toolbar-context-full-screen-exit": "fullscreen-exit",
+        "zen-toolbar-context-set-profile": "container-tab"
       },
       "byL10n": {
         "library-media-turn-off": "unloadTab",
@@ -3085,7 +3208,9 @@
         "tab-context-share-url": "share",
         "menu-share-copy-links": "link",
         "menu-file-share-qrcode3": "qr-code",
-        "menu-share-windows": "share"
+        "menu-share-windows": "share",
+        "user-context-add-container2": "container-tab",
+        "user-context-manage-containers2": "manage"
       }
     },
     "zen": {
@@ -3268,7 +3393,6 @@
         "context_reverseSplitView": "move-tab",
         "context_ungroupTab": "remove-tab",
         "context_zenMoveToFolder": "folder",
-        "better-zen-folders-move-space": "move-tab",
         "context_zenShareWorkspace": "share",
         "context_zenShareFolder": "share",
         "context_zenShareSplitView": "share",
@@ -3316,7 +3440,64 @@
         "context-back": "arrow-left",
         "context-forward": "arrow-right",
         "context-reload": "reload",
-        "context-stop": "close"
+        "context-stop": "close",
+        "better-zen-folders-move-space": "move-tab",
+        "context_unloadTab": "unloadTab",
+        "context_zenUnloadWorkspace": "unloadTab",
+        "context_zenFolderUnloadAll": "unloadTab",
+        "context_zenUnloadAllOtherWorkspace": "unloadTab",
+        "context_askChat": "AI-chat",
+        "context-ask-chat": "AI-chat",
+        "toolbar-context-customize": "customize",
+        "toolbar-context-customize-sidebar": "customize",
+        "zen-toolbar-context-tabs-right": "sidebar-right",
+        "sidebar-reverse-position": "sidebar-right",
+        "BMB_viewBookmarksSidebar": "sidebar",
+        "PanelUI-historyMore": "manage",
+        "context_zenSpaceRoutingSettings": "settings",
+        "context_moveTabToGroupNewGroup": "plus",
+        "context_moveTabToSavedGroup": "history",
+        "context_ungroupSplitView": "remove-tab",
+        "context_askChatSummarize": "AI-summarize",
+        "context_createAITab": "AI-chat",
+        "context_moveToStart": "arrow-up",
+        "context_moveToEnd": "arrow-down",
+        "context_fullscreenAutohide": "fullscreen",
+        "context_fullscreenExit": "fullscreen-exit",
+        "context-bookmarkpage": "bookmark-hollow",
+        "context-viewsource-goToLine": "search-page",
+        "spell-undo-add-to-dictionary": "edit-undo",
+        "context-viewimagedesc": "info",
+        "use-relay-mask": "mail",
+        "context-pdfjs-comment-selection": "comment",
+        "context-pdfjs-highlight-selection": "highlight",
+        "context-reveal-password": "passwords",
+        "context-use-mini-window": "popup",
+        "context-create-aitab": "AI-chat",
+        "context-showonlythisframe": "window",
+        "context-viewframeinfo": "info",
+        "context-media-eme-learnmore": "help",
+        "placesContext_openBookmarkContainer:tabs": "tab",
+        "placesContext_openBookmarkLinks:tabs": "tab",
+        "placesContext_show_bookmark:info": "edit",
+        "placesContext_deleteBookmark": "edit-delete",
+        "placesContext_sortBy:name": "sort",
+        "placesContext_new:folder": "folder",
+        "placesContext_showAllBookmarks": "library",
+        "context_zenLiveFolderOptions": "settings",
+        "better-zen-folders-sticky-folder": "pin",
+        "context_zenManageWorkspaces": "manage",
+        "toolbar-context-manage-extension": "extension",
+        "toolbar-context-report-extension": "report",
+        "toolbar-context-toggle-vertical-tabs": "sidebar",
+        "toolbar-context-move-to-panel": "pin",
+        "toolbar-context-autohide-downloads-button": "downloads",
+        "toolbar-context-always-open-downloads-panel": "downloads",
+        "toolbar-context-always-show-extensions-button": "extension",
+        "toolbar-context-pin-to-toolbar": "pin",
+        "toolbar-context-full-screen-autohide": "fullscreen",
+        "toolbar-context-full-screen-exit": "fullscreen-exit",
+        "zen-toolbar-context-set-profile": "container-tab"
       },
       "byL10n": {
         "text-action-select-all": "edit-select-all",
@@ -3351,7 +3532,9 @@
         "tab-context-share-url": "share",
         "menu-share-copy-links": "link",
         "menu-file-share-qrcode3": "qr-code",
-        "menu-share-windows": "share"
+        "menu-share-windows": "share",
+        "user-context-add-container2": "container-tab",
+        "user-context-manage-containers2": "manage"
       }
     }
   },
@@ -3371,6 +3554,22 @@
     "version": "1.23.2b",
     "buildID": "20261009073723",
     "sourceStamp": "185e856f68a451dc71988e988bc080c56452ea66"
+  },
+  "localAdditions": {
+    "fluentGlyphs": [
+      "comment",
+      "highlight",
+      "qr-code"
+    ],
+    "zenReferences": [
+      "AI-chat",
+      "AI-summarize",
+      "comment",
+      "highlight",
+      "qr-code",
+      "sort",
+      "unloadTab"
+    ]
   },
   "transformation": "Fluent SVG context-fill/context-stroke replaced by #667b91; contextual opacity replaced by 1. Zen artwork referenced from the installed browser, not copied."
 }

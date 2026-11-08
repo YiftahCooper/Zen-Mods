@@ -1,7 +1,23 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.1.**
+an interactive Sine settings editor. **Version 0.2.2.**
+
+Version 0.2.2 fills in missing icons across the menus the editor manages.
+
+- **Toolbar menu and Space menu.** The menu you get by right-clicking the
+  sidebar or a toolbar (New Folder, Live Folder, Tabs on the right, Enable
+  compact mode, Customize Toolbar and the rest) and a space's menu are now
+  built-in editor menus. Every action row there shows an icon. Live Folder's
+  GitHub and RSS rows keep Zen's own logos.
+- **More rows with real icons.** Unload Tab, Unload Space and the other unload
+  rows, Ask an AI chatbot, New Group, Move to Start/End, Bookmark Page, Reveal
+  Password, PDF comment and highlight, bookmark Edit/Delete/Sort/New Folder, and
+  the container menu's Add/Manage rows now get a matching glyph instead of the
+  generic info icon or nothing.
+- **No placeholder beside a check or radio state.** Rows such as playback
+  speeds or a space list keep their native check or dot without a generic
+  info icon next to it. Rows with a real matching glyph still show it.
 
 Version 0.2.1 restores the icons inside the tab menu's **Share** submenu.
 Zen 1.24 (Firefox 159) stopped giving Copy Link and Create QR Code their own
@@ -104,7 +120,7 @@ are usable; otherwise ordinary Copy Link remains available.
 ## Use the editor
 
 Open **Configure** for this mod in Sine. Choose **Page menu**, **Tab menu**,
-**Folder menu** or **Bookmarks menu**. A discovered mod-owned menu also appears
+**Bookmarks menu**, **Folder menu**, **Space menu** or **Toolbar menu**. A discovered mod-owned menu also appears
 in the selector. Open a menu in Zen once if its owner creates entries lazily.
 
 The list follows the shape of a menu. Each row has a drag handle, an enable
@@ -224,6 +240,12 @@ no network request when a menu opens. Existing owner-provided icon URLs remain
 controlled by that owner.
 
 ## Verification
+
+Version 0.2.2 adds unit tests for the new glyph mappings, the toolbar menu and
+check/radio rows, and a native check that every visible action row in the real
+toolbar and space menus shows a loaded icon. A disposable-profile sweep with a
+copy of the user's mods and editor settings compared 0.2.1 and 0.2.2 menu by
+menu.
 
 Version 0.2.1 adds unit tests for the Share submenu rows and a native check
 that each rebuilt row shows a loaded icon in every geometry case.

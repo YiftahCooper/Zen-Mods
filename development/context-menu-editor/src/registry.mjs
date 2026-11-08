@@ -4,6 +4,8 @@ export const ROOTS = Object.freeze([
  {id:'tabContextMenu',label:'Tab menu'},
  {id:'placesContext',label:'Bookmarks menu'},
  {id:'zenFolderActions',label:'Folder menu'},
+ {id:'zenWorkspaceMoreActions',label:'Space menu'},
+ {id:'toolbar-context-menu',label:'Toolbar menu'},
 ]);
 export const isHidden = node => Boolean(node && ((node.hasAttribute('hidden') ? node.getAttribute('hidden') !== 'false' : node.hidden === true) || node.getAttribute('collapsed') === 'true'));
 const owned = node => node.closest?.('[data-cme-owned]');
@@ -12,13 +14,7 @@ const AI_IDS = new Set(['context_askChat','context-ask-chat','context-ask-chatgp
 // The rows SharingUtils inserts Share after (classic and alternative tab menu layouts).
 const SHARE_ANCHORS = ['context_moveTabOptions','context_shareSelectedTabs'];
 export const NATIVE_SHARE_KEY = 'native:tab-context-share-url';
-// The rows SharingUtils rebuilds inside that Share menu on every opening. They
-// have no ID and no editor identity; only their artwork is presented.
-export const SHARE_SERVICE_ROWS = Object.freeze([
- Object.freeze({className:'share-copy-link',l10nId:'menu-share-copy-links'}),
- Object.freeze({className:'share-qrcode-item',l10nId:'menu-file-share-qrcode3'}),
- Object.freeze({className:'share-windows-item',l10nId:'menu-share-windows'}),
-]);
+export const isTransient = node => Boolean(transient(node));
 const digest=value=>{
  let a=2166136261,b=5381;for(const char of value){const code=char.codePointAt(0);a=Math.imul(a^code,16777619);b=Math.imul(b,33)^code;}
  return (a>>>0).toString(36)+(b>>>0).toString(36);

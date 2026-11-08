@@ -60,6 +60,6 @@ settings.querySelector('[data-icon-action="cancel"]').click();
 action('icon').click();settings.querySelector('[data-icon-tab="built-in"]').click();const gallery=settings.querySelector('.cme-gallery');
 await waitFor(()=>[...gallery.querySelectorAll('img')].every(img=>img.complete),'pack gallery image load');
 details.gallery={count:gallery.querySelectorAll('img').length,failed:[...gallery.querySelectorAll('img')].filter(img=>!img.naturalWidth).map(img=>img.src)};
-checks.fullGalleryLoads=details.gallery.count===287&&details.gallery.failed.length===0;
+checks.fullGalleryLoads=details.gallery.count===295&&details.gallery.failed.length===0;
 details.layout={viewport:{width:p.innerWidth,height:p.innerHeight},dialog:rect(dialog),contentWidth:card.querySelector('.sineItemPreferenceDialogContent').clientWidth,scrollWidth:card.querySelector('.sineItemPreferenceDialogContent').scrollWidth};
 return{checks,details,inputEvidence:'Real Gecko FileReader/Image/canvas through Sine controls; FileList assigned by test and DOM clicks. Native OS file picker and system clipboard acceptance remain separate.'};

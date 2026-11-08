@@ -3,7 +3,7 @@ const MENU_TAGS=new Set(['menu','menuitem','menupopup','menuseparator','menugrou
 const EVENTS=new Set(['command','click','popupshowing']);
 const UNKNOWN=Object.freeze({kind:'unknown',name:'Source unknown'});
 const BROWSER=Object.freeze({kind:'browser',name:'Zen Browser',via:'browser'});
-const BUILT_IN_ROOTS=['contentAreaContextMenu','tabContextMenu','placesContext','zenFolderActions'];
+const BUILT_IN_ROOTS=['contentAreaContextMenu','tabContextMenu','placesContext','zenFolderActions','zenWorkspaceMoreActions','toolbar-context-menu'];
 const OWN_PREFIX='chrome://sine/content/context-menu-editor/';
 const MOD_FRAME=/^chrome:\/\/sine\/content\/([\w.-]+)\//;
 // Sine's own helpers create elements on behalf of the mod that called them.
@@ -19,7 +19,7 @@ const OWN_FILE=(()=>{
 })();
 
 /** Parse browser.xhtml as inert XML once per build. `rows` are the IDs inside
- * the four built-in roots (attributed to the browser); `popups` and `popupRows`
+ * the built-in roots (attributed to the browser); `popups` and `popupRows`
  * are every menupopup ID and every ID inside any menupopup. */
 export function browserMarkupIds(window,markup){
  // Neutralize privileged XUL before inert XML parsing. Keeping XML hierarchy

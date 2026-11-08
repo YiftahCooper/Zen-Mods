@@ -9,27 +9,116 @@ ROOT = Path(__file__).resolve().parent.parent
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
-# Local additions, not from CMI. The Fluent QR glyph is adopted from Microsoft's
-# Fluent UI System Icons (MIT, licenses/FluentUI-System-Icons-MIT.txt): the
-# 20 px regular outline, recoloured like the other Fluent assets and drawn at
-# 16 px. The ZenUI choice is the browser's own share-panel QR artwork; it is
-# referenced, not copied. A missing browser resource falls back to the Fluent file.
-FLUENT_QR = {"repository":"https://github.com/microsoft/fluentui-system-icons",
-             "revision":"e15fc0de25fab983e3e42bac8798be69a85c23bf",
-             "file":"assets/QR Code/SVG/ic_fluent_qr_code_20_regular.svg",
-             "originalSha256":"69f9c0a55a5362e7299af893426f5096156c6ad459f02642a53f5b325284b55a",
-             "sha256":"34ced1ba5650d68abd7c022ed0e13e7a856d77e71c35c0836d1d8f3b6d22f790"}
-SHARE_ROWS = {"menu-share-copy-links":"link","menu-file-share-qrcode3":"qr-code","menu-share-windows":"share"}
+# Local additions, not from CMI. Fluent glyphs are adopted from Microsoft's
+# Fluent UI System Icons (MIT, licenses/FluentUI-System-Icons-MIT.txt) by
+# tools/adopt-fluent.py: the 20 px regular outline, recoloured like the other
+# Fluent assets and drawn at 16 px. ZenUI entries reference artwork the
+# installed browser already ships; nothing is copied. A missing browser
+# resource falls back to the Fluent file with the same ID.
+FLUENT_REVISION = "e15fc0de25fab983e3e42bac8798be69a85c23bf"
+FLUENT_GLYPHS = {
+    "qr-code": {"label":"QR code", "file":"assets/QR Code/SVG/ic_fluent_qr_code_20_regular.svg",
+                "originalSha256":"69f9c0a55a5362e7299af893426f5096156c6ad459f02642a53f5b325284b55a",
+                "sha256":"34ced1ba5650d68abd7c022ed0e13e7a856d77e71c35c0836d1d8f3b6d22f790"},
+    "comment": {"label":"Comment", "file":"assets/Comment/SVG/ic_fluent_comment_20_regular.svg",
+                "originalSha256":"553257ec69c1337652f6627c7901dec1cd263483c9f04ae669f074353c65bccb",
+                "sha256":"92f83c395b99f6f8bb2d7beaef78bedc827e568dcafabb59451fdfafc5f972c5"},
+    "highlight": {"label":"Highlight", "file":"assets/Highlight/SVG/ic_fluent_highlight_20_regular.svg",
+                  "originalSha256":"32a83b8b6ecfc870fd1b633dfaa0a997128f7d3fe168affec723045a29f71d0d",
+                  "sha256":"f5131100958ffe9ce8dff44f0222c425cd1639b8050813091b14d6dee0c67a60"},
+}
+# Zen ships no unload, AI, sort, comment or highlight glyph under these names;
+# these are the closest artwork it does ship (moon for a sleeping tab, sparkles
+# as Zen uses for its own AI-style actions, the filter bars for sorting).
+ZEN_SKIN = "chrome://browser/skin/zen-icons/"
+ZEN_REFERENCES = {
+    "qr-code": "chrome://browser/content/sharing/qr-code.svg",
+    "unloadTab": ZEN_SKIN + "selectable/moon.svg",
+    "AI-chat": ZEN_SKIN + "sparkles.svg",
+    "AI-summarize": ZEN_SKIN + "sparkles.svg",
+    "sort": ZEN_SKIN + "circle-bars-filter.svg",
+    "comment": ZEN_SKIN + "selectable/chat.svg",
+    "highlight": ZEN_SKIN + "paintbrush.svg",
+}
+# Exact mappings added to both packs (pack-specific values where they differ).
+LOCAL_BY_L10N = {
+    # SharingUtils' ID-less Share rows (Gecko 159+ dropped their artwork, Firefox bug 2009747).
+    "menu-share-copy-links":"link", "menu-file-share-qrcode3":"qr-code", "menu-share-windows":"share",
+    # The ID-less container submenu actions under their current Fluent IDs (CMI maps the older ones).
+    "user-context-add-container2":"container-tab", "user-context-manage-containers2":"manage",
+}
+def both(icon_id): return icon_id
+LOCAL_BY_ID = {
+    # Zen has these glyphs under another ID, or now through ZEN_REFERENCES.
+    **{key:{"zen":"unloadTab"} for key in ("context_unloadTab","context_zenUnloadWorkspace",
+        "context_zenFolderUnloadAll","context_zenUnloadAllOtherWorkspace")},
+    "context_askChat":{"zen":"AI-chat"}, "context-ask-chat":{"zen":"AI-chat"},
+    "toolbar-context-customize":{"zen":"customize"}, "toolbar-context-customize-sidebar":{"zen":"customize"},
+    "zen-toolbar-context-tabs-right":{"zen":"sidebar-right"}, "sidebar-reverse-position":{"zen":"sidebar-right"},
+    "BMB_viewBookmarksSidebar":{"zen":"sidebar"}, "PanelUI-historyMore":{"zen":"manage"},
+    "context_zenSpaceRoutingSettings":{"zen":"settings"},
+    # Tab menu.
+    "context_moveTabToGroupNewGroup":{"fluent":"TabGroup-add","zen":"plus"},
+    "context_moveTabToSavedGroup":both("history"),
+    "context_ungroupSplitView":{"fluent":"TabGroup-remove","zen":"remove-tab"},
+    "context_askChatSummarize":both("AI-summarize"), "context_createAITab":both("AI-chat"),
+    "context_moveToStart":both("arrow-up"), "context_moveToEnd":both("arrow-down"),
+    "context_fullscreenAutohide":both("fullscreen"), "context_fullscreenExit":both("fullscreen-exit"),
+    # Page menu.
+    "context-bookmarkpage":both("bookmark-hollow"), "context-viewsource-goToLine":both("search-page"),
+    "spell-undo-add-to-dictionary":both("edit-undo"), "context-viewimagedesc":both("info"),
+    "use-relay-mask":both("mail"), "context-pdfjs-comment-selection":both("comment"),
+    "context-pdfjs-highlight-selection":both("highlight"), "context-reveal-password":both("passwords"),
+    "context-use-mini-window":both("popup"), "context-create-aitab":both("AI-chat"),
+    "context-showonlythisframe":both("window"), "context-viewframeinfo":both("info"),
+    "context-media-eme-learnmore":both("help"),
+    # Bookmarks menu (CMI's selectors escape the colons, which the importer cannot read).
+    "placesContext_openBookmarkContainer:tabs":both("tab"), "placesContext_openBookmarkLinks:tabs":both("tab"),
+    "placesContext_show_bookmark:info":both("edit"), "placesContext_deleteBookmark":both("edit-delete"),
+    "placesContext_sortBy:name":both("sort"), "placesContext_new:folder":{"fluent":"folder-add","zen":"folder"},
+    "placesContext_showAllBookmarks":both("library"),
+    # Folder and Space menus.
+    "context_zenLiveFolderOptions":both("settings"), "better-zen-folders-sticky-folder":both("pin"),
+    "context_zenManageWorkspaces":both("manage"),
+    # Toolbar menu.
+    "toolbar-context-manage-extension":both("extension"), "toolbar-context-report-extension":both("report"),
+    "toolbar-context-toggle-vertical-tabs":both("sidebar"), "toolbar-context-move-to-panel":both("pin"),
+    "toolbar-context-autohide-downloads-button":both("downloads"),
+    "toolbar-context-always-open-downloads-panel":both("downloads"),
+    "toolbar-context-always-show-extensions-button":both("extension"), "toolbar-context-pin-to-toolbar":both("pin"),
+    "toolbar-context-full-screen-autohide":both("fullscreen"), "toolbar-context-full-screen-exit":both("fullscreen-exit"),
+    "zen-context-menu-compact-mode":both("sidebar"), "zen-toolbar-context-set-profile":both("container-tab"),
+}
 
-def local_icon(pack_id):
-    entry = {"id":"qr-code","label":"QR code","tags":["qr","code"]}
-    if pack_id == "zen":
-        return {**entry, "browserPath":"chrome://browser/content/sharing/qr-code.svg"}
-    path = "assets/packs/fluent/qr-code.svg"
-    if digest((ROOT/path).read_bytes()) != FLUENT_QR["sha256"]:
-        raise ValueError("Unexpected local QR asset")
-    return {**entry, "path":path, "sha256":FLUENT_QR["sha256"], "originalSha256":FLUENT_QR["originalSha256"],
-            "source":{key:FLUENT_QR[key] for key in ("repository","revision","file")}}
+def local_icons(pack_id, existing):
+    icons = []
+    for icon_id, glyph in FLUENT_GLYPHS.items():
+        if icon_id in existing: raise ValueError("Local glyph shadows CMI: " + icon_id)
+        words = re.sub(r"([a-z])([A-Z])", r"\1 \2", icon_id).replace("-", " ").lower()
+        entry = {"id":icon_id, "label":glyph["label"], "tags":words.split()}
+        if pack_id == "zen":
+            if icon_id in ZEN_REFERENCES:
+                icons.append({**entry, "browserPath":ZEN_REFERENCES[icon_id]})
+            continue
+        path = f"assets/packs/fluent/{icon_id}.svg"
+        if digest((ROOT/path).read_bytes()) != glyph["sha256"]:
+            raise ValueError("Unexpected local Fluent asset: " + icon_id)
+        icons.append({**entry, "path":path, "sha256":glyph["sha256"], "originalSha256":glyph["originalSha256"],
+                      "source":{"repository":"https://github.com/microsoft/fluentui-system-icons",
+                                "revision":FLUENT_REVISION, "file":glyph["file"]}})
+    for icon_id, uri in ZEN_REFERENCES.items():
+        if pack_id == "zen" and icon_id not in FLUENT_GLYPHS:
+            if icon_id in existing: raise ValueError("Local reference shadows CMI: " + icon_id)
+            icons.append({"id":icon_id, "label":icon_id.replace("-", " ").capitalize(), "tags":icon_id.split("-"), "browserPath":uri})
+    for uri in ZEN_REFERENCES.values():
+        if not re.fullmatch(r"chrome://browser/(?:skin|content/sharing)/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.svg", uri):
+            raise ValueError("Unexpected browser icon URI")
+    return icons
+
+def local_mapping(table, pack_id):
+    """Exact local mappings for one pack; a dict value names per-pack choices."""
+    return {key:(value.get(pack_id) if isinstance(value, dict) else value) for key, value in table.items()
+            if not isinstance(value, dict) or pack_id in value}
 
 def adopt_svg(data):
     text = data.decode("utf-8")
@@ -117,12 +206,13 @@ def build(archive):
                           "better-zen-folders-move-space":"move-tab"})
             # SharingUtils' Share submenu has no ID; its localization ID is stable.
             by_l10n.setdefault("tab-context-share-url","share")
-            # Its rows (Gecko 159+) are ID-less too and lost their own artwork
-            # upstream (Firefox bug 2009747), so they use exact localization IDs.
-            pack["icons"].append(local_icon(pack_id))
-            by_l10n.update(SHARE_ROWS)
+            # Local glyphs and exact mappings for rows CMI does not cover.
+            pack["icons"].extend(local_icons(pack_id, ids))
+            by_id.update(local_mapping(LOCAL_BY_ID, pack_id))
+            by_l10n.update(local_mapping(LOCAL_BY_L10N, pack_id))
             output["packs"].append(pack)
             output["mappings"][pack_id]={"byId":by_id,"byL10n":by_l10n}
+    output["localAdditions"]={"fluentGlyphs":sorted(FLUENT_GLYPHS),"zenReferences":sorted(ZEN_REFERENCES)}
     output["transformation"]="Fluent SVG context-fill/context-stroke replaced by #667b91; contextual opacity replaced by 1. Zen artwork referenced from the installed browser, not copied."
     (ROOT/"assets"/"catalog.json").write_text(json.dumps(output,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
     print(f"Catalogued {sum(len(p['icons']) for p in output['packs'])} icons; {sum(len(m['byId']) for m in output['mappings'].values())} ID mappings.")

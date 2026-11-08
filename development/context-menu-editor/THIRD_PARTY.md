@@ -11,8 +11,8 @@ Its repository MIT notice is preserved in
 `licenses/Context-Menu-Icons-MIT.txt`.
 
 The library contains 138 copied FluentUI SVGs and 147 references to artwork
-already bundled with the installed Zen browser, plus the QR glyphs described
-below. The upstream
+already bundled with the installed Zen browser, plus the local Fluent glyphs
+and Zen references described below. The upstream
 CSS supplies the exact command/localization mappings. Broken upstream references
 to `sidebars-right`, `edit-theme` and `new-tab` use existing `sidebar-right`,
 `color` and `plus` artwork, respectively. The full upstream styling, settings and
@@ -33,6 +33,20 @@ other Fluent files and sized to 16 px. Its MIT notice is in
 source, original and adopted SHA-256 values. The ZenUI pack references the
 browser's own share-panel artwork, `chrome://browser/content/sharing/qr-code.svg`,
 which is not copied; a missing resource uses the local Fluent QR glyph.
+
+Version 0.2.2 adds two more Fluent glyphs the same way: `comment.svg`
+(`ic_fluent_comment_20_regular.svg`) and `highlight.svg`
+(`ic_fluent_highlight_20_regular.svg`), both from the same pinned revision under
+the same MIT notice. `tools/adopt-fluent.py` downloads each pinned original,
+checks its SHA-256, and writes the adopted file; `tools/import-cmi.py` verifies
+the adopted bytes. The ZenUI pack adds references, not copies, to the installed
+browser's `selectable/moon.svg`, `sparkles.svg`, `circle-bars-filter.svg`,
+`selectable/chat.svg` and `paintbrush.svg`; a missing resource uses the
+matching local Fluent glyph or `info.svg`. Further local mappings assign
+existing artwork to rows CMI does not map (unload, AI, tab-group, move, full
+screen, bookmark, folder, space and toolbar commands, and the container
+submenu's current localization IDs). `assets/catalog.json` lists every local
+addition under `localAdditions`.
 
 Fluent SVG context paint is replaced with `#667b91`, and contextual opacity with
 `1`, so it can render in the HTML gallery and native menu decorations.

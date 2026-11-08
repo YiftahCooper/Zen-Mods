@@ -1,4 +1,4 @@
-import {ROOTS,NATIVE_SHARE_KEY,SHARE_SERVICE_ROWS,discoverRoot,isHidden} from './registry.mjs';
+import {ROOTS,discoverRoot,isHidden,isTransient} from './registry.mjs';
 import {changedOwnerPlacement} from './owner-settings.mjs';
 import {appendFittedSymbol,fitSymbol} from './icon-view.mjs';
 import {mergeInventory,recordHasEdits} from './model.mjs';
@@ -321,6 +321,9 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   attr(c,node,'data-cme-icons',iconsOff?'off':'on');
   if(iconsOff)return;
   const icon=resolveIcon(descriptor,record,options);
+  // A generic placeholder adds nothing beside a native check or radio state
+  // (playback speeds, display choices); real glyphs and user choices still show.
+  if(icon?.source==='fallback'&&['checkbox','radio'].includes(node.getAttribute('type')))return;
   if(icon)prependIcon(c,node,icon,options);
  }
  function prependIcon(c,node,icon,options){
@@ -348,22 +351,26 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   node.prepend(deco);
   if(icon.type==='text'){deco.textContent='';appendFittedSymbol(window,deco,icon.text,options.iconSize||16);}
  }
- // SharingUtils rebuilds the native Share menu's rows without IDs on every
- // opening, and Gecko 159 dropped their artwork (Firefox bug 2009747). Give
- // them their exact mapped icon only: no identity, placement, label or
- // visibility change. Every write is recorded, so restore() removes it.
- function decorateServiceRows(c,popup,options){
-  const menu=popup?.parentElement;
-  if(popup?.localName!=='menupopup'||!menu||descriptorOf(c,menu)?.key!==NATIVE_SHARE_KEY)return;
+ // Browser rows without an ID have no editor identity, and some owners rebuild
+ // them on every opening (SharingUtils' Share rows lost their artwork in Gecko
+ // 159, Firefox bug 2009747). Give such a row only the exact glyph mapped to
+ // its localization ID: no identity, placement, label or visibility change.
+ // Mod rows, transient rows and unmapped rows stay untouched. Every write is
+ // recorded, so restore() removes it.
+ function decorateAnonymousRows(c,popup,options){
+  if(!popup||popup.closest('[data-cme-owned]'))return;
   for(const node of popup.children){
-   if(node.localName!=='menuitem'||node.id||c.scan.byNode.has(node)||node.getAttribute('data-cme-item'))continue;
-   const row=SHARE_SERVICE_ROWS.find(row=>node.classList.contains(row.className)&&node.getAttribute('data-l10n-id')===row.l10nId);
-   if(!row)continue;
+   if(!['menu','menuitem'].includes(node.localName)||node.id||c.scan.byNode.has(node)||node.hasAttribute('data-cme-item'))continue;
+   const l10nId=node.getAttribute('data-l10n-id');
+   // Share's own identity follows the B3 rule; a stale duplicate Share stays plain.
+  if(!l10nId||node.classList.contains('share-tab-url-item')||isTransient(node)||resolveSource(node)?.kind==='mod')continue;
+   const descriptor={kind:node.localName==='menu'?'native-menu':'command',nativeId:null,l10nId,label:node.getAttribute('label')||''};
+   const icon=resolveIcon(descriptor,{},{...options,showIcons:true});
+   if(icon?.source!=='builtin')continue;
+   const off=options.showIcons===false;
    attr(c,node,'data-cme-item','true');
-   attr(c,node,'data-cme-icons',options.showIcons===false?'off':'on');
-   if(options.showIcons===false)continue;
-   const icon=resolveIcon({kind:'command',nativeId:null,l10nId:row.l10nId,label:node.getAttribute('label')||''},{},options);
-   if(icon?.source==='builtin')prependIcon(c,node,icon,options);
+   attr(c,node,'data-cme-icons',off?'off':'on');
+   if(!off)prependIcon(c,node,icon,options);
   }
  }
  function apply(c){
@@ -514,8 +521,7 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    }
    accessKeys(c,container,records);
   }
-  const share=c.scan.nodes.get(NATIVE_SHARE_KEY);
-  if(share&&!records[NATIVE_SHARE_KEY]?.hidden&&!records[NATIVE_SHARE_KEY]?.removed)decorateServiceRows(c,[...share.children].find(n=>n.localName==='menupopup'),options);
+  for(const popup of [c.root,...c.root.querySelectorAll('menupopup')])decorateAnonymousRows(c,popup,options);
  }
  function reconcile(c){
   if(destroyed||!c.root.isConnected)return;
@@ -573,7 +579,7 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
      const options={...state?.options};
      withPaused(c,()=>{
       for(const popup of new Set(ownerOnly.map(record=>record.target.closest('menupopup')))){
-       decorateServiceRows(c,popup,options);
+       decorateAnonymousRows(c,popup,options);
        accessKeys(c,popup,saved);
       }
      });
