@@ -4,6 +4,16 @@ Baseline: **0.3.26**, runtime commit
 `56789780f376021d276634967961252954f5eee6`. Status is alpha, with limited user
 testing. Publication, source checks, native checks and user acceptance are distinct.
 
+## 0.3.28: one-time URL-pin unavailable notice
+
+The "Folder URL Pins are not available" notice used to appear in every popup
+window. Popups (no toolbar) now never show it, and elsewhere it shows once:
+the pref `better-zen-folders.url-pins-unavailable-notice-shown` records that it
+was seen. Node checks pass (1,345 run, 988 pass, 0 fail; 357 rendering checks
+skipped because Playwright is not installed here). A disposable Zen 1.24.1b
+confirmed a popup window reports `toolbar.visible` false while an ordinary
+window reports true.
+
 ## Unpublished candidate 0.3.27 (runtime performance)
 
 Not published, not installed in an everyday profile, not user-accepted. It targets

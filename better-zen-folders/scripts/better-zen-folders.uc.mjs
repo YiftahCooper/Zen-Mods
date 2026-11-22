@@ -1833,6 +1833,13 @@ export class FolderPinRuntime {
     this.result = {ok:false,reason};
     const document = this.host.document;
     if (!document?.createElementNS || !document.documentElement?.appendChild) return;
+    // Popups have no folders to pin, so they never show it. Elsewhere it is a
+    // one-time notice: once shown in any window, later windows stay quiet.
+    const chromeHidden = String(document.documentElement.getAttribute?.('chromehidden') ?? '');
+    if (this.host.toolbar?.visible === false || /\b(toolbar|extrachrome)\b/.test(chromeHidden)) return;
+    const prefs = this.host.Services?.prefs, shownKey = 'better-zen-folders.url-pins-unavailable-notice-shown';
+    try { if (prefs?.getBoolPref?.(shownKey,false)) return;prefs?.setBoolPref?.(shownKey,true); }
+    catch (error) { this.reportError(error); }
     const notice = this.notice = document.createElementNS('http://www.w3.org/1999/xhtml','div');
     notice.className = 'better-zen-folders-url-pin-status';
     notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');notice.setAttribute('data-bzf-error','true');

@@ -81,3 +81,22 @@ test('runtime exposes unsupported window mode before entering activation or open
  await runtime.enable();assert.equal(runtime.result.reason,'unsupported-window-mode');
  assert.equal(notices.length,1);assert.match(notices[0].textContent,/not available/i);assert.equal(runtime.activation,null);
 });
+
+test('unavailable notice is shown once across windows and never in popups',async()=>{
+ const saved=new Map(),notices=[];
+ const prefs={getBoolPref:(k,d)=>saved.has(k)?saved.get(k):d,setBoolPref:(k,v)=>saved.set(k,v)};
+ const win=(extra={})=>{
+  const doc={documentElement:{appendChild:n=>notices.push(n),getAttribute:()=>extra.chromehidden??null},
+   createElementNS:()=>({setAttribute(){},appendChild(){},addEventListener(){},remove(){}})};
+  const runtime=new api.FolderPinRuntime({document:doc,toolbar:{visible:extra.toolbar??true},
+   gZenWorkspaces:{privateWindowOrDisabled:true},Services:{prefs}},{get:()=>true});
+  runtime.active=true;return runtime;
+ };
+ for(const popup of [win({toolbar:false}),win({chromehidden:'menubar toolbar directories extrachrome'})]){
+  await popup.enable();assert.equal(popup.result.reason,'unsupported-window-mode');
+ }
+ assert.equal(notices.length,0,'popups stay quiet and do not use up the one-time notice');
+ await win().enable();assert.equal(notices.length,1,'first ordinary unsupported window is told once');
+ await win().enable();await win({toolbar:false}).enable();
+ assert.equal(notices.length,1,'later windows and popups stay quiet');
+});
