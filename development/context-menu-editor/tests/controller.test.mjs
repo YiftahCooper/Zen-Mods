@@ -198,6 +198,24 @@ test('a foreign owner repeatedly rewriting an override causes bounded fallback t
  const f=setup();let writes=0;const a=f.w.document.getElementById('a');const owner=new f.w.MutationObserver(()=>{if(a.getAttribute('label')==='Custom'&&writes<100){writes++;a.setAttribute('label','Owner active');}});owner.observe(a,{attributes:true,attributeFilter:['label']});
  f.event('popupshowing');await wait();assert.ok(writes<=32,`owner rewritten ${writes} times`);assert.equal(a.getAttribute('label'),'Owner active');owner.disconnect();f.ctl.destroy();f.dom.window.close();
 });
+test('Gecko first-render of a decorated row keeps its icon without rebuilding the open menu',async()=>{
+ const f=setup(),b=f.w.document.getElementById('b');f.event('popupshowing');await wait();
+ const deco=b.querySelector(':scope > .cme-decoration'),moved=f.w.document.getElementById('a').parentElement;assert.ok(deco);
+ let rootChanges=0;const watch=new f.w.MutationObserver(rs=>{rootChanges+=rs.filter(r=>r.target===f.root&&r.type==='childList').length;});watch.observe(f.root,{childList:true});
+ // Gecko clears the row, then appends its own parts when the submenu first opens.
+ b.textContent='';for(const [tag,cls]of [['img','menu-icon'],['label','menu-text'],['label','menu-highlightable-text']]){const n=f.w.document.createElement(tag);n.className=cls;b.append(n);}
+ await wait();await wait();
+ assert.equal(b.firstElementChild,deco,'the same icon is put back first');assert.equal(rootChanges,0,'no restore or reapply');
+ assert.equal(f.w.document.getElementById('a').parentElement,moved);assert.equal(f.ctl.diagnostics()[0].reconciliations,0);
+ watch.disconnect();f.ctl.destroy();assert.equal(b.querySelector('.cme-decoration'),null);f.dom.window.close();
+});
+test('repeated access-key refreshes on rows the editor did not write never fall back to the owner menu',async()=>{
+ const f=setup(),b=f.w.document.getElementById('b');f.event('popupshowing');await wait();
+ for(let i=0;i<40;i++){b.setAttribute('accesskey','B');await wait();}
+ const c=f.ctl.diagnostics()[0];assert.equal(c.open,true);assert.equal(c.reconciliations,0);
+ assert.equal(f.w.document.getElementById('a').getAttribute('label'),'Custom');assert.notEqual(f.w.document.getElementById('a').parentElement,f.root);
+ f.ctl.destroy();assert.equal(b.getAttribute('accesskey'),'B','the owner keeps its own write');f.dom.window.close();
+});
 test('locked group retains topology while explicit row overrides still work',async()=>{
  const f=setup('<menugroup id="foreign-group"><menuitem id="foreign-child" label="Original"></menuitem></menugroup>',{'foreign-group':{kind:'native-menu',children:['foreign-child']},'foreign-child':{kind:'command',name:'Renamed',hidden:true}},['foreign-group']);
  f.event('popupshowing');await wait();const child=f.w.document.getElementById('foreign-child');assert.equal(child.parentElement.id,'foreign-group');assert.equal(child.getAttribute('label'),'Renamed');assert.equal(child.getAttribute('hidden'),'true');f.ctl.destroy();assert.equal(child.getAttribute('label'),'Original');assert.equal(child.hasAttribute('hidden'),false);f.dom.window.close();

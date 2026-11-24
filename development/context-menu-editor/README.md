@@ -1,7 +1,14 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.3.**
+an interactive Sine settings editor. **Version 0.2.4.**
+
+Version 0.2.4 fixes menus that jumped around and then grew back to Zen's full
+menu a few seconds after opening. Opening a submenu for the first time, such as
+an extension's (Bitwarden, for example), made the editor rebuild the whole menu.
+That moved the open submenus away from their rows, and after about two dozen
+submenu openings the editor gave up and showed Zen's original menu until it
+closed. Opening submenus now leaves the menu as you arranged it.
 
 Version 0.2.3 adds icons to right-click menus the editor does not manage. These
 menus get icons only: they do not appear in the editor, nothing about them is

@@ -1,4 +1,4 @@
-// Context Menu Editor 0.2.3 — generated from src/entry.mjs.
+// Context Menu Editor 0.2.4 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -1475,7 +1475,7 @@
   var ROW_TAGS = ["menu", "menuitem", "menuseparator", "menugroup"];
   var REMEMBERED_LIMIT = 200;
   var bool = (node, name) => node.getAttribute(name) === "true" || node[name] === true;
-  var presentation = "label.menu-text,label.menu-accel,img.menu-icon";
+  var presentation = "label.menu-text,label.menu-accel,label.menu-highlightable-text,img.menu-icon";
   function derivedPresentation(record) {
     const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
     if (target?.closest?.(presentation)) {
@@ -2069,7 +2069,18 @@
       records = records.filter((record) => !(record.type === "attributes" && record.attributeName === "src" && fallbackTargets.has(record.target)));
       for (const target of fallbackTargets) c.fallbackWrites.delete(target);
       records = records.filter((record) => !ignorableRecord(c, record));
+      const cleared = records.filter((record) => record.type === "childList" && !record.addedNodes.length && record.removedNodes.length && [...record.removedNodes].every((node) => c.owned.has(node) && node.classList?.contains("cme-decoration")));
+      if (cleared.length) {
+        records = records.filter((record) => !cleared.includes(record));
+        withPaused(c, () => {
+          for (const record of cleared) {
+            const row = record.target, deco = [...record.removedNodes].find((node) => !node.isConnected);
+            if (deco && row.isConnected && !row.querySelector(":scope > .cme-decoration")) row.prepend(deco);
+          }
+        });
+      }
       if (!records.length) return;
+      const contested = records.some((record) => record.type === "attributes" && c.attrs.get(record.target)?.has(record.attributeName));
       adoptForeign(c, records);
       if (c.open) {
         const ownerOnly = records.filter((record) => ownerOnlySubmenuChange(c, record));
@@ -2091,7 +2102,7 @@
       if (!records.length) return;
       const labelsOnly = records.every((record) => record.type === "attributes" && ["label", "accesskey"].includes(record.attributeName));
       if (c.open && !c.scheduled && labelsOnly && c.reconciliations < 24) {
-        c.reconciliations++;
+        if (contested) c.reconciliations++;
         withPaused(c, () => {
           const targets = new Set(records.map((record) => record.target));
           for (const node of targets) {
@@ -3744,7 +3755,7 @@
   var TOPIC = "context-menu-editor-inventory";
   var OWNER_WRITE_TOPIC = "context-menu-editor-owner-write";
   var BASE = "chrome://sine/content/context-menu-editor/";
-  var VERSION = true ? "0.2.3" : "dev";
+  var VERSION = true ? "0.2.4" : "dev";
   var loadSineMods = async () => ChromeUtils.importESModule("chrome://userscripts/content/core/utils.sys.mjs").default.getMods();
   function sharedMarkup(services, build) {
     try {

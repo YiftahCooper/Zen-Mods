@@ -9,7 +9,7 @@ const ROW_TAGS=['menu','menuitem','menuseparator','menugroup'];
 // saved edits are always kept; beyond this many, the oldest others are dropped.
 export const REMEMBERED_LIMIT=200;
 const bool=(node,name)=>node.getAttribute(name)==='true'||node[name]===true;
-const presentation='label.menu-text,label.menu-accel,img.menu-icon';
+const presentation='label.menu-text,label.menu-accel,label.menu-highlightable-text,img.menu-icon';
 function derivedPresentation(record){
  const target=record.target.nodeType===1?record.target:record.target.parentElement;
  if(target?.closest?.(presentation)){
@@ -625,7 +625,25 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   records=records.filter(record=>!(record.type==='attributes'&&record.attributeName==='src'&&fallbackTargets.has(record.target)));
   for(const target of fallbackTargets)c.fallbackWrites.delete(target);
   records=records.filter(record=>!ignorableRecord(c,record));
+  // Gecko renders a row's own parts the first time its submenu opens and
+  // clears the row first, which drops our icon. No command changed: put the
+  // same icon back. Rebuilding here displaced open submenus on every hover
+  // and, after the per-opening limit, left the stock menu (0.2.4).
+  const cleared=records.filter(record=>record.type==='childList'&&!record.addedNodes.length&&record.removedNodes.length&&
+   [...record.removedNodes].every(node=>c.owned.has(node)&&node.classList?.contains('cme-decoration')));
+  if(cleared.length){
+   records=records.filter(record=>!cleared.includes(record));
+   withPaused(c,()=>{
+    for(const record of cleared){
+     const row=record.target,deco=[...record.removedNodes].find(node=>!node.isConnected);
+     if(deco&&row.isConnected&&!row.querySelector(':scope > .cme-decoration'))row.prepend(deco);
+    }
+   });
+  }
   if(!records.length)return;
+  // Only an owner overwriting this editor's own write can turn into a rewrite
+  // fight. Decide before adoption hands those attributes back to the owner.
+  const contested=records.some(record=>record.type==='attributes'&&c.attrs.get(record.target)?.has(record.attributeName));
   adoptForeign(c,records);
   // Native service menus recreate anonymous owner-only rows when opened.
   // They have no editor state to reconcile. Reinserting their parent here
@@ -653,7 +671,9 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
   // even briefly closes its popup. Metadata and overrides still stay fresh.
   const labelsOnly=records.every(record=>record.type==='attributes'&&['label','accesskey'].includes(record.attributeName));
   if(c.open&&!c.scheduled&&labelsOnly&&c.reconciliations<24){
-   c.reconciliations++;
+   // Gecko re-sets access keys on every submenu opening; refreshes of rows
+   // this editor did not write must not use up this opening's limit (0.2.4).
+   if(contested)c.reconciliations++;
    withPaused(c,()=>{
     const targets=new Set(records.map(record=>record.target));
     for(const node of targets){

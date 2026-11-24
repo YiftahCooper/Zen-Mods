@@ -246,6 +246,22 @@ original nodes and removes the editor's owned containers and styles.
   user-item lists, left-click menus and rows with native artwork are left out.
   `tests/unmanaged-menu-icons.test.mjs` and the `unmanaged-menu-icons` native
   stage cover it.
+- **Submenu first render (0.2.4).** Gecko renders a menu row's own parts
+  (`img.menu-icon`, `label.menu-text`, `label.menu-accel` or
+  `label.menu-highlightable-text`) the first time its popup opens, and clears
+  the row first. That removed CME's prepended `.cme-decoration`, and
+  `label.menu-highlightable-text` was not in the presentation list, so every
+  first submenu opening ran a full `reconcile` (restore and reapply, about 300
+  writes), which displaced the open submenus. Gecko also re-sets `accesskey` on
+  every row of an opening submenu, and each of those label-only refreshes used
+  one of the 24 reconciliations allowed per opening; at the limit the overlay
+  released and the stock menu showed while still open. Now a record that only
+  removes CME's own decoration puts the same node back (paused, no reconcile),
+  the highlightable label counts as presentation, and only attribute records
+  that overwrite one of this editor's own writes count toward the limit; the
+  owner still takes ownership of every attribute it writes. A disposable
+  native probe with an extension menu of four nested submenus, opened four
+  times, went from 22 reconciliations and 6,497 menu mutations to 0 and 343.
 - **Saved-state size (B4).** Settings up to 1 MiB / 40,000 records load. Saves aim
   for 512 KiB / 10,000 records: unedited remembered `mod:` rows go first, oldest
   first; edits are never dropped. Absent remembered rows are saved only once
