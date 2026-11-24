@@ -48,7 +48,7 @@ export function startContextMenuEditor(window,{Services:services}={}){
  window.__contextMenuEditor?.unload();
 
  let disposed=false,offStore=()=>{},controller=null,bridge=null,sources=null,ownerSettings=null;
- let ownerWrite=false,ownerRaw=null,markup=null,markupState='pending',stylesheet=null;
+ let ownerWrite=false,ownerRaw=null,markup=null,markupState='pending',stylesheet=null,ownerWriteObserved=false;
  const store=createStore(services.prefs,{onError:problem=>window.console?.warn?.('Context Menu Editor could not refresh settings.',problem)});
  const browserWindow=()=>window.browsingContext?.topChromeWindow||(/^chrome:/.test(window.location.href)?window:services.wm?.getMostRecentWindow('navigator:browser'));
  // about:preferences blocks external fetches through its document CSP. Keep
@@ -64,20 +64,29 @@ export function startContextMenuEditor(window,{Services:services}={}){
   store,
   /** Read-only provenance for diagnostics and native tests. */
   resolveSource:node=>sources?.resolve(node)||null,
+  // Sine runs every mod's unload in one loop when a page unloads. A throw here
+  // stopped that loop before Sine forgot this mod for the page, so a reloaded
+  // settings page skipped loading it and Configure stayed empty (0.2.7). Every
+  // step runs, and none can throw out of unload.
   unload(){
    if(disposed)return;
    disposed=true;
-   offStore();
-   ownerSettings?.destroy();
-   bridge?.destroy();
-   controller?.destroy();
-   sources?.destroy();
-   store.destroy();
-   stylesheet?.remove();
-   services.obs?.removeObserver(ownerWriteObserver,OWNER_WRITE_TOPIC);
-   window.removeEventListener('unload',owner.unload);
-   if(window.__contextMenuEditor===owner)delete window.__contextMenuEditor;
-   services.obs?.notifyObservers(null,TOPIC);
+   for(const step of [
+    ()=>offStore(),
+    ()=>ownerSettings?.destroy(),
+    ()=>bridge?.destroy(),
+    ()=>controller?.destroy(),
+    ()=>sources?.destroy(),
+    ()=>store.destroy(),
+    ()=>stylesheet?.remove(),
+    // Only browser windows add this observer; removing one never added throws.
+    ()=>{if(ownerWriteObserved)services.obs?.removeObserver(ownerWriteObserver,OWNER_WRITE_TOPIC);},
+    ()=>window.removeEventListener('unload',owner.unload),
+    ()=>{if(window.__contextMenuEditor===owner)delete window.__contextMenuEditor;},
+    ()=>services.obs?.notifyObservers(null,TOPIC),
+   ]){
+    try{step();}catch(problem){window.console?.warn?.('Context Menu Editor could not finish one unload step.',problem);}
+   }
   }};
  window.__contextMenuEditor=owner;
  window.addEventListener('unload',owner.unload,{once:true});
@@ -168,7 +177,7 @@ export function startContextMenuEditor(window,{Services:services}={}){
     }finally{ownerWrite=false;}
    },
    onInventory:()=>services.obs?.notifyObservers(null,TOPIC)});
-  services.obs?.addObserver(ownerWriteObserver,OWNER_WRITE_TOPIC);
+  services.obs?.addObserver(ownerWriteObserver,OWNER_WRITE_TOPIC);ownerWriteObserved=true;
   offStore=store.subscribe(()=>{
    if(ownerWrite){ownerRaw=null;return;}
    // A user's edit ends every pending owner window. Another window's owner

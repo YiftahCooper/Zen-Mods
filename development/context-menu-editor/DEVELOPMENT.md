@@ -260,6 +260,18 @@ original nodes and removes the editor's owned containers and styles.
   now restores `scrollTop` last. With the user's 158-row layout and the other
   installed mods in a disposable profile, Save Link As, Copy Link and Copy Link
   to Highlight moved 152-218 px before and 0 px after.
+- **Settings page unload (0.2.7).** `unload` removed the owner-write
+  observer, which only browser windows add. On a settings page Gecko throws
+  `NS_ERROR_ILLEGAL_VALUE` for that. Sine calls every mod's unload from one
+  `beforeunload` loop (`removeListenersForDOM`) without a try, so the throw
+  ended the loop before Sine dropped this mod's entry for the page. Sine keys
+  that entry by window, and a reloaded page is the same window, so a Sine with
+  the duplicate-load guard (`#unloadListeners.get(path)?.has(window)`, the
+  #790 fix) skipped the editor on the reloaded page: Configure showed only
+  `preferences.json`'s label. Upstream `fb0bd4ca` has no guard and loaded it.
+  `unload` now runs every step in its own try and removes that observer only
+  if it was added. Reproduced natively with the user's Sine 2.3.4.1c: edit,
+  reload, Configure is empty on 0.2.6 and filled on 0.2.7.
 - **Unchanged owner rewrites (0.2.6).** Mods such as Open in Container Window
   and Define Word listen for `popupshowing` on `contentAreaContextMenu`, which
   also fires for every submenu opening (it bubbles), and re-set `hidden`,

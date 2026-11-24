@@ -247,3 +247,30 @@ test('B3: with a duplicate Share menu, the one after its layout anchor keeps the
  assert.equal(find(`${share}<menuitem id="a"></menuitem>${share}`),-1,'ambiguous duplicates stay unidentified');
  assert.equal(find(`<menu id="context_moveTabOptions"></menu>${share}`),1);
 });
+
+test('unloading a settings page never throws, so Sine loads the editor again after a reload',async t=>{
+ // Sine runs every mod's unload in one loop on beforeunload. 0.2.6 removed an
+ // observer the settings page never added; Gecko throws for that, the loop
+ // stopped, and the reloaded settings page skipped the editor (0.2.7).
+ const previous=globalThis.ChromeUtils;
+ globalThis.ChromeUtils={importESModule(){throw new Error('Sine is not available in unit tests.');}};
+ t.after(()=>{if(previous===undefined)delete globalThis.ChromeUtils;else globalThis.ChromeUtils=previous;});
+ const {services}=sharedServices(),notified=[];
+ // Gecko's observer service throws when asked to remove an observer it never had.
+ const added=new Set(),{addObserver:add,removeObserver:remove,notifyObservers:notify}=services.obs;
+ services.obs.addObserver=(observer,topic)=>{added.add(observer);add(observer,topic);};
+ services.obs.removeObserver=(observer,topic)=>{if(!added.has(observer))throw new Error('NS_ERROR_ILLEGAL_VALUE');remove(observer,topic);};
+ services.obs.notifyObservers=(subject,topic,data)=>{notified.push(topic);notify(subject,topic,data);};
+ const dom=makeDOM('<div></div>');dom.reconfigure({url:'about:preferences#sineMods'});
+ const owner=startContextMenuEditor(dom.window,{Services:services});
+ assert.equal(dom.window.__contextMenuEditor,owner);
+ assert.doesNotThrow(()=>owner.unload());
+ assert.equal(dom.window.__contextMenuEditor,undefined,'cleanup finished');
+ assert.ok(notified.includes('context-menu-editor-inventory'),'browser windows are told');
+ // A failing step does not stop the ones after it.
+ const second=makeDOM('<div></div>');second.reconfigure({url:'about:preferences'});
+ const other=startContextMenuEditor(second.window,{Services:services});
+ services.prefs.removeObserver=()=>{throw new Error('pref service gone');};
+ assert.doesNotThrow(()=>other.unload());assert.equal(second.window.__contextMenuEditor,undefined);
+ dom.window.close();second.window.close();
+});

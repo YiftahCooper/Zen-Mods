@@ -1,4 +1,4 @@
-// Context Menu Editor 0.2.6 — generated from src/entry.mjs.
+// Context Menu Editor 0.2.7 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -3777,7 +3777,7 @@
   var TOPIC = "context-menu-editor-inventory";
   var OWNER_WRITE_TOPIC = "context-menu-editor-owner-write";
   var BASE = "chrome://sine/content/context-menu-editor/";
-  var VERSION = true ? "0.2.6" : "dev";
+  var VERSION = true ? "0.2.7" : "dev";
   var loadSineMods = async () => ChromeUtils.importESModule("chrome://userscripts/content/core/utils.sys.mjs").default.getMods();
   function sharedMarkup(services, build) {
     try {
@@ -3810,7 +3810,7 @@
     window2.__contextMenuEditor?.unload();
     let disposed = false, offStore = () => {
     }, controller = null, bridge = null, sources = null, ownerSettings = null;
-    let ownerWrite = false, ownerRaw = null, markup = null, markupState = "pending", stylesheet = null;
+    let ownerWrite = false, ownerRaw = null, markup = null, markupState = "pending", stylesheet = null, ownerWriteObserved = false;
     const store = createStore(services.prefs, { onError: (problem) => window2.console?.warn?.("Context Menu Editor could not refresh settings.", problem) });
     const browserWindow = () => window2.browsingContext?.topChromeWindow || (/^chrome:/.test(window2.location.href) ? window2 : services.wm?.getMostRecentWindow("navigator:browser"));
     const icons = createIconService(window2, { baseURL: BASE, fetch: (...args) => browserWindow().fetch(...args) });
@@ -3830,20 +3830,37 @@
       store,
       /** Read-only provenance for diagnostics and native tests. */
       resolveSource: (node) => sources?.resolve(node) || null,
+      // Sine runs every mod's unload in one loop when a page unloads. A throw here
+      // stopped that loop before Sine forgot this mod for the page, so a reloaded
+      // settings page skipped loading it and Configure stayed empty (0.2.7). Every
+      // step runs, and none can throw out of unload.
       unload() {
         if (disposed) return;
         disposed = true;
-        offStore();
-        ownerSettings?.destroy();
-        bridge?.destroy();
-        controller?.destroy();
-        sources?.destroy();
-        store.destroy();
-        stylesheet?.remove();
-        services.obs?.removeObserver(ownerWriteObserver, OWNER_WRITE_TOPIC);
-        window2.removeEventListener("unload", owner.unload);
-        if (window2.__contextMenuEditor === owner) delete window2.__contextMenuEditor;
-        services.obs?.notifyObservers(null, TOPIC);
+        for (const step of [
+          () => offStore(),
+          () => ownerSettings?.destroy(),
+          () => bridge?.destroy(),
+          () => controller?.destroy(),
+          () => sources?.destroy(),
+          () => store.destroy(),
+          () => stylesheet?.remove(),
+          // Only browser windows add this observer; removing one never added throws.
+          () => {
+            if (ownerWriteObserved) services.obs?.removeObserver(ownerWriteObserver, OWNER_WRITE_TOPIC);
+          },
+          () => window2.removeEventListener("unload", owner.unload),
+          () => {
+            if (window2.__contextMenuEditor === owner) delete window2.__contextMenuEditor;
+          },
+          () => services.obs?.notifyObservers(null, TOPIC)
+        ]) {
+          try {
+            step();
+          } catch (problem) {
+            window2.console?.warn?.("Context Menu Editor could not finish one unload step.", problem);
+          }
+        }
       }
     };
     window2.__contextMenuEditor = owner;
@@ -3941,6 +3958,7 @@
         onInventory: () => services.obs?.notifyObservers(null, TOPIC)
       });
       services.obs?.addObserver(ownerWriteObserver, OWNER_WRITE_TOPIC);
+      ownerWriteObserved = true;
       offStore = store.subscribe(() => {
         if (ownerWrite) {
           ownerRaw = null;

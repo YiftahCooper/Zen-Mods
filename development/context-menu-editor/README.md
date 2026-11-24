@@ -1,7 +1,12 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.6.**
+an interactive Sine settings editor. **Version 0.2.7.**
+
+Version 0.2.7 fixes an empty settings dialog. After you reloaded Zen's
+settings page, opening Configure for this mod sometimes showed only "Choose a
+menu to edit." The editor's cleanup for the old page stopped with an error, and
+Sine then skipped loading the editor on the reloaded page.
 
 Version 0.2.6 fixes two problems that 0.2.4 and 0.2.5 left behind:
 
