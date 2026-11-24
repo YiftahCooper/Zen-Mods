@@ -256,6 +256,10 @@ original nodes and removes the editor's owned containers and styles.
 - **Sine updates.** Sine replaces a JS mod's files on update but does not rerun
   its scripts in open windows (it shows `sine-toast-2`, "restart your
   browser"). A controller fix reaches users only after a restart.
+  Sine offers an update only when `updatedAt` is later than the installed
+  copy's; it ignores `version`. 0.2.5 first shipped with 0.2.4's date and was
+  not offered. `tests/release-metadata.test.mjs` fails a version bump that
+  does not move `updatedAt` forward against the committed `theme.json`.
 - **Submenu first render (0.2.4).** Gecko renders a menu row's own parts
   (`img.menu-icon`, `label.menu-text`, `label.menu-accel` or
   `label.menu-highlightable-text`) the first time its popup opens, and clears
