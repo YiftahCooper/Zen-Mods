@@ -148,3 +148,17 @@ test('older code detection reads each browser window owner version',async()=>{
   assert.equal(olderCodeRunning(services([{__defineWord:{version:'0.3.4'}}])),true);
   assert.equal(olderCodeRunning({wm:{getEnumerator(){throw new Error('unavailable');}}}),true,'unknown window state keeps older actors');
 });
+
+test('context menu keeps actor geometry when raw selection text normalises to Gecko\'s trimmed menu text (0.3.6)',async()=>{
+  const h=fixture(),owner=h.service.acquire(),anchor={x:10,y:20,width:50,height:18};
+  // [raw actor text, Gecko SelectionUtils.trimSelection result]
+  const long='a '.repeat(200);
+  for(const [raw,cached] of [['word ','word'],['  two\n\tlines \r\n','two lines'],[long,'a '.repeat(75)],['x'.repeat(300),'x'.repeat(150)],[' '.repeat(100)+'b'.repeat(200),'b'.repeat(150)]]) {
+    h.frame.currentWindowGlobal.getActor=()=>({sendQuery:async()=>({rawText:raw,contextId:2,innerWindowId:20,anchor})});
+    const value=await owner.capture(h.window,{frameBrowsingContext:h.frame,selectionInfo:{text:cached}});
+    assert.equal(value.rawText,cached,'menu text stays authoritative');assert.deepEqual(value.anchor,anchor,JSON.stringify(raw.slice(0,20)));
+  }
+  h.frame.currentWindowGlobal.getActor=()=>({sendQuery:async()=>({rawText:'words ',contextId:2,innerWindowId:20,anchor})});
+  assert.equal((await owner.capture(h.window,{frameBrowsingContext:h.frame,selectionInfo:{text:'word'}})).anchor,null,'different text still rejects geometry');
+  owner.release();
+});

@@ -57,3 +57,41 @@ test('same-document and unrelated subframe location changes keep the popup; real
   for(const listener of n.listeners)listener.onLocationChange(n.w.gBrowser.selectedBrowser,{isTopLevel:true},null,null,0);
   assert(!n.visible,'top-level navigation closes the popup');assert(n.pending[0].args.signal.aborted);
 });
+
+test('an unexpected lookup rejection is logged with its provider in the browser console (0.3.6)',async t=>{
+  const h=fixture();t.after(()=>h.close());const warned=[],error=new TypeError('fixture parser failure');
+  h.w.console.warn=(...args)=>warned.push(args);h.deps.lookup.lookup=async()=>{throw error;};
+  await h.c.define();assert.equal(h.states.at(-1).outcome.status,'unavailable');
+  assert.equal(warned.length,1);assert.match(warned[0][0],/wiktionary-en/);assert.equal(warned[0][1],error);
+});
+
+test('Define sits after the native selection search item, ignores submenu openings and is removed on destroy (0.3.6)',t=>{
+  const dom=new JSDOM('<div id="contentAreaContextMenu"><div id="context-searchselect"></div><div id="context-searchselect-private"></div><div id="submenu"><div id="subpopup"></div></div></div>'),w=dom.window;
+  w.document.createXULElement=tag=>w.document.createElement(tag);
+  w.gBrowser={selectedBrowser:{},tabContainer:new w.EventTarget(),addTabsProgressListener(){},removeTabsProgressListener(){}};
+  const c=createController(w,{selection:{capture:async()=>null,isCurrent:()=>true,release(){}},settings:()=>({}),providers:new Map(),lookup:{},createPopup:()=>({show(){},render(){},close(){},destroy(){}})});
+  t.after(()=>{c.destroy();dom.window.close();});
+  const menu=w.document.getElementById('contentAreaContextMenu'),item=w.document.getElementById('define-word-menu');
+  assert.equal(w.document.getElementById('context-searchselect').nextElementSibling,item);
+  w.gContextMenu={selectionInfo:{text:'hello'},onPassword:false};menu.dispatchEvent(new w.Event('popupshowing'));
+  assert(!item.hidden);const label=item.getAttribute('label');assert.match(label,/hello/);
+  w.gContextMenu={selectionInfo:{text:''},onPassword:false};w.document.getElementById('subpopup').dispatchEvent(new w.Event('popupshowing',{bubbles:true}));
+  assert(!item.hidden,'a submenu opening must not hide Define');assert.equal(item.getAttribute('label'),label,'a submenu opening must not relabel Define');
+  c.destroy();assert.equal(w.document.getElementById('define-word-menu'),null);
+});
+
+test('typing never requests suggestions from keyed providers; a search still does, and keyless typing still suggests (0.3.6)',async t=>{
+  const h=fixture();t.after(()=>h.close());const suggested=[],timers=[];
+  h.deps.lookup.suggest=async args=>{suggested.push(args.providerId);return {status:'ok',suggestions:[]};};
+  h.deps.providers.set('keyed',{id:'keyed',language:'en',label:'Keyed',keyRequired:true});
+  h.deps.settings=()=>({englishProvider:'keyed',hebrewProvider:'wiktionary-he'});
+  h.w.setTimeout=callback=>{timers.push(callback);return timers.length;};
+  h.c.define();await tick();assert.deepEqual(suggested,['keyed'],'an explicit lookup may suggest');
+  h.callbacks.onQueryInput('brows');for(const callback of timers.splice(0))callback();await tick();
+  assert.deepEqual(suggested,['keyed'],'typing makes no keyed request');
+  h.callbacks.onSearch('browse');await tick();assert.deepEqual(suggested,['keyed','keyed']);
+  const k=fixture();t.after(()=>k.close());const free=[],pending=[];
+  k.deps.lookup.suggest=async args=>{free.push(args.providerId);return {status:'ok',suggestions:[]};};k.w.setTimeout=callback=>{pending.push(callback);return pending.length;};
+  k.c.define();await tick();free.length=0;k.callbacks.onQueryInput('brows');for(const callback of pending.splice(0))callback();await tick();
+  assert.deepEqual(free,['wiktionary-en'],'keyless providers keep typing suggestions');
+});

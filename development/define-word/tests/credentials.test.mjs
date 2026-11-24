@@ -39,3 +39,19 @@ test('recreating the mod credential service reads existing version-independent M
     for(const id of ['mw-collegiate','mw-learners'])assert.equal(await credentials.get(id),`fixture-${id}`);
   }
 });
+
+test('locked storage prompts to unlock only for an explicit lookup, at most once, and not over an open prompt (0.3.6)',async()=>{
+  let loggedIn=false,unlocks=0,prompts=0,result='cancel';
+  const manager={get isLoggedIn(){return loggedIn;},uiBusy:false,searchLoginsAsync:async()=>[{password:'fixture-only-key'}],addLoginAsync(){assert.fail('no writes');}};
+  const credentials=createCredentials(manager,fields=>fields,async()=>{unlocks++;if(result==='cancel')throw new Error('user cancelled');loggedIn=result==='unlock';});
+  const onUnlockPrompt=()=>prompts++;
+  await assert.rejects(credentials.get('mw-collegiate'),{message:'credential-unavailable'});await assert.rejects(credentials.set('mw-collegiate','fixture'),{message:'credential-unavailable'});await assert.rejects(credentials.remove('mw-collegiate'),{message:'credential-unavailable'});
+  assert.equal(unlocks,0,'reads without an explicit lookup and settings writes never prompt');
+  await assert.rejects(credentials.get('mw-collegiate',{onUnlockPrompt}),{message:'credential-unavailable'});assert.equal(unlocks,1);assert.equal(prompts,1);
+  result='still-locked';await assert.rejects(credentials.get('mw-collegiate',{onUnlockPrompt}),{message:'credential-unavailable'});assert.equal(unlocks,2,'one prompt per call');
+  manager.uiBusy=true;result='unlock';await assert.rejects(credentials.get('mw-collegiate',{onUnlockPrompt}),{message:'credential-unavailable'});assert.equal(unlocks,2,'never stacks a second prompt');
+  manager.uiBusy=false;assert.equal(await credentials.get('mw-collegiate',{onUnlockPrompt}),'fixture-only-key');assert.equal(unlocks,3);
+  assert.equal(await credentials.get('mw-collegiate',{onUnlockPrompt}),'fixture-only-key');assert.equal(unlocks,3,'an unlocked store does not prompt');
+  await assert.rejects(credentials.get('other',{onUnlockPrompt}));assert.equal(unlocks,3,'unknown providers never prompt');
+  loggedIn=false;await assert.rejects(credentials.get('mw-collegiate',{onUnlockPrompt:()=>false}),{message:'credential-unavailable'});assert.equal(unlocks,3,'an abandoned lookup does not prompt');
+});

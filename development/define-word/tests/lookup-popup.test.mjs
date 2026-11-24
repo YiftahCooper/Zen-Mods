@@ -43,7 +43,7 @@ test('a stalled Free API request becomes a visible timeout through the real look
   assert.doesNotMatch(result.textContent,/Looking up/);
   assert.match(result.textContent,/too long|timed out/i);
   assert.match(result.textContent,/retry|Enter/i);
-  assert.equal(window.document.querySelector('[role="combobox"]').value,'Hello');
+  assert.equal(window.document.querySelector('[role="combobox"]').value,'hello');
   respond=true;
   window.document.querySelector('.dw-search').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
   await tick();
@@ -72,9 +72,29 @@ test('a Merriam-Webster definition costs one request and still shows its matchin
   await controller.define();await tick();
   assert.equal(requests.length,1,'definition and suggestions share one request');assert.equal(reads,1,'one credential read per lookup');
   assert.match(window.document.querySelector('[data-result]').textContent,/a meaning/);
-  assert.deepEqual(options(),['Common Sense']);assert.match(window.document.querySelector('.dw-matches').textContent,/Matching dictionary entries/);
+  assert.deepEqual(options(),['Common sense']);assert.match(window.document.querySelector('.dw-matches').textContent,/Matching dictionary entries/);
   word='snese';await controller.define();await tick();
   assert.equal(requests.length,2);assert.equal(reads,2);
   assert.deepEqual(options(),['Sense','Snide'],'spelling suggestions come from the lookup response');
   assert.match(window.document.querySelector('.dw-matches').textContent,/Matching words/);
+});
+
+test('an Academy lookup makes one request and shows one deterministic list under one label (0.3.6)',async t=>{
+  const dom=new JSDOM('<div id="contentAreaContextMenu"></div><div id="mainPopupSet"></div>');
+  const window=dom.window;
+  window.document.createXULElement=tag=>{const node=window.document.createElement(tag);node.openPopup=()=>{};node.openPopupAtScreen=()=>{};node.hidePopup=()=>{};return node;};
+  window.gBrowser={selectedBrowser:window.document.body,tabContainer:new window.EventTarget(),addTabsProgressListener(){},removeTabsProgressListener(){}};
+  const row=(keyword,plain,definition)=>({keyword,keywordWithoutNikud:plain,ktiv_male:plain,title:`${keyword} (${plain})`,hagdarot:[definition],ItemTypeName:'AcItemShem'});
+  const requests=[];let rows=[row('מַחְשֵׁב','מחשב','כלי לעיבוד מידע'),row('מְחַשֵּׁב','מחשב','עושה חישוב')];
+  const lookup=createLookupService({providers,parseDocument:html=>new JSDOM(html).window.document,fetch:async url=>{requests.push(url);return Response.json(rows);}});
+  const controller=createController(window,{providers,lookup,settings:()=>({hebrewProvider:'academy-he',textSize:14}),selection:{capture:async()=>({rawText:'מחשב'}),isCurrent:()=>true,release(){}}});
+  t.after(()=>{controller.destroy();window.close();});
+  const options=()=>[...window.document.querySelectorAll('#dw-matches [role=option]')].map(node=>node.textContent),label=()=>window.document.querySelector('.dw-matches p').textContent;
+  await controller.define();await tick();
+  assert.equal(requests.length,1,'definition and suggestions share one Academy request');
+  assert.match(window.document.querySelector('[data-result]').textContent,/כלי לעיבוד מידע/);
+  assert.deepEqual(options(),['מְחַשֵּׁב']);assert.equal(label(),'Matching dictionary entries');
+  rows=[row('מַחְשֵׁבָה','מחשבה','')];await controller.define();await tick();
+  assert.equal(requests.length,2,'a no-result lookup is also one request');
+  assert.deepEqual(options(),['מַחְשֵׁבָה']);assert.equal(label(),'Matching dictionary entries','one label for every Academy list');
 });

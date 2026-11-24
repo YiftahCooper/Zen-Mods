@@ -162,3 +162,14 @@ test('HTTP only permits fixed HTTPS dictionary hosts and sanitizes non-Error fai
   }
   await assert.rejects(requestJson('https://en.wiktionary.org/w/api.php',{fetch:()=>Promise.reject(null)}),e=>e.code==='unavailable');
 });
+
+test('keyed requests bypass the HTTP cache and keep the safety options; keyless requests stay cacheable (0.3.6)',async()=>{
+  const seen=[];const fetch=async(url,options)=>{seen.push({url,options});return Response.json(url.includes('rapidapi')?{results:[]}:[]);};
+  await providers.get('mw-collegiate').lookupWithSuggestions({query:'sense',key:'fixture-only-key',fetch});
+  await providers.get('lexicala-he').lookup({query:'בית',key:'fixture-only-key',fetch});
+  await providers.get('free-en').lookup({query:'sense',fetch});
+  const [mw,lexicala,free]=seen;
+  assert.match(mw.url,/key=fixture-only-key/);
+  for(const {options} of [mw,lexicala]){assert.equal(options.cache,'no-store');assert.equal(options.credentials,'omit');assert.equal(options.redirect,'error');assert.equal(options.referrerPolicy,'no-referrer');}
+  assert.equal(free.options.cache,undefined);
+});

@@ -1,4 +1,4 @@
-import {sanitizeSelectionAnchor} from '../src/selection.sys.mjs?v=0.3.5';
+import {sanitizeSelectionAnchor} from '../src/selection.sys.mjs?v=0.3.6';
 
 export class DefineWordChild extends JSWindowActorChild {
   async receiveMessage(message) {
@@ -24,4 +24,4 @@ export class DefineWordChild extends JSWindowActorChild {
   }
 }
 // build.mjs stamps the import URL and the release actor name; Gecko looks up `${name}Child`.
-export {DefineWordChild as DefineWordV0_3_5Child};
+export {DefineWordChild as DefineWordV0_3_6Child};

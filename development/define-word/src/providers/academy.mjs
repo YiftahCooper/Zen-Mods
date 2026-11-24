@@ -28,4 +28,7 @@ export function parseAcademyHebrew(data,query,parseDocument){
 // The public search endpoint accepts unpointed spelling, even for vocalized
 // entries. Keep the original query for exact homograph selection in the parser.
 async function search(options){return requestJson(`https://kalanit.hebrew-academy.org.il/api/Ac/?${new URLSearchParams({SearchString:unpointed(options.query)})}`,options);}
-export const academyHebrew={id:'academy-he',label:'האקדמיה ללשון העברית',language:'he',keyRequired:false,supportsFallback:false,suggestionsLabel:'Dictionary entries',async suggest(options){const data=await search(options);return data===null?[]:candidates(rows(data));},async lookup(options){const data=await search(options);return data===null?null:parseAcademyHebrew(data,options.query,options.parseDocument);}};
+export const academyHebrew={id:'academy-he',label:'האקדמיה ללשון העברית',language:'he',keyRequired:false,supportsFallback:false,suggestionsLabel:'Matching dictionary entries',async suggest(options){const data=await search(options);return data===null?[]:candidates(rows(data));},async lookup(options){const data=await search(options);return data===null?null:parseAcademyHebrew(data,options.query,options.parseDocument);},
+  // Lookup and suggestions use the same search URL. One request answers both,
+  // so a slower parallel suggest cannot replace the list; one label (0.3.6).
+  async lookupWithSuggestions(options){const data=await search(options);return data===null?{definition:null,suggestions:[]}:{definition:parseAcademyHebrew(data,options.query,options.parseDocument),suggestions:candidates(rows(data))};}};

@@ -4,7 +4,9 @@ import {createPopupPositioner} from './position.mjs';
 import {normalizeTextSize} from './settings.mjs';
 const hosts=['en.wiktionary.org','he.wiktionary.org','dictionaryapi.dev','www.merriam-webster.com','creativecommons.org','lexicala.com','hebrew-academy.org.il','milog.co.il','www.milog.co.il'];
 const wordKey=value=>String(value||'').normalize('NFC').trim().toLocaleLowerCase('en');
-const displayWord=(value,language)=>language==='en'?String(value||'').toLocaleLowerCase('en').replace(/(^|[\s-])(\p{L})/gu,(_m,space,letter)=>space+letter.toLocaleUpperCase('en')):String(value||'');
+// Keep user and dictionary casing ("DNA", "iPhone"). Display may only capitalise
+// the first letter of an entirely lowercase English word (0.3.6).
+const displayWord=(value,language)=>{const text=String(value||'');return language==='en'&&text===text.toLocaleLowerCase('en')?text.replace(/^\p{L}/u,letter=>letter.toLocaleUpperCase('en')):text;};
 const messages={empty:'Enter an English or Hebrew word.',unsupported:'Enter an English or Hebrew word.','too-long':'Enter a word or short phrase (up to 100 characters).',loading:'Looking up…','no-result':'No definition found. Try a matching word below the search field.','missing-key':'Add your dictionary API key in the mod’s Configure settings.','credential-unavailable':'Credential storage is unavailable or locked. Unlock it and try again.','unauthorized':'The dictionary rejected the API key. Check or replace it in Configure.','access-denied':'Access was denied. Check that your key has an active subscription to this dictionary.','rate-limit':'This dictionary’s request limit has been reached.',timeout:'The dictionary took too long to respond. Press Enter to retry, or choose another dictionary.',unavailable:'The dictionary is currently unavailable. Press Enter to retry, or choose another.'};
 export function createPopup(window,callbacks){
   const {document}=window;
@@ -26,10 +28,10 @@ export function createPopup(window,callbacks){
   const positioner=createPopupPositioner(window,{panel,shell,header:bar,isOpen:()=>active});
   const resizer=createPopupResizer(window,{panel,shell,handle:resizeHandle,handles,isOpen:()=>active,readSize:callbacks.readSize,onSizeChange:callbacks.onSizeChange,onPositionChange:positioner.setPosition});
   function clearMatches(){matches.hidden=true;list.replaceChildren();candidates=[];selected=-1;query.setAttribute('aria-expanded','false');query.removeAttribute('aria-activedescendant');}
-  // Display casing is presentation only: "may" and "May" can name different
-  // dictionary entries. Real input edits replace the underlying query text.
-  function setQuery(value,language){queryText=String(value||'');query.value=displayWord(queryText,language);}
-  function choose(word){setQuery(word,/\p{Script=Hebrew}/u.test(word)?'he':'en');clearMatches();callbacks.onSearch?.(word);query.focus();}
+  // "may" and "May" can name different dictionary entries. The search box shows
+  // the exact query, so editing it cannot re-case the search (0.3.6).
+  function setQuery(value){queryText=String(value||'');query.value=queryText;}
+  function choose(word){setQuery(word);clearMatches();callbacks.onSearch?.(word);query.focus();}
   function setTextSize(size=14){shell.style.setProperty('--dw-text-size',`${normalizeTextSize(size)}px`);}
   function chooseProviders(term,providerId,providers){provider.replaceChildren();for(const p of providers){const option=el('option',p.label+(p.keyRequired?' · API key':''));option.value=p.id;provider.append(option);}provider.value=providerId;provider.disabled=!providers.length;}
   function clearResult(){headword.textContent='';headword.hidden=true;senses.replaceChildren();attribution.replaceChildren();sourceUrl=null;source.hidden=true;}
@@ -56,7 +58,7 @@ export function createPopup(window,callbacks){
       for(const [index,item] of candidates.entries()){const li=el('li',displayWord(item.word,item.language));li.id=`dw-match-${index}`;li.setAttribute('role','option');li.setAttribute('aria-selected','false');li.dir=item.language==='he'?'rtl':'ltr';li.lang=item.language||'en';li.addEventListener('mousedown',event=>event.preventDefault());li.addEventListener('click',()=>choose(item.word));list.append(li);}
     },
     render({term,providerId,providers,outcome,textSize}){
-      const original=String(term.original||'');if(outcome.status==='loading'||queryText!==original){setQuery(original,term.language);clearMatches();}
+      const original=String(term.original||'');if(outcome.status==='loading'||queryText!==original){setQuery(original);clearMatches();}
       setTextSize(textSize);chooseProviders(term,providerId,providers);
       result.dir=term.language==='he'?'rtl':'ltr';result.lang=term.language||'en';word.textContent=displayWord(term.original,term.language)||'Define';clearResult();
       status.textContent=messages[outcome.status]||'';status.dir='ltr';status.lang='en';

@@ -87,3 +87,43 @@ test('a Merriam-Webster lookup derives its definition and suggestions from one k
     assert.deepEqual(urls.map(u=>u.pathname.split('/').at(-1)),['Snese','snese']);assert.equal(reads,1);
   }
 });
+
+test('unexpected provider failures reach the console with the provider id; HTTP statuses, aborts and timeouts stay quiet (0.3.6)',async()=>{
+  const logged=[],log={warn:(...args)=>logged.push(args)};
+  const parser=new TypeError('parser broke');
+  let service=createLookupService({providers:new Map([['p1',{language:'he',lookup:async()=>{throw parser;}}]]),log});
+  assert.deepEqual(await service.lookup({term,providerId:'p1'}),{status:'unavailable'},'the user still sees unavailable');
+  assert.equal(logged.length,1);assert.match(logged[0][0],/p1/);assert.equal(logged[0][1],parser);
+  // A malformed JSON body through the real HTTP path logs its parse error, not the URL.
+  logged.length=0;service=createLookupService({providers,log,fetch:async()=>new Response('<html>not json')});
+  assert.equal((await service.lookup({term:{original:'hello',query:'hello',language:'en'},providerId:'free-en'})).status,'unavailable');
+  assert.equal(logged.length,1);assert.match(logged[0][0],/free-en/);assert(logged[0][1] instanceof SyntaxError);
+  logged.length=0;service=createLookupService({providers,log,fetch:async()=>new Response('Origin connection timed out',{status:522})});
+  assert.equal((await service.lookup({term:{original:'hello',query:'hello',language:'en'},providerId:'free-en'})).status,'unavailable');
+  assert.equal(logged.length,0,'an HTTP status error is not logged');
+  // Aborts and timeouts are not logged even when the provider rejects afterwards.
+  let reject;service=createLookupService({providers:new Map([['p1',{language:'he',lookup:()=>new Promise((_r,j)=>reject=j)}]]),log});
+  const controller=new AbortController(),cancelled=service.lookup({term,providerId:'p1',signal:controller.signal});await Promise.resolve();controller.abort();reject(new Error('aborted fetch'));
+  assert.equal((await cancelled).status,'cancelled');
+  let timeout;service=createLookupService({providers:new Map([['p1',{language:'he',lookup:()=>new Promise((_r,j)=>reject=j)}]]),log,timers:{setTimeout(f){timeout=f;return 1;},clearTimeout(){}}});
+  const timed=service.lookup({term,providerId:'p1'});await Promise.resolve();timeout();reject(new Error('aborted fetch'));
+  assert.equal((await timed).status,'timeout');await new Promise(r=>setImmediate(r));assert.equal(logged.length,0);
+});
+
+test('a user-started lookup unlocks a locked primary password once and pauses its deadline; suggestions never prompt (0.3.6)',async()=>{
+  const {createCredentials}=await import('../src/credentials.sys.mjs');
+  let loggedIn=false,unlocks=0,cancel=false,next=1,clearedDuringPrompt=false;const active=new Set();
+  const manager={get isLoggedIn(){return loggedIn;},uiBusy:false,searchLoginsAsync:async()=>[{password:'fixture-only-key'}]};
+  const credentials=createCredentials(manager,fields=>fields,async()=>{unlocks++;clearedDuringPrompt=active.size===0;if(cancel)throw new Error('cancelled');loggedIn=true;});
+  const timers={setTimeout(){const id=next++;active.add(id);return id;},clearTimeout(id){active.delete(id);}};
+  const urls=[];const service=createLookupService({providers,credentials,timers,fetch:async url=>{urls.push(url);return Response.json([{meta:{id:'sense:1'},hwi:{hw:'sense'},fl:'noun',shortdef:['a meaning']}]);}});
+  const english={original:'sense',query:'sense',language:'en'};
+  assert.deepEqual(await service.suggest({term:english,providerId:'mw-collegiate'}),{status:'credential-unavailable'});assert.equal(unlocks,0,'typing suggestions must not prompt');
+  cancel=true;assert.deepEqual(await service.lookup({term:english,providerId:'mw-collegiate'}),{status:'credential-unavailable'});assert.equal(unlocks,1,'one prompt per lookup; cancel keeps the locked message');assert.equal(urls.length,0);
+  cancel=false;assert.equal((await service.lookup({term:english,providerId:'mw-collegiate'})).status,'ok');assert.equal(unlocks,2);assert.equal(urls.length,1);
+  assert(clearedDuringPrompt,'the ten-second deadline is paused while the prompt is open');assert.equal(active.size,0,'the re-armed deadline is cleared afterwards');
+  assert.equal((await service.lookup({term:english,providerId:'mw-collegiate'})).status,'ok');assert.equal(unlocks,2,'no prompt once unlocked');
+  loggedIn=false;let ready;manager.initializationPromise=new Promise(resolve=>ready=resolve);const controller=new AbortController();
+  const abandoned=service.lookup({term:english,providerId:'mw-collegiate',signal:controller.signal});await Promise.resolve();controller.abort();ready();
+  assert.equal((await abandoned).status,'cancelled');await new Promise(resolve=>setImmediate(resolve));assert.equal(unlocks,2,'an abandoned lookup never prompts');
+});

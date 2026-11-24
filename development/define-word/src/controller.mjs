@@ -2,7 +2,9 @@ import {normalizeTerm} from './normalize.mjs';
 import {createPopup as defaultPopup} from './popup.mjs';
 export function createController(window,deps) {
   const {document}=window,menu=document.getElementById('contentAreaContextMenu');
-  const item=document.createXULElement('menuitem');item.id='define-word-menu';item.hidden=true;item.setAttribute('label','Define');menu?.append(item);
+  const item=document.createXULElement('menuitem');item.id='define-word-menu';item.hidden=true;item.setAttribute('label','Define');
+  // Sit beside the native selection search item when it exists (0.3.6).
+  const searchSelect=document.getElementById('context-searchselect');if(menu&&searchSelect?.parentNode===menu)searchSelect.after(item);else menu?.append(item);
   function updateAppearance(settings=deps.settings()){
     const visible=settings.showIcon!==false;item.classList.toggle('menuitem-iconic',visible);
     if(visible)item.setAttribute('image','chrome://sine/content/define-word/assets/define-word.svg');else item.removeAttribute('image');
@@ -14,6 +16,8 @@ export function createController(window,deps) {
   // Tab and location events are constant. With no popup open and no invocation
   // capturing its selection, closing would only repeat completed cleanup.
   const idle=()=>!opened&&capturing===null;
+  // The outcome stays 'unavailable'; the Browser Console gets the cause (0.3.6).
+  const warn=(providerId,error)=>window.console?.warn?.(`[Define Word] ${providerId} lookup failed:`,error);
   function cancel(){generation++;pending?.abort();suggestionsPending?.abort();pending=suggestionsPending=null;window.clearTimeout(debounce);}
   function close({restoreFocus=false}={}){cancel();opened=false;popup.close({restoreFocus:restoreFocus&&current()});}
   const popup=(deps.createPopup||defaultPopup)(window,{
@@ -22,7 +26,10 @@ export function createController(window,deps) {
     onSizeChange:deps.savePopupSize,
     onProviderChange(id,query=lastTerm?.original){if(!lastTerm||!current()){close();return;}const term=normalizeTerm(query||'');if(deps.providers.get(id)?.language!==term.language)return;deps.saveProvider?.(term.language,id);void run(term,id);},
     onSearch(query){if(!current()){close();return;}const term=normalizeTerm(query);void run(term,chooseProvider(term.language));},
-    onQueryInput(query){if(!current()){close();return;}cancel();const token=generation,term=normalizeTerm(query),providerId=chooseProvider(term.language);popup.editing?.({term,providerId,providers:available(term.language)});debounce=window.setTimeout(()=>{void suggest(term,providerId,token);},350);},
+    onQueryInput(query){if(!current()){close();return;}cancel();const token=generation,term=normalizeTerm(query),providerId=chooseProvider(term.language);popup.editing?.({term,providerId,providers:available(term.language)});
+      // Keyed providers spend a quota request and a credential read per call:
+      // they suggest only when a search runs, never while typing (0.3.6).
+      if(!deps.providers.get(providerId)?.keyRequired)debounce=window.setTimeout(()=>{void suggest(term,providerId,token);},350);},
   });
   updateAppearance();
   const defaultProvider=language=>language==='he'?deps.settings().hebrewProvider:deps.settings().englishProvider;
@@ -30,7 +37,7 @@ export function createController(window,deps) {
   async function suggest(term,providerId,token){
     if(term.status||!term.language||!deps.lookup.suggest)return;
     suggestionsPending?.abort();const operation=new AbortController();suggestionsPending=operation;
-    let outcome;try{outcome=await deps.lookup.suggest({term,providerId,signal:operation.signal});}catch{outcome={status:'unavailable'};}
+    let outcome;try{outcome=await deps.lookup.suggest({term,providerId,signal:operation.signal});}catch(error){if(token===generation&&!operation.signal.aborted)warn(providerId,error);outcome={status:'unavailable'};}
     if(disposed||token!==generation||operation.signal.aborted||outcome?.status==='cancelled')return;
     if(!current()){close();return;}popup.renderSuggestions?.({outcome:outcome||{status:'unavailable'},label:deps.providers.get(providerId)?.suggestionsLabel||'Matching words'});
   }
@@ -43,11 +50,11 @@ export function createController(window,deps) {
     popup.show(lastSelection?.anchor);
     opened=true;
     if(term.status || !term.language)return;
-    // Merriam-Webster serves definitions and suggestions from one endpoint; its
+    // Merriam-Webster and the Academy serve definitions and suggestions from one endpoint; its
     // lookup outcome carries both, so a parallel suggest would repeat the request.
     const provider=deps.providers.get(providerId),shared=typeof provider?.lookupWithSuggestions==='function';
     if(!shared)void suggest(term,providerId,token);
-    let outcome;try{outcome=await deps.lookup.lookup({term,providerId,signal:pending.signal});}catch{outcome={status:'unavailable'};}
+    let outcome;try{outcome=await deps.lookup.lookup({term,providerId,signal:pending.signal});}catch(error){if(token===generation&&!disposed)warn(providerId,error);outcome={status:'unavailable'};}
     outcome ||= {status:'unavailable'};
     if(disposed || token!==generation || outcome.status==='cancelled')return;
     if(!current()){close();return;}
@@ -68,7 +75,9 @@ export function createController(window,deps) {
     if(!contextMenu&&!selection?.rawText?.trim()&&repeat&&deps.selection.isCurrent(window,repeat))selection=repeat;
     lastSelection=selection;const term=normalizeTerm(selection?.rawText||'');await run(term,defaultProvider(term.language),token);
   }
-  function showing(){const context=window.gContextMenu;const value=context?.selectionInfo?.text||'';item.hidden=!value.trim()||!!context?.onPassword;item.setAttribute('label',`Define “${value.slice(0,36)}${value.length>36?'…':''}”`);}
+  // Submenu popupshowing events bubble here too; only the context menu's own
+  // opening may rewrite this item (0.3.6).
+  function showing(event){if(event?.target!==menu)return;const context=window.gContextMenu;const value=context?.selectionInfo?.text||'';item.hidden=!value.trim()||!!context?.onPassword;item.setAttribute('label',`Define “${value.slice(0,36)}${value.length>36?'…':''}”`);}
   const command=()=>{const context=window.gContextMenu;if(!context||context.onPassword)return;
     // Use Gecko's native context-menu point only as a fallback when the selection
     // actor is unavailable. The native coordinates are device pixels.

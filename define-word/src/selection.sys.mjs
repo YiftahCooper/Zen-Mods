@@ -1,7 +1,7 @@
 const BASE = 'chrome://sine/content/define-word/';
 // Stamped from package.json by build.mjs. Gecko caches modules by URL for the
 // session, so module URLs and the actor name change with every release.
-export const VERSION='0.3.5';
+export const VERSION='0.3.6';
 export const ACTOR_NAME=`DefineWordV${VERSION.replace(/\./g,'_')}`;
 // Actor names of earlier releases. Later releases record theirs in REGISTERED.
 const LEGACY_ACTOR_NAMES=['DefineWord','DefineWordV030','DefineWordV031'];
@@ -20,6 +20,16 @@ export function sanitizeSelectionAnchor(value) {
   if(!value || !['x','y','width','height'].every(key=>Number.isFinite(value[key]) && Math.abs(value[key])<=100000)) return null;
   if(value.width<=0 || value.height<=0) return null;
   return {x:value.x,y:value.y,width:value.width,height:value.height};
+}
+// Port of Gecko's SelectionUtils.trimSelection, which produces the context
+// menu's selectionInfo.text. The actor sends raw selection text ("word " after
+// a Windows double-click, line breaks, long text), so compare it only after the
+// same normalisation or the accurate geometry is never used (0.3.6).
+export function trimSelection(text,maxLength=150) {
+  const max=Math.min(maxLength||150,text.length);
+  if(text.length>max)text=new RegExp(`^(?:\\s*.){0,${max}}`).exec(text)[0];
+  text=text.trim().replace(/\s+/g,' ');
+  return text.length>max?text.substr(0,max):text;
 }
 
 async function menuGeometry(window,global) {
@@ -78,7 +88,7 @@ export function createSelectionService({chrome,services,registered=new Set(),old
           // actor reply may enrich its geometry, but cannot replace its text.
           const cachedText=menu?.selectionInfo?.text || '';
           const reply=menu ? await menuGeometry(window,global) : await global.getActor(ACTOR_NAME).sendQuery('DefineWord:GetSelection');
-          const matchingReply=reply && reply.contextId===context.id && reply.innerWindowId===global.innerWindowId && reply.rawText===cachedText;
+          const matchingReply=reply && reply.contextId===context.id && reply.innerWindowId===global.innerWindowId && typeof reply.rawText==='string' && trimSelection(reply.rawText)===cachedText;
           const result=menu ? {rawText:cachedText,contextId:context.id,innerWindowId:global.innerWindowId,anchor:matchingReply?reply.anchor:null} : reply;
           if(released || context.isDiscarded || context.currentWindowGlobal!==global || top.currentWindowGlobal!==topGlobal || window.gBrowser.selectedBrowser!==browser) return null;
           if(!result || result.contextId!==context.id || result.innerWindowId!==global.innerWindowId || typeof result.rawText!=='string') return null;

@@ -74,3 +74,32 @@ test('settings observers cover only prefs that change live window state',async()
   for(const name of ['popup-size','english','hebrew'])notify(`extension.define-word.${name}`);assert.equal(scans,1);
   w.__defineWord.unload();assert.equal(registrations.length,0);dom.window.close();
 });
+
+function bundleWindow(extraHtml=''){
+  const dom=new JSDOM(`<div id="mainPopupSet"></div><div id="contentAreaContextMenu"></div><div id="browser"></div>${extraHtml}`,{runScripts:'outside-only'}),w=dom.window;
+  Object.defineProperty(w.document,'readyState',{value:'complete',configurable:true});
+  w.document.createXULElement=tag=>{const n=w.document.createElement(tag);n.openPopup=()=>{};n.hidePopup=()=>{};return n;};
+  const observers=[],warnings=[],errors=[];
+  w.Services={prefs:{getStringPref:(k,d)=>d,getBoolPref:(k,d)=>d,addObserver:(name,observer)=>observers.push({name,observer}),removeObserver(){}},obs:{addObserver(){},removeObserver(){}},logins:{isLoggedIn:true},focus:{}};
+  w.ChromeUtils={importESModule:()=>({acquireSelectionService:()=>({capture:async()=>null,release(){}})})};
+  w.gBrowser={selectedBrowser:w.document.getElementById('browser'),tabContainer:new w.EventTarget(),addTabsProgressListener(){},removeTabsProgressListener(){}};w.fetch=()=>{throw Error('No request expected');};
+  w.console.warn=(...args)=>warnings.push(args);w.console.error=(...args)=>errors.push(args);
+  return {dom,w,observers,warnings,errors};
+}
+
+test('a conflicting shortcut is reported once in the browser console instead of failing silently (0.3.6)',async()=>{
+  const source=await readFile(new URL('../define-word.uc.js',import.meta.url),'utf8');
+  const h=bundleWindow('<key id="existing" key="d" modifiers="control,alt"></key>');h.w.eval(source);
+  assert.equal(h.warnings.length,1);assert.match(String(h.warnings[0][0]),/inactive[\s\S]*existing/);
+  for(const {name,observer} of h.observers)if(name.endsWith('shortcut'))observer.observe(null,'nsPref:changed',name);
+  h.w.dispatchEvent(new h.w.KeyboardEvent('keydown',{code:'KeyD',ctrlKey:true,altKey:true}));
+  assert.equal(h.warnings.length,1,'the same conflict is reported once');
+  h.w.__defineWord.unload();h.dom.window.close();
+});
+
+test('a failed browser integration logs its cause (0.3.6)',async()=>{
+  const source=await readFile(new URL('../define-word.uc.js',import.meta.url),'utf8');
+  const h=bundleWindow(),failure=new Error('fixture initialization failure');h.w.ChromeUtils.importESModule=()=>{throw failure;};h.w.eval(source);
+  assert.equal(h.errors.length,1);assert.match(String(h.errors[0][0]),/Could not initialize/);assert.equal(h.errors[0][1],failure);
+  h.dom.window.close();
+});

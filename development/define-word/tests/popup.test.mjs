@@ -11,13 +11,13 @@ function queryFixture(t){
   return {w,popup,searches,changes,inputs,input:w.document.querySelector('[role=combobox]'),provider:w.document.querySelector('select'),submit(){w.document.querySelector('form').dispatchEvent(new w.Event('submit',{cancelable:true}));},change(){const provider=w.document.querySelector('select');provider.value='free-en';provider.dispatchEvent(new w.Event('change'));}};
 }
 
-test('Search preserves original case beneath an unedited title-cased input',t=>{
-  const h=queryFixture(t);assert.equal(h.input.value,'May');h.submit();
+test('Search preserves the original case shown in an unedited input',t=>{
+  const h=queryFixture(t);assert.equal(h.input.value,'may');h.submit();
   assert.deepEqual(h.searches,['may'],'visual title casing must not change the modal verb into the month');
 });
 
-test('dictionary changes preserve original case beneath an unedited title-cased input',t=>{
-  const h=queryFixture(t);assert.equal(h.input.value,'May');h.change();
+test('dictionary changes preserve the original case shown in an unedited input',t=>{
+  const h=queryFixture(t);assert.equal(h.input.value,'may');h.change();
   assert.deepEqual(h.changes,[{id:'free-en',value:'may'}]);
 });
 
@@ -36,23 +36,23 @@ test('suggestion selection preserves the chosen spelling for later Search and di
   }
 });
 
-test('suggestions deduplicate case variants and title-case display without altering provider queries or niqqud',()=>{
+test('suggestions deduplicate case variants and capitalise display without altering provider queries or niqqud',()=>{
   const dom=new JSDOM(''),w=dom.window,queries=[];
   w.document.createXULElement=t=>w.document.createElement(t);
   const popup=createPopup(w,{onSearch:q=>queries.push(q)});
   popup.renderSuggestions({label:'Matches',outcome:{status:'ok',suggestions:[{word:'define',language:'en'},{word:'Define',language:'en'},{word:'DEFINE',language:'en'},{word:'web browser',language:'en'},{word:'שָׁלוֹם',language:'he'}]}});
   const options=[...w.document.querySelectorAll('[role=option]')];
-  assert.deepEqual(options.map(n=>n.textContent),['Define','Web Browser','שָׁלוֹם']);
+  assert.deepEqual(options.map(n=>n.textContent),['Define','Web browser','שָׁלוֹם']);
   options[0].click();assert.deepEqual(queries,['define']);
   assert(![...w.document.querySelectorAll('button')].some(n=>/settings/i.test(n.textContent)));
   popup.destroy();dom.window.close();
 });
 
-test('English result has one title-cased heading without redundant lowercase-entry explanation',()=>{
+test('English result keeps the selected casing in one heading without redundant lowercase-entry explanation',()=>{
   const dom=new JSDOM(''),w=dom.window;w.document.createXULElement=t=>w.document.createElement(t);
   const popup=createPopup(w,{});
   popup.render({term:{original:'DEFINE',language:'en'},providers:[],outcome:{status:'ok',normalizedRetry:true,definition:{headword:'define',language:'en',senses:[],attribution:{label:'Dictionary',url:'https://en.wiktionary.org/wiki/define'}}}});
-  assert.equal(w.document.querySelector('h2').textContent,'Define');
+  assert.equal(w.document.querySelector('h2').textContent,'DEFINE');
   assert(w.document.querySelector('[data-headword]').hidden);
   assert(!w.document.querySelector('[data-result]').textContent.includes('lowercase'));
   popup.destroy();dom.window.close();
@@ -103,4 +103,19 @@ test('missing Hebrew entry names the dictionary without suggesting a nonexistent
   const dom=new JSDOM(''),w=dom.window;w.document.createXULElement=t=>{const n=w.document.createElement(t);n.openPopup=()=>{};n.hidePopup=()=>{};return n;};
   const popup=createPopup(w,{onClose(){}});popup.render({term:{original:'מדריך',language:'he'},providerId:'wiktionary-he',providers:[{id:'wiktionary-he',label:'ויקימילון'}],outcome:{status:'no-result'}});
   const text=w.document.querySelector('[data-result]').textContent;assert(text.includes('ויקימילון'));assert(!text.includes('Try another dictionary'));assert(text.includes('מדריך'));popup.destroy();dom.window.close();
+});
+
+test('search box and query keep user and dictionary casing; display only capitalises an all-lowercase word (0.3.6)',t=>{
+  const dom=new JSDOM(''),w=dom.window,searches=[];w.document.createXULElement=tag=>w.document.createElement(tag);
+  const popup=createPopup(w,{onSearch:value=>searches.push(value),onQueryInput(){}});t.after(()=>{popup.destroy();dom.window.close();});
+  const input=w.document.querySelector('[role=combobox]'),heading=()=>w.document.querySelector('h2').textContent;
+  const render=original=>popup.render({term:{original,language:'en'},providerId:'wiktionary-en',providers:[],outcome:{status:'loading'}});
+  for(const [original,shown] of [['DNA','DNA'],['iPhone','iPhone'],['McDonald','McDonald'],['dna','Dna'],['web browser','Web browser']]){
+    render(original);assert.equal(input.value,original,'the search box shows the exact query');assert.equal(heading(),shown);
+  }
+  render('iPhone');input.value+='s';input.dispatchEvent(new w.Event('input'));w.document.querySelector('form').dispatchEvent(new w.Event('submit',{cancelable:true}));
+  assert.deepEqual(searches,['iPhones'],'editing must not re-case the search');
+  popup.renderSuggestions({label:'Matching words',outcome:{status:'ok',suggestions:[{word:'DNA',language:'en'},{word:'iOS',language:'en'}]}});
+  const options=[...w.document.querySelectorAll('[role=option]')];assert.deepEqual(options.map(n=>n.textContent),['DNA','iOS']);
+  options[1].click();assert.equal(input.value,'iOS');assert.equal(searches.at(-1),'iOS');
 });

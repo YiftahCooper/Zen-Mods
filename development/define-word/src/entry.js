@@ -32,6 +32,10 @@ function start(){
     const credentials=createCredentials(Services.logins,fields=>{
       const login=Cc['@mozilla.org/login-manager/loginInfo;1'].createInstance(Ci.nsILoginInfo);
       login.init(fields.origin,fields.formActionOrigin,fields.httpRealm,fields.username,fields.password,fields.usernameField,fields.passwordField);return login;
+    },async()=>{
+      // Gecko's own unlock: logging in to the internal key token shows the
+      // standard primary-password prompt and throws on cancel (0.3.6).
+      await Cc['@mozilla.org/security/internalkeytoken;1'].createInstance(Ci.nsIPKCS11Token).login();
     });
     if(/^about:(preferences|settings)(?:[?#]|$)/.test(window.location.href)){
       settingsBridge=createSineSettingsBridge(window,{prefs:Services.prefs,credentials,
@@ -41,20 +45,23 @@ function start(){
     }
     const {acquireSelectionService}=ChromeUtils.importESModule(`chrome://sine/content/define-word/src/selection.sys.mjs?v=${VERSION}`);
     selection=acquireSelectionService();
-    const lookup=createLookupService({providers,credentials,fetch:window.fetch.bind(window),timers:window,
+    const lookup=createLookupService({providers,credentials,fetch:window.fetch.bind(window),timers:window,log:window.console,
       parseDocument:html=>new window.DOMParser().parseFromString('<meta http-equiv="Content-Security-Policy" content="default-src \'none\'">'+html,'text/html')});
     controller=createController(window,{providers,selection,lookup,settings:()=>readSettings(Services.prefs),
       saveProvider(language,id){Services.prefs.setStringPref(`${PREF}${language==='he'?'hebrew':'english'}`,id);},
       loadPopupSize(){try{return JSON.parse(Services.prefs.getStringPref(`${PREF}popup-size`,''));}catch{return null;}},
       savePopupSize(size){Services.prefs.setStringPref(`${PREF}popup-size`,size?JSON.stringify(size):'');},
     });
-    shortcut=createShortcut(window,{binding:readSettings(Services.prefs).shortcut,onInvoke:()=>{void controller.define();},onConflict:()=>{}});
+    // A conflicting shortcut is inactive. Say so once per message in this
+    // window's Browser Console; Configure shows the same conflict (0.3.6).
+    let reportedConflict='';
+    shortcut=createShortcut(window,{binding:readSettings(Services.prefs).shortcut,onInvoke:()=>{void controller.define();},onConflict:message=>{if(!message||message===reportedConflict)return;reportedConflict=message;console.warn(`[Define Word] Keyboard shortcut inactive. ${message} (Sine → Define Word → Configure)`);}});
     observer={observe(_subject,_topic,name){const settings=readSettings(Services.prefs);if(name===SHORTCUT_PREF)shortcut.update(settings.shortcut);else controller.updateAppearance(settings);}};
     for(const name of OBSERVED_PREFS)Services.prefs.addObserver(name,observer);
     credentialObserver={observe(_subject,_topic,id){controller.credentialsChanged(id);}};
     Services.obs.addObserver(credentialObserver,CREDENTIAL_TOPIC);
-  }catch{
-    if(!controller)selection?.release();owner.unload();console.error('[Define Word] Could not initialize browser integration.');
+  }catch(error){
+    if(!controller)selection?.release();owner.unload();console.error('[Define Word] Could not initialize browser integration.',error);// Include the cause (0.3.6).
   }
 }
 if(document.readyState==='complete')start();else window.addEventListener('load',start,{once:true});

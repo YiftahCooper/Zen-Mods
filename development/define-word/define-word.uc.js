@@ -1,11 +1,11 @@
-// Define Word 0.3.5 - generated from src/entry.js; run node build.mjs.
+// Define Word 0.3.6 - generated from src/entry.js; run node build.mjs.
 // Local candidate; native Zen verification required.
 (() => {
   // project:src/providers/http.mjs
   function failure(code) {
     return Object.assign(new Error(code), { code });
   }
-  async function request(url, { fetch, signal, lexicalaKey }, format) {
+  async function request(url, { fetch, signal, key, lexicalaKey }, format) {
     try {
       const target = new URL(url);
       const lexicala = target.hostname === "lexicala1.p.rapidapi.com";
@@ -19,12 +19,15 @@
       } else if (!safeUrl(url, ["api.dictionaryapi.dev", "en.wiktionary.org", "he.wiktionary.org", "www.dictionaryapi.com", "kalanit.hebrew-academy.org.il", "milog.co.il"]) || target.port) throw failure("unavailable");
       if (target.hostname === "kalanit.hebrew-academy.org.il" && (target.pathname !== "/api/Ac/" || format !== "json")) throw failure("unavailable");
       if (format === "html" && target.hostname !== "milog.co.il") throw failure("unavailable");
-      const response = await fetch(url, { signal, credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", headers });
+      const init = { signal, credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", headers };
+      if (key !== void 0 || lexicala || lexicalaKey !== void 0) init.cache = "no-store";
+      const response = await fetch(url, init);
       if (response.status === 404) return null;
       if (response.status === 401) throw failure("unauthorized");
       if (response.status === 403) throw failure("access-denied");
       if (response.status === 429) throw failure("rate-limit");
-      if (!response.ok || Number(response.headers.get("content-length")) > 1048576) throw failure("unavailable");
+      if (!response.ok) throw Object.assign(failure("unavailable"), { status: response.status });
+      if (Number(response.headers.get("content-length")) > 1048576) throw failure("unavailable");
       const reader = response.body.getReader(), chunks = [];
       let bytes = 0;
       try {
@@ -50,7 +53,8 @@
       return format === "json" ? JSON.parse(body) : body;
     } catch (error) {
       if (signal?.aborted) throw failure("cancelled");
-      throw failure(["rate-limit", "unauthorized", "access-denied", "missing-key"].includes(error?.code) ? error.code : "unavailable");
+      if (typeof error?.code === "string") throw error;
+      throw Object.assign(failure("unavailable"), { cause: error });
     }
   }
   var requestJson = (url, options) => request(url, options, "json");
@@ -328,13 +332,28 @@
   async function search(options) {
     return requestJson(`https://kalanit.hebrew-academy.org.il/api/Ac/?${new URLSearchParams({ SearchString: unpointed2(options.query) })}`, options);
   }
-  var academyHebrew = { id: "academy-he", label: "האקדמיה ללשון העברית", language: "he", keyRequired: false, supportsFallback: false, suggestionsLabel: "Dictionary entries", async suggest(options) {
-    const data = await search(options);
-    return data === null ? [] : candidates(rows(data));
-  }, async lookup(options) {
-    const data = await search(options);
-    return data === null ? null : parseAcademyHebrew(data, options.query, options.parseDocument);
-  } };
+  var academyHebrew = {
+    id: "academy-he",
+    label: "האקדמיה ללשון העברית",
+    language: "he",
+    keyRequired: false,
+    supportsFallback: false,
+    suggestionsLabel: "Matching dictionary entries",
+    async suggest(options) {
+      const data = await search(options);
+      return data === null ? [] : candidates(rows(data));
+    },
+    async lookup(options) {
+      const data = await search(options);
+      return data === null ? null : parseAcademyHebrew(data, options.query, options.parseDocument);
+    },
+    // Lookup and suggestions use the same search URL. One request answers both,
+    // so a slower parallel suggest cannot replace the list; one label (0.3.6).
+    async lookupWithSuggestions(options) {
+      const data = await search(options);
+      return data === null ? { definition: null, suggestions: [] } : { definition: parseAcademyHebrew(data, options.query, options.parseDocument), suggestions: candidates(rows(data)) };
+    }
+  };
 
   // project:src/providers/milog.mjs
   var unpointed3 = (value) => text(value).normalize("NFD").replace(/[\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/gu, "");
@@ -388,7 +407,7 @@
     }
     return suggestions;
   }
-  function createLookupService({ providers: providers2, credentials, fetch = globalThis.fetch, parseDocument, timers = globalThis }) {
+  function createLookupService({ providers: providers2, credentials, fetch = globalThis.fetch, parseDocument, timers = globalThis, log = globalThis.console }) {
     async function run({ term, providerId, signal }, operation) {
       if (term?.status) return term;
       const provider = providers2.get(providerId);
@@ -396,24 +415,34 @@
       if (signal?.aborted) return { status: "cancelled" };
       if (operation === "suggest" && typeof provider.suggest !== "function") return { status: "unsupported-suggestions" };
       const abort = new AbortController();
-      let timedOut = false, finishAbort;
+      let timedOut = false, finishAbort, timer, prompted = false;
       const stopped = new Promise((resolve) => finishAbort = resolve);
       const stop = () => {
         abort.abort();
         finishAbort({ status: timedOut ? "timeout" : "cancelled" });
       };
       signal?.addEventListener("abort", stop, { once: true });
-      const timer = timers.setTimeout(() => {
-        timedOut = true;
-        stop();
-      }, 1e4);
+      const arm = () => {
+        timer = timers.setTimeout(() => {
+          timedOut = true;
+          stop();
+        }, 1e4);
+      };
+      arm();
       async function request2() {
         let key;
+        const onUnlockPrompt = operation === "lookup" ? () => {
+          if (abort.signal.aborted) return false;
+          timers.clearTimeout(timer);
+          prompted = true;
+        } : void 0;
         if (provider.keyRequired) {
           try {
-            key = await credentials?.get(providerId);
+            key = await credentials?.get(providerId, { onUnlockPrompt });
           } catch {
             return { status: "credential-unavailable" };
+          } finally {
+            if (prompted && !abort.signal.aborted) arm();
           }
           if (!key) return { status: "missing-key" };
         }
@@ -443,7 +472,11 @@
         return outcome;
       }
       try {
-        return await Promise.race([request2().catch((error) => ({ status: ["rate-limit", "cancelled", "unauthorized", "access-denied"].includes(error?.code) ? error.code : "unavailable" })), stopped]);
+        return await Promise.race([request2().catch((error) => {
+          const status = ["rate-limit", "cancelled", "unauthorized", "access-denied"].includes(error?.code) ? error.code : "unavailable";
+          if (status === "unavailable" && !abort.signal.aborted && error?.status === void 0) log?.warn?.(`[Define Word] ${providerId} ${operation} failed:`, error?.cause ?? error);
+          return { status };
+        }), stopped]);
       } finally {
         timers.clearTimeout(timer);
         signal?.removeEventListener("abort", stop);
@@ -1122,7 +1155,10 @@
   // project:src/popup.mjs
   var hosts = ["en.wiktionary.org", "he.wiktionary.org", "dictionaryapi.dev", "www.merriam-webster.com", "creativecommons.org", "lexicala.com", "hebrew-academy.org.il", "milog.co.il", "www.milog.co.il"];
   var wordKey = (value) => String(value || "").normalize("NFC").trim().toLocaleLowerCase("en");
-  var displayWord2 = (value, language) => language === "en" ? String(value || "").toLocaleLowerCase("en").replace(new RegExp("(^|[\\s-])(\\p{L})", "gu"), (_m, space, letter) => space + letter.toLocaleUpperCase("en")) : String(value || "");
+  var displayWord2 = (value, language) => {
+    const text2 = String(value || "");
+    return language === "en" && text2 === text2.toLocaleLowerCase("en") ? text2.replace(new RegExp("^\\p{L}", "u"), (letter) => letter.toLocaleUpperCase("en")) : text2;
+  };
   var messages = { empty: "Enter an English or Hebrew word.", unsupported: "Enter an English or Hebrew word.", "too-long": "Enter a word or short phrase (up to 100 characters).", loading: "Looking up…", "no-result": "No definition found. Try a matching word below the search field.", "missing-key": "Add your dictionary API key in the mod’s Configure settings.", "credential-unavailable": "Credential storage is unavailable or locked. Unlock it and try again.", "unauthorized": "The dictionary rejected the API key. Check or replace it in Configure.", "access-denied": "Access was denied. Check that your key has an active subscription to this dictionary.", "rate-limit": "This dictionary’s request limit has been reached.", timeout: "The dictionary took too long to respond. Press Enter to retry, or choose another dictionary.", unavailable: "The dictionary is currently unavailable. Press Enter to retry, or choose another." };
   function createPopup(window2, callbacks) {
     const { document: document2 } = window2;
@@ -1220,12 +1256,12 @@
       query.setAttribute("aria-expanded", "false");
       query.removeAttribute("aria-activedescendant");
     }
-    function setQuery(value, language) {
+    function setQuery(value) {
       queryText = String(value || "");
-      query.value = displayWord2(queryText, language);
+      query.value = queryText;
     }
     function choose(word2) {
-      setQuery(word2, new RegExp("\\p{Script=Hebrew}", "u").test(word2) ? "he" : "en");
+      setQuery(word2);
       clearMatches();
       callbacks.onSearch?.(word2);
       query.focus();
@@ -1368,7 +1404,7 @@
       render({ term, providerId, providers: providers2, outcome, textSize }) {
         const original = String(term.original || "");
         if (outcome.status === "loading" || queryText !== original) {
-          setQuery(original, term.language);
+          setQuery(original);
           clearMatches();
         }
         setTextSize(textSize);
@@ -1440,7 +1476,9 @@
     item.id = "define-word-menu";
     item.hidden = true;
     item.setAttribute("label", "Define");
-    menu?.append(item);
+    const searchSelect = document2.getElementById("context-searchselect");
+    if (menu && searchSelect?.parentNode === menu) searchSelect.after(item);
+    else menu?.append(item);
     function updateAppearance(settings = deps.settings()) {
       const visible = settings.showIcon !== false;
       item.classList.toggle("menuitem-iconic", visible);
@@ -1452,6 +1490,7 @@
     const available = (language) => [...deps.providers.values()].filter((p) => p.language === language);
     const current = () => originBrowser === window2.gBrowser.selectedBrowser && (!lastSelection || deps.selection.isCurrent(window2, lastSelection));
     const idle = () => !opened && capturing === null;
+    const warn = (providerId, error) => window2.console?.warn?.(`[Define Word] ${providerId} lookup failed:`, error);
     function cancel() {
       generation++;
       pending?.abort();
@@ -1494,7 +1533,7 @@
         cancel();
         const token = generation, term = normalizeTerm(query), providerId = chooseProvider(term.language);
         popup.editing?.({ term, providerId, providers: available(term.language) });
-        debounce = window2.setTimeout(() => {
+        if (!deps.providers.get(providerId)?.keyRequired) debounce = window2.setTimeout(() => {
           void suggest(term, providerId, token);
         }, 350);
       }
@@ -1510,7 +1549,8 @@
       let outcome;
       try {
         outcome = await deps.lookup.suggest({ term, providerId, signal: operation.signal });
-      } catch {
+      } catch (error) {
+        if (token === generation && !operation.signal.aborted) warn(providerId, error);
         outcome = { status: "unavailable" };
       }
       if (disposed2 || token !== generation || operation.signal.aborted || outcome?.status === "cancelled") return;
@@ -1546,7 +1586,8 @@
       let outcome;
       try {
         outcome = await deps.lookup.lookup({ term, providerId, signal: pending.signal });
-      } catch {
+      } catch (error) {
+        if (token === generation && !disposed2) warn(providerId, error);
         outcome = { status: "unavailable" };
       }
       outcome ||= { status: "unavailable" };
@@ -1581,7 +1622,8 @@
       const term = normalizeTerm(selection?.rawText || "");
       await run(term, defaultProvider(term.language), token);
     }
-    function showing() {
+    function showing(event) {
+      if (event?.target !== menu) return;
       const context = window2.gContextMenu;
       const value = context?.selectionInfo?.text || "";
       item.hidden = !value.trim() || !!context?.onPassword;
@@ -1632,7 +1674,7 @@
   }
 
   // project:src/version.mjs
-  var VERSION = "0.3.5";
+  var VERSION = "0.3.6";
 
   // project:src/sine-settings.mjs
   function createSineSettingsBridge(window2, options) {
@@ -1690,20 +1732,26 @@
   // project:src/credentials.sys.mjs
   var ORIGIN = "https://define-word.invalid";
   var allowed = /* @__PURE__ */ new Set(["mw-collegiate", "mw-learners", "lexicala-he"]);
-  function createCredentials(manager, createLogin) {
-    async function check(provider) {
+  function createCredentials(manager, createLogin, unlock) {
+    async function check(provider, onUnlockPrompt) {
       if (!allowed.has(provider)) throw new Error("Unsupported credential provider");
       await manager.initializationPromise;
+      if (!manager.isLoggedIn && onUnlockPrompt && typeof unlock === "function" && !manager.uiBusy && onUnlockPrompt() !== false) {
+        try {
+          await unlock();
+        } catch {
+        }
+      }
       if (!manager.isLoggedIn) throw new Error("credential-unavailable");
     }
-    async function find(provider) {
-      await check(provider);
+    async function find(provider, onUnlockPrompt) {
+      await check(provider, onUnlockPrompt);
       return typeof manager.searchLoginsAsync === "function" ? manager.searchLoginsAsync({ origin: ORIGIN, httpRealm: `define-word:${provider}` }) : manager.findLogins(ORIGIN, null, `define-word:${provider}`);
     }
     return {
-      async get(provider) {
+      async get(provider, { onUnlockPrompt } = {}) {
         try {
-          return (await find(provider))[0]?.password || null;
+          return (await find(provider, onUnlockPrompt))[0]?.password || null;
         } catch {
           throw new Error("credential-unavailable");
         }
@@ -1763,6 +1811,8 @@
         const login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
         login.init(fields.origin, fields.formActionOrigin, fields.httpRealm, fields.username, fields.password, fields.usernameField, fields.passwordField);
         return login;
+      }, async () => {
+        await Cc["@mozilla.org/security/internalkeytoken;1"].createInstance(Ci.nsIPKCS11Token).login();
       });
       if (/^about:(preferences|settings)(?:[?#]|$)/.test(window.location.href)) {
         settingsBridge = createSineSettingsBridge(window, {
@@ -1780,6 +1830,7 @@
         credentials,
         fetch: window.fetch.bind(window),
         timers: window,
+        log: window.console,
         parseDocument: (html) => new window.DOMParser().parseFromString(`<meta http-equiv="Content-Security-Policy" content="default-src 'none'">` + html, "text/html")
       });
       controller = createController(window, {
@@ -1801,9 +1852,13 @@
           Services.prefs.setStringPref(`${PREF}popup-size`, size ? JSON.stringify(size) : "");
         }
       });
+      let reportedConflict = "";
       shortcut = createShortcut(window, { binding: readSettings(Services.prefs).shortcut, onInvoke: () => {
         void controller.define();
-      }, onConflict: () => {
+      }, onConflict: (message) => {
+        if (!message || message === reportedConflict) return;
+        reportedConflict = message;
+        console.warn(`[Define Word] Keyboard shortcut inactive. ${message} (Sine → Define Word → Configure)`);
       } });
       observer = { observe(_subject, _topic, name) {
         const settings = readSettings(Services.prefs);
@@ -1815,10 +1870,10 @@
         controller.credentialsChanged(id);
       } };
       Services.obs.addObserver(credentialObserver, CREDENTIAL_TOPIC);
-    } catch {
+    } catch (error) {
       if (!controller) selection?.release();
       owner.unload();
-      console.error("[Define Word] Could not initialize browser integration.");
+      console.error("[Define Word] Could not initialize browser integration.", error);
     }
   }
   if (document.readyState === "complete") start();
