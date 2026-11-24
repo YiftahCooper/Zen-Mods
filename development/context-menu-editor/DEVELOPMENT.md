@@ -246,6 +246,16 @@ original nodes and removes the editor's owned containers and styles.
   user-item lists, left-click menus and rows with native artwork are left out.
   `tests/unmanaged-menu-icons.test.mjs` and the `unmanaged-menu-icons` native
   stage cover it.
+- **Settings scroll (0.2.5).** Every commit re-renders the editor, which
+  replaced the list and reset its scroll; `restoreFocus` then focused the
+  clicked control and Gecko scrolled it to the middle of the list. `render`
+  now keeps the list's `scrollTop` while the same menu is shown, and focus is
+  restored with `preventScroll` plus `scrollIntoView({block:'nearest'})`. In a
+  disposable profile with a 136-row page menu, ticking rows moved the clicked
+  row 38-186 px before and at most 12 px (first status message only) after.
+- **Sine updates.** Sine replaces a JS mod's files on update but does not rerun
+  its scripts in open windows (it shows `sine-toast-2`, "restart your
+  browser"). A controller fix reaches users only after a restart.
 - **Submenu first render (0.2.4).** Gecko renders a menu row's own parts
   (`img.menu-icon`, `label.menu-text`, `label.menu-accel` or
   `label.menu-highlightable-text`) the first time its popup opens, and clears

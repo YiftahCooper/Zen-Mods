@@ -1,7 +1,15 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.4.**
+an interactive Sine settings editor. **Version 0.2.5.**
+
+Version 0.2.5 stops the editor's list from jumping when you tick or untick a
+row, rename it or change its icon. Each change redraws the list; it now keeps
+its scroll position, so the row you clicked stays under the mouse.
+
+This mod runs JavaScript, so after Sine updates it, restart Zen. Sine shows "A
+mod utilizing JS has been updated" for this; until the restart, open windows
+keep running the previous version.
 
 Version 0.2.4 fixes menus that jumped around and then grew back to Zen's full
 menu a few seconds after opening. Opening a submenu for the first time, such as

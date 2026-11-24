@@ -1,4 +1,4 @@
-// Context Menu Editor 0.2.4 — generated from src/entry.mjs.
+// Context Menu Editor 0.2.5 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -2382,7 +2382,7 @@
     status.id = `cme-${ownerToken}-status`;
     const expanded = /* @__PURE__ */ new Set();
     let currentRoot = "", inventory = [], view, expectedRaw, readError, revision = 0;
-    let destroyed = false, draft = null, tree = null, query = "", matchIndex = 0, selected = null;
+    let destroyed = false, draft = null, tree = null, renderedRoot = null, query = "", matchIndex = 0, selected = null;
     let dragged = null, autoscroll = null, scrollDirection = 0, statusMessage = "", sequence = 0;
     let inventoryFingerprint = "", inventoryDeferred = false, deferredRefresh = null;
     let popover = null, findOpen = false;
@@ -2552,7 +2552,8 @@
       const target = focus?.id ? [...element.querySelectorAll("[data-focus]")].find((el) => el.dataset.focus === focus.id) : null;
       const fallback = fallbackKey ? rowFor(fallbackKey)?.querySelector('[data-action="label"]') : null;
       const control = target || fallback;
-      control?.focus();
+      control?.focus({ preventScroll: true });
+      control?.scrollIntoView?.({ block: "nearest" });
       if (target && typeof focus.start === "number" && target.setSelectionRange) {
         try {
           target.setSelectionRange(focus.start, focus.end);
@@ -3212,6 +3213,7 @@
       focusPopover();
     }
     function render() {
+      const keepScroll = tree && renderedRoot === currentRoot ? tree.scrollTop : null;
       element.replaceChildren();
       if (readError) {
         element.append(node("p", "Saved settings could not be read. Your original data is preserved.", { class: "cme-error" }), button("Reset saved settings", () => {
@@ -3303,6 +3305,8 @@
       tree.addEventListener("drop", stopScroll);
       element.append(tree);
       renderRows();
+      if (keepScroll !== null) tree.scrollTop = keepScroll;
+      renderedRoot = currentRoot;
       if (!inventory.length) tree.append(node("p", "Open a supported browser menu to discover its items.", { class: "cme-help" }));
       const footer = node("div", null, { class: "cme-footer" });
       footer.append(button("Undo", () => {
@@ -3755,7 +3759,7 @@
   var TOPIC = "context-menu-editor-inventory";
   var OWNER_WRITE_TOPIC = "context-menu-editor-owner-write";
   var BASE = "chrome://sine/content/context-menu-editor/";
-  var VERSION = true ? "0.2.4" : "dev";
+  var VERSION = true ? "0.2.5" : "dev";
   var loadSineMods = async () => ChromeUtils.importESModule("chrome://userscripts/content/core/utils.sys.mjs").default.getMods();
   function sharedMarkup(services, build) {
     try {

@@ -28,7 +28,7 @@ export function createSettingsUI(window, {store, registry, icons}) {
   status.id=`cme-${ownerToken}-status`;
   const expanded = new Set();
   let currentRoot = '', inventory = [], view, expectedRaw, readError, revision = 0;
-  let destroyed = false, draft = null, tree = null, query = '', matchIndex = 0, selected = null;
+  let destroyed = false, draft = null, tree = null, renderedRoot = null, query = '', matchIndex = 0, selected = null;
   let dragged = null, autoscroll = null, scrollDirection = 0, statusMessage = '', sequence = 0;
   let inventoryFingerprint = '', inventoryDeferred = false, deferredRefresh = null;
   let popover = null, findOpen = false;
@@ -144,7 +144,10 @@ export function createSettingsUI(window, {store, registry, icons}) {
     const target = focus?.id ? [...element.querySelectorAll('[data-focus]')].find(el => el.dataset.focus === focus.id) : null;
     const fallback = fallbackKey ? rowFor(fallbackKey)?.querySelector('[data-action="label"]') : null;
     const control = target || fallback;
-    control?.focus();
+    // A redraw keeps the list's scroll position; focusing must not then
+    // scroll the clicked row to the middle of the list (0.2.4 jumped).
+    control?.focus({preventScroll:true});
+    control?.scrollIntoView?.({block:'nearest'});
     if (target && typeof focus.start === 'number' && target.setSelectionRange) {
       try { target.setSelectionRange(focus.start, focus.end); } catch { /* selects and checkboxes have no selection */ }
     }
@@ -516,6 +519,8 @@ export function createSettingsUI(window, {store, registry, icons}) {
   }
 
   function render() {
+    // Every change redraws the list; keep the same menu at the same scroll position.
+    const keepScroll=tree&&renderedRoot===currentRoot?tree.scrollTop:null;
     element.replaceChildren();
     if(readError){element.append(node('p','Saved settings could not be read. Your original data is preserved.',{class:'cme-error'}),button('Reset saved settings',()=>{try{store.resetInvalid(expectedRaw);refresh();announce('Saved settings reset.');}catch(error){announce(error.message);}}));}
     const toolbar=node('div',null,{class:'cme-toolbar','aria-label':'Menu editor controls',role:'group'});element.append(toolbar);
@@ -539,7 +544,7 @@ export function createSettingsUI(window, {store, registry, icons}) {
       if(direction===scrollDirection)return;stopScroll();scrollDirection=direction;if(direction)autoscroll=window.setInterval(()=>{tree.scrollTop+=direction*12;},40);
     },true); // Insertion targets stop bubbling after accepting their drop.
     tree.addEventListener('dragleave',event=>{if(!tree.contains(event.relatedTarget))stopScroll();});tree.addEventListener('drop',stopScroll);
-    element.append(tree);renderRows();
+    element.append(tree);renderRows();if(keepScroll!==null)tree.scrollTop=keepScroll;renderedRoot=currentRoot;
     if(!inventory.length)tree.append(node('p','Open a supported browser menu to discover its items.',{class:'cme-help'}));
     const footer=node('div',null,{class:'cme-footer'});footer.append(button('Undo',()=>{try{store.undo();refresh(true);announce('Last change undone.');}catch(error){announce(error.message || 'Could not undo.');}},{'data-cme-undo':'','data-focus':'undo'}),node('span','Drag to move · Click a name or icon to edit',{class:'cme-help'}));element.append(footer);
     status.textContent=statusMessage;element.append(status);updateExpanded();applyFind(false);

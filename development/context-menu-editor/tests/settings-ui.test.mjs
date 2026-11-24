@@ -60,6 +60,20 @@ test('opening shows a compact menu without permanent name fields or action panel
   f.ui.destroy();assert.equal(f.listeners.size,0);assert.equal(f.inventoryListeners.size,0);
 });
 
+test('ticking a row keeps the list where it was and does not scroll the row to the middle',()=>{
+  const f=fixture(),w=f.dom.window,focused=[];
+  // jsdom has no layout: give the list a scroll position and record focus options.
+  Object.defineProperty(w.HTMLElement.prototype,'scrollTop',{configurable:true,get(){return this._scrollTop||0;},set(value){this._scrollTop=value;}});
+  const focus=w.HTMLElement.prototype.focus;w.HTMLElement.prototype.focus=function(options){focused.push({focus:this.dataset.focus,options});return focus.call(this,options);};
+  f.el.querySelector('[data-cme-tree]').scrollTop=137;
+  const box=row(f,'paste').querySelector('[data-action="enabled"]');box.focus();box.click();
+  assert.equal(f.state.roots.content.records.paste.hidden,true);
+  assert.equal(f.el.querySelector('[data-cme-tree]').scrollTop,137,'the redrawn list keeps its scroll position');
+  assert.deepEqual(focused.at(-1),{focus:'paste:enabled',options:{preventScroll:true}});
+  f.el.querySelector('[data-cme-menu]').dispatchEvent(new w.Event('change'));
+  assert.equal(f.el.querySelector('[data-cme-tree]').scrollTop,137,'same menu chosen again keeps it too');
+  f.ui.destroy();f.dom.window.close();
+});
 test('dragging over an insertion line near the list edge keeps autoscrolling',async()=>{
  const f=fixture(),tree=f.el.querySelector('[data-cme-tree]'),data=transfer();
  tree.getBoundingClientRect=()=>({top:100,bottom:500});tree.scrollTop=200;
