@@ -209,6 +209,31 @@ test('Gecko first-render of a decorated row keeps its icon without rebuilding th
  assert.equal(f.w.document.getElementById('a').parentElement,moved);assert.equal(f.ctl.diagnostics()[0].reconciliations,0);
  watch.disconnect();f.ctl.destroy();assert.equal(b.querySelector('.cme-decoration'),null);f.dom.window.close();
 });
+test('other mods rewriting their rows unchanged on every submenu opening never rebuild the open menu',async()=>{
+ // Open in Container Window and Define Word re-hide their own rows, and reset
+ // the same handler or label, on every popupshowing, including the ones that
+ // bubble up from submenus. 0.2.5 rebuilt the menu each time (0.2.6).
+ const f=setup('<menuitem id="a" label="Owner A" accesskey="A"></menuitem><menuitem id="b" label="Owner B" oncommand="run()"></menuitem><menuitem id="c" label="Define"></menuitem>',
+  {a:{kind:'command',name:'Custom'},b:{kind:'command'},c:{kind:'command',hidden:true},custom:{kind:'submenu',name:'More',children:['a']}},['custom','b','c']);
+ const b=f.w.document.getElementById('b'),c=f.w.document.getElementById('c');f.event('popupshowing');await wait();
+ assert.equal(c.getAttribute('hidden'),'true');const moved=f.w.document.getElementById('a').parentElement;
+ let rootChanges=0;const watch=new f.w.MutationObserver(rs=>{rootChanges+=rs.filter(r=>r.target===f.root&&r.type==='childList').length;});watch.observe(f.root,{childList:true});
+ for(let i=0;i<40;i++){c.toggleAttribute('hidden',true);c.setAttribute('label','Define');b.setAttribute('oncommand','run()');await wait();}
+ const d=f.ctl.diagnostics()[0];assert.equal(d.open,true);assert.equal(d.reconciliations,0);assert.equal(rootChanges,0,'no restore or reapply');
+ assert.equal(f.w.document.getElementById('a').parentElement,moved);assert.ok(c.hasAttribute('hidden'));
+ // A real owner change still rebuilds, and the saved layout still hides the row.
+ c.removeAttribute('hidden');await wait();await wait();
+ assert.equal(f.ctl.diagnostics()[0].reconciliations,1);assert.equal(c.getAttribute('hidden'),'true');
+ watch.disconnect();f.ctl.destroy();f.dom.window.close();
+});
+test('Gecko copying an extension row image into its icon slot does not rebuild the open menu',async()=>{
+ const f=setup('<menuitem id="a" label="Owner A"></menuitem><menuitem id="b" label="Extension" image="moz-extension://x/icon.svg"><img class="menu-icon"/></menuitem>');
+ const b=f.w.document.getElementById('b');f.event('popupshowing');await wait();
+ const moved=f.w.document.getElementById('a').parentElement;
+ b.querySelector('img.menu-icon').setAttribute('srcset','moz-extension://x/icon.svg');await wait();await wait();
+ assert.equal(f.ctl.diagnostics()[0].reconciliations,0);assert.equal(f.w.document.getElementById('a').parentElement,moved);
+ f.ctl.destroy();f.dom.window.close();
+});
 test('repeated access-key refreshes on rows the editor did not write never fall back to the owner menu',async()=>{
  const f=setup(),b=f.w.document.getElementById('b');f.event('popupshowing');await wait();
  for(let i=0;i<40;i++){b.setAttribute('accesskey','B');await wait();}

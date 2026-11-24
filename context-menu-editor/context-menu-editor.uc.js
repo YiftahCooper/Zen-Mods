@@ -1,4 +1,4 @@
-// Context Menu Editor 0.2.5 — generated from src/entry.mjs.
+// Context Menu Editor 0.2.6 — generated from src/entry.mjs.
 // Run node build.mjs; native qualification is reported separately.
 (() => {
   // project:src/model.mjs
@@ -1479,11 +1479,26 @@
   function derivedPresentation(record) {
     const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
     if (target?.closest?.(presentation)) {
-      const ownImage = record.type === "attributes" && ["src", "srcset", "style"].includes(record.attributeName) && target.matches?.("img.menu-icon,.menu-iconic-icon");
+      const ownImage = record.type === "attributes" && ["src", "srcset", "style"].includes(record.attributeName) && target.matches?.("img.menu-icon,.menu-iconic-icon") && !target.parentElement?.getAttribute?.("image");
       return !ownImage;
     }
     const changed = [...record.addedNodes || [], ...record.removedNodes || []];
     return record.type === "childList" && changed.length > 0 && changed.every((node) => node.nodeType === 3 || node.matches?.(presentation));
+  }
+  function unchangedAttributes(records) {
+    const first = /* @__PURE__ */ new Map(), unchanged = /* @__PURE__ */ new Set();
+    for (const record of records) {
+      if (record.type !== "attributes") continue;
+      let fields = first.get(record.target);
+      if (!fields) first.set(record.target, fields = /* @__PURE__ */ new Map());
+      if (!fields.has(record.attributeName)) fields.set(record.attributeName, record.oldValue);
+    }
+    for (const record of records) {
+      if (record.type !== "attributes") continue;
+      const before = first.get(record.target).get(record.attributeName), now = record.target.getAttribute(record.attributeName);
+      if (before === now || record.attributeName === "hidden" && before !== null && now !== null) unchanged.add(record);
+    }
+    return unchanged;
   }
   function ignorableRecord(c, record) {
     if (record.type !== "attributes") return derivedPresentation(record);
@@ -2080,8 +2095,11 @@
         });
       }
       if (!records.length) return;
-      const contested = records.some((record) => record.type === "attributes" && c.attrs.get(record.target)?.has(record.attributeName));
+      const same = unchangedAttributes(records), unchanged = new Set([...same].filter((record) => !c.attrs.get(record.target)?.has(record.attributeName) || ["menuitem", "menu", "menuseparator"].includes(record.target.localName)));
+      const contested = records.some((record) => record.type === "attributes" && !unchanged.has(record) && c.attrs.get(record.target)?.has(record.attributeName));
       adoptForeign(c, records);
+      records = records.filter((record) => !unchanged.has(record));
+      if (!records.length) return;
       if (c.open) {
         const ownerOnly = records.filter((record) => ownerOnlySubmenuChange(c, record));
         if (ownerOnly.length) {
@@ -3305,7 +3323,6 @@
       tree.addEventListener("drop", stopScroll);
       element.append(tree);
       renderRows();
-      if (keepScroll !== null) tree.scrollTop = keepScroll;
       renderedRoot = currentRoot;
       if (!inventory.length) tree.append(node("p", "Open a supported browser menu to discover its items.", { class: "cme-help" }));
       const footer = node("div", null, { class: "cme-footer" });
@@ -3327,6 +3344,7 @@
         if (control.textContent !== "Reset saved settings") control.disabled = true;
       });
       fitSymbols();
+      if (keepScroll !== null) tree.scrollTop = keepScroll;
     }
     function refresh(force = false) {
       if (destroyed) return;
@@ -3759,7 +3777,7 @@
   var TOPIC = "context-menu-editor-inventory";
   var OWNER_WRITE_TOPIC = "context-menu-editor-owner-write";
   var BASE = "chrome://sine/content/context-menu-editor/";
-  var VERSION = true ? "0.2.5" : "dev";
+  var VERSION = true ? "0.2.6" : "dev";
   var loadSineMods = async () => ChromeUtils.importESModule("chrome://userscripts/content/core/utils.sys.mjs").default.getMods();
   function sharedMarkup(services, build) {
     try {

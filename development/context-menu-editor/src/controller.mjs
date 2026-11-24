@@ -13,11 +13,32 @@ const presentation='label.menu-text,label.menu-accel,label.menu-highlightable-te
 function derivedPresentation(record){
  const target=record.target.nodeType===1?record.target:record.target.parentElement;
  if(target?.closest?.(presentation)){
-  const ownImage=record.type==='attributes'&&['src','srcset','style'].includes(record.attributeName)&&target.matches?.('img.menu-icon,.menu-iconic-icon');
+  // A row's own icon slot is its artwork, unless the row names it in `image`
+  // (extension rows): Gecko then copies that into the slot when the submenu
+  // first opens, which changes nothing a scan reads (0.2.6).
+  const ownImage=record.type==='attributes'&&['src','srcset','style'].includes(record.attributeName)&&target.matches?.('img.menu-icon,.menu-iconic-icon')&&!target.parentElement?.getAttribute?.('image');
   return !ownImage;
  }
  const changed=[...record.addedNodes||[],...record.removedNodes||[]];
  return record.type==='childList'&&changed.length>0&&changed.every(node=>node.nodeType===3||node.matches?.(presentation));
+}
+// Attribute records whose attribute ends the batch with the value it started
+// with. `hidden` hides a row whatever its value ("true" or ""), so any two
+// present values match.
+function unchangedAttributes(records){
+ const first=new Map(),unchanged=new Set();
+ for(const record of records){
+  if(record.type!=='attributes')continue;
+  let fields=first.get(record.target);
+  if(!fields)first.set(record.target,fields=new Map());
+  if(!fields.has(record.attributeName))fields.set(record.attributeName,record.oldValue);
+ }
+ for(const record of records){
+  if(record.type!=='attributes')continue;
+  const before=first.get(record.target).get(record.attributeName),now=record.target.getAttribute(record.attributeName);
+  if(before===now||(record.attributeName==='hidden'&&before!==null&&now!==null))unchanged.add(record);
+ }
+ return unchanged;
 }
 // Records that never change command metadata: they must not rebuild the overlay.
 function ignorableRecord(c,record){
@@ -641,10 +662,21 @@ export function createMenuController(window,{getState,resolveIcon=()=>null,resol
    });
   }
   if(!records.length)return;
+  // Other mods refresh their own rows on every popupshowing, and that event
+  // also bubbles up from each submenu. A rewrite that leaves an attribute as
+  // it was changes nothing to rebuild. Rebuilding moved rows under the open
+  // submenu and, after the per-opening limit, left the stock menu (0.2.6).
+  // The owner still takes the attribute over (adoptForeign below). A group
+  // this editor hid after moving its rows out is different: the owner hiding
+  // it too means "hide those rows", so that still rebuilds.
+  const same=unchangedAttributes(records),unchanged=new Set([...same].filter(record=>
+   !c.attrs.get(record.target)?.has(record.attributeName)||['menuitem','menu','menuseparator'].includes(record.target.localName)));
   // Only an owner overwriting this editor's own write can turn into a rewrite
   // fight. Decide before adoption hands those attributes back to the owner.
-  const contested=records.some(record=>record.type==='attributes'&&c.attrs.get(record.target)?.has(record.attributeName));
+  const contested=records.some(record=>record.type==='attributes'&&!unchanged.has(record)&&c.attrs.get(record.target)?.has(record.attributeName));
   adoptForeign(c,records);
+  records=records.filter(record=>!unchanged.has(record));
+  if(!records.length)return;
   // Native service menus recreate anonymous owner-only rows when opened.
   // They have no editor state to reconcile. Reinserting their parent here
   // can close or displace the popup that Gecko is currently positioning.

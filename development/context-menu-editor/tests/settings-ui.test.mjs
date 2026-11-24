@@ -74,6 +74,20 @@ test('ticking a row keeps the list where it was and does not scroll the row to t
   assert.equal(f.el.querySelector('[data-cme-tree]').scrollTop,137,'same menu chosen again keeps it too');
   f.ui.destroy();f.dom.window.close();
 });
+test('a redraw restores the scroll position only after collapsed submenu rows are hidden',()=>{
+  // Rows inside collapsed submenus are drawn, then hidden. 0.2.5 restored the
+  // position while they still took up room above, and the list slid when
+  // they were hidden: rows below a collapsed submenu jumped (0.2.6).
+  const f=fixture(),w=f.dom.window,writes=[];
+  Object.defineProperty(w.HTMLElement.prototype,'scrollTop',{configurable:true,get(){return this._scrollTop||0;},
+    set(value){this._scrollTop=value;if(this.matches('[data-cme-tree]'))writes.push({value,childHidden:row(f,'child')?.hidden});}});
+  f.el.querySelector('[data-cme-tree]').scrollTop=137;writes.length=0;
+  assert.equal(row(f,'child').hidden,true,'the owner submenu starts collapsed');
+  row(f,'paste').querySelector('[data-action="enabled"]').click();
+  assert.ok(writes.length);assert.deepEqual(writes.at(-1),{value:137,childHidden:true});
+  assert.ok(writes.every(write=>write.childHidden),'no write while collapsed rows still take up room');
+  f.ui.destroy();f.dom.window.close();
+});
 test('dragging over an insertion line near the list edge keeps autoscrolling',async()=>{
  const f=fixture(),tree=f.el.querySelector('[data-cme-tree]'),data=transfer();
  tree.getBoundingClientRect=()=>({top:100,bottom:500});tree.scrollTop=200;

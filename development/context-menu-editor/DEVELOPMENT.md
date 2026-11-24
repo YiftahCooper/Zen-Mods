@@ -253,6 +253,27 @@ original nodes and removes the editor's owned containers and styles.
   restored with `preventScroll` plus `scrollIntoView({block:'nearest'})`. In a
   disposable profile with a 136-row page menu, ticking rows moved the clicked
   row 38-186 px before and at most 12 px (first status message only) after.
+- **Settings scroll, collapsed submenus (0.2.6).** `renderRows` draws rows
+  inside collapsed submenus and `updateExpanded` hides them afterwards. 0.2.5
+  restored `scrollTop` between the two, so the hidden rows above still took up
+  room and the list slid 150-220 px for rows below a collapsed submenu. `render`
+  now restores `scrollTop` last. With the user's 158-row layout and the other
+  installed mods in a disposable profile, Save Link As, Copy Link and Copy Link
+  to Highlight moved 152-218 px before and 0 px after.
+- **Unchanged owner rewrites (0.2.6).** Mods such as Open in Container Window
+  and Define Word listen for `popupshowing` on `contentAreaContextMenu`, which
+  also fires for every submenu opening (it bubbles), and re-set `hidden`,
+  `oncommand` or `label` on their rows each time. `onRootMutations` drops
+  attribute records whose attribute ends the batch as it started
+  (`unchangedAttributes`; for `hidden` any two present values match) after
+  `adoptForeign` has given the attribute to the owner, so they no longer
+  rebuild the menu or count toward the per-opening limit. On a `menugroup` or
+  other container the editor itself wrote, a same-value rewrite still rebuilds:
+  the owner hiding the emptied navigation group means "hide its rows". With
+  copies of those mods in a disposable profile, opening each submenu twice took
+  16 rebuilds and ended in Zen's own menu on 0.2.5, and 0 rebuilds after.
+  Extension rows with an `image` attribute also no longer rebuild when Gecko
+  sets `srcset` on their icon slot on first opening (`derivedPresentation`).
 - **Sine updates.** Sine replaces a JS mod's files on update but does not rerun
   its scripts in open windows (it shows `sine-toast-2`, "restart your
   browser"). A controller fix reaches users only after a restart.

@@ -544,12 +544,15 @@ export function createSettingsUI(window, {store, registry, icons}) {
       if(direction===scrollDirection)return;stopScroll();scrollDirection=direction;if(direction)autoscroll=window.setInterval(()=>{tree.scrollTop+=direction*12;},40);
     },true); // Insertion targets stop bubbling after accepting their drop.
     tree.addEventListener('dragleave',event=>{if(!tree.contains(event.relatedTarget))stopScroll();});tree.addEventListener('drop',stopScroll);
-    element.append(tree);renderRows();if(keepScroll!==null)tree.scrollTop=keepScroll;renderedRoot=currentRoot;
+    element.append(tree);renderRows();renderedRoot=currentRoot;
     if(!inventory.length)tree.append(node('p','Open a supported browser menu to discover its items.',{class:'cme-help'}));
     const footer=node('div',null,{class:'cme-footer'});footer.append(button('Undo',()=>{try{store.undo();refresh(true);announce('Last change undone.');}catch(error){announce(error.message || 'Could not undo.');}},{'data-cme-undo':'','data-focus':'undo'}),node('span','Drag to move · Click a name or icon to edit',{class:'cme-help'}));element.append(footer);
     status.textContent=statusMessage;element.append(status);updateExpanded();applyFind(false);
     if(readError)element.querySelectorAll('input,select,button').forEach(control=>{if(control.textContent!=='Reset saved settings')control.disabled=true;});
     fitSymbols();
+    // Restore only now: rows inside collapsed submenus are hidden above, and
+    // restoring while they still took up room made the list slide (0.2.6).
+    if(keepScroll!==null)tree.scrollTop=keepScroll;
   }
   function refresh(force = false) {
     if(destroyed)return;

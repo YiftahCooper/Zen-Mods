@@ -1,7 +1,20 @@
 # Context Menu Editor
 
 Arrange Zen's native right-click menus, create submenus and choose icons through
-an interactive Sine settings editor. **Version 0.2.5.**
+an interactive Sine settings editor. **Version 0.2.6.**
+
+Version 0.2.6 fixes two problems that 0.2.4 and 0.2.5 left behind:
+
+- The page menu no longer jumps or falls back to Zen's full menu while you
+  open submenus when other mods are installed. Mods such as Open in Container
+  Window and Define Word refresh their own menu rows each time any submenu
+  opens. Nothing actually changes, but the editor rebuilt the whole menu every
+  time and gave up after about two dozen rebuilds. It now ignores rewrites
+  that leave a row as it was.
+- The settings list no longer slides when you tick or untick a row below a
+  collapsed submenu (Save Link As or Copy Link, for example). The list now
+  returns to its scroll position after collapsed submenus are folded away,
+  not before.
 
 Version 0.2.5 stops the editor's list from jumping when you tick or untick a
 row, rename it or change its icon. Each change redraws the list; it now keeps
